@@ -29,10 +29,8 @@ def main():
         utils.set_debug_status()
         log.info("Getting new loggen with DEBUG level!")
         log = utils.get_logger("main")
-        log.level = 10
-        log.debug("Debug enabled!")
-
-
+        log.debug("Debug mode enabled!")
+        log.debug(f"Server config: {config}")
 
 if __name__ == '__main__':
     main()

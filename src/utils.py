@@ -10,16 +10,17 @@ logging.basicConfig(level=log_level, format=log_format)
 if os.path.exists(log_file):
     os.remove(log_file)
 fh = logging.FileHandler(log_file)
-fh.setLevel(log_level)
 fh.setFormatter(logging.Formatter(log_format))
 
 
 def get_logger(name):
     log = logging.getLogger(name=name)
     log.addHandler(fh)
+    log.level = log_level
+    log.handlers[0].level = log_level
     return log
 
 
 def set_debug_status():
     global log_level
-    log_level = logging.DEBUG
+    log_level = 10
