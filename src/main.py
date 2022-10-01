@@ -1,4 +1,13 @@
+#!/usr/bin/python3
 import argparse
+import asyncio
+
+try:
+    from modules.console.src.console import Console, ConsoleIO
+except ImportError:
+    Console, ConsoleIO = None, None
+    print("Clone with submodules!")
+    exit(1)
 
 import __version__
 import config_provider
@@ -8,9 +17,12 @@ parser = argparse.ArgumentParser(description='KuiToi-Server - BeamingDrive serve
 parser.add_argument('-v', '--version', action="store_true", help='Print version and exit.', default=False)
 parser.add_argument('--config', help='Patch to config file.', nargs='?', default=None, type=str)
 log = utils.get_logger("main")
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+console = Console(prompt_out=":", async_loop=loop)
 
 
-def main():
+def init():
     global log
     log.info("Hello from KuiToi-Server!")
     args = parser.parse_args()
@@ -31,6 +43,26 @@ def main():
         log = utils.get_logger("main")
         log.debug("Debug mode enabled!")
         log.debug(f"Server config: {config}")
+    console.builtins_hook()
+    console.logger_hook()
+
+
+def start():
+    tasks = [
+        loop.create_task(console.async_run()),
+    ]
+
+    loop.run_until_complete(asyncio.wait(tasks))
+
+
+def end():
+    log.info("Goodbye!")
+
 
 if __name__ == '__main__':
-    main()
+    init()
+    try:
+        start()
+    except KeyboardInterrupt:
+        print("Exiting..")
+    end()
