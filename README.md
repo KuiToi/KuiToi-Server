@@ -1,6 +1,13 @@
 # KuiToi-Server
 
+## Installation
 
+1. Clone the repository in a location of your choice with: `git clone -b Stable --recurse-submodules https://github.com/kuitoi/kuitoi-Server.git`.
+2. Change directory into the KuiToi-Server: `cd KuiToi-Server`.
+3. Ensure that all submodules are initialized by running git: `submodule update --init --recursive`.
+4. Install requirements: `pip install -r requirements.txt`.
+5. Change directory into sources: `cd src`.
+6. Run KuiToi-Server: `python3 main.py`.
 
 ## Feedback
 
