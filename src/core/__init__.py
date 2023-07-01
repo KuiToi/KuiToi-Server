@@ -45,7 +45,7 @@ config_provider = ConfigProvider(config_path)
 config = config_provider.open_config()
 if config.Server['debug'] is True:
     utils.set_debug_status()
-    log.info("Getting new loggen with DEBUG level!")
+    log.info("Getting new logging with DEBUG level!")
     log = utils.get_logger("main")
     log.debug("Debug mode enabled!")
     log.debug(f"Server config: {config}")
