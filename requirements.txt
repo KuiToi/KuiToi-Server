@@ -1,2 +1,2 @@
 PyYAML~=6.0
-aioconsole
+prompt-toolkit~=3.0.38
