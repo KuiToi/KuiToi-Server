@@ -1,8 +1,14 @@
+# -*- coding: utf-8 -*-
+
+# Developed by KuiToi Dev
+# File core.config_provider.py
+# Written by: SantaSpeen
+# Version 1.0
+# Licence: FPA
+# (c) kuitoi.su 2023
 import os
 
 import yaml
-
-import errors
 
 
 class Config:
@@ -10,8 +16,8 @@ class Config:
         self.Auth = auth or {"key": None, "private": True}
         self.Game = game or {"map": "gridmap_v2", "players": 8, "max_cars": 1}
         self.Server = server or {"name": "KuiToi-Server",
-                                 "description": "The best description",
-                                 "port": 30814, "custom_ip": None, "debug": False}
+                                 "description": "This server uses KuiToi!",
+                                 "port": 30814, "server_ip": "0.0.0.0", "debug": False}
 
     def __repr__(self):
         return "%s(Auth=%r, Game=%r, Server=%r)" % (self.__class__.__name__, self.Auth, self.Game, self.Server)
@@ -31,6 +37,8 @@ class ConfigProvider:
             with open(self.config_patch, "r", encoding="utf-8") as f:
                 self.config = yaml.load(f.read(), yaml.Loader)
         except yaml.YAMLError:
-            raise errors.BadConfigError("Your config file can't open as YAML.")
+            print("You have errors in the YAML syntax.")
+            print("Stopping server.")
+            exit(1)
 
         return self.config
