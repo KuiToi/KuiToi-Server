@@ -128,5 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .idea/
+# Server configuration
 /src/kuitoi.yml
+# cmdhistory from prompt_toolkit
 .cmdhistory
