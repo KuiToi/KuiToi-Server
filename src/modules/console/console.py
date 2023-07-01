@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+
+# Developed by KuiToi Dev
+# File core.config_provider.py
+# Written by: SantaSpeen
+# Version 1.1
+# Licence: FPA
+# (c) kuitoi.su 2023
 import asyncio
 import builtins
 import logging
@@ -27,7 +35,8 @@ class Console:
         self.__man = dict()
         self.__desc = dict()
         self.add_command("man", self.__create_man_message, "man - display the manual page.\n"
-                                                           "Usage: man COMMAND", "Display the manual page")
+                                                           "Usage: man COMMAND", "Display the manual page",
+                         custom_completer={"man": {}})
         self.add_command("help", self.__create_help_message,
                          "help - display names and brief descriptions of available commands.\n"
                          "Usage: help [--raw]\n"
@@ -108,6 +117,7 @@ class Console:
             raise TypeError("key must be string")
         self.__debug(f"added user command: key={key}; func={func};")
         self.__alias.update(custom_completer or {key: None})
+        self.__alias["man"].update({key: None})
         self.__func.update({key: {"f": func}})
         self.__man.update({key: f'html<seagreen>Manual for command <b>{key}</b>\n{man}</seagreen>' if man else None})
         self.__desc.update({key: desc})
@@ -193,11 +203,17 @@ class Console:
                     else:
                         self.log(self.__not_found % cmd)
             except KeyboardInterrupt:
-                break
+                raise KeyboardInterrupt
+            except Exception as e:
+                print(f"Error in console.py: {e}")
 
     async def start(self):
         self.__is_run = True
         await self.read_input()
+
+    def stop(self, *args, **kwargs):
+        self.__is_run = False
+        raise KeyboardInterrupt
 
 
 if __name__ == '__main__':
