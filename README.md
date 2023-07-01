@@ -4,22 +4,21 @@
 
 1. Clone the repository in a location of your choice with: `git clone -b Stable --recurse-submodules https://github.com/kuitoi/kuitoi-Server.git`.
 2. Change directory into the KuiToi-Server: `cd KuiToi-Server`.
-3. Ensure that all submodules are initialized by running git: `submodule update --init --recursive`.
-4. Install requirements: `pip install -r requirements.txt`.
-5. Change directory into sources: `cd src`.
-6. Run KuiToi-Server: `python3 main.py`.
+3. Install requirements: `pip install -r requirements.txt`.
+4. Change directory into sources: `cd src`.
+5. Run KuiToi-Server: `python3 main.py`.
 
 ## Feedback
 
 If you have any questions, or you want to help the author in any way, you can write to him in \
 Telegram: [@SantaSpeen](https://t.me/SantaSpeen) \
-Discord: [SantaSpeen#0017](https://discordapp.com/users/406948906195353600)
+Discord: [SantaSpeen](https://discordapp.com/users/910990039557767241)
 
 <br/>
 
-## License
+## Licence
 ```text
-Copyright (c) 2022 SantaSpeen (Maxim Khomutov)
+Copyright (c) 2023 SantaSpeen (Maxim Khomutov)
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without limitation in the rights to use, copy, modify, merge, publish, and/ or distribute copies of the Software in an educational or personal context, subject to the following conditions:
 - The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 Permission is granted to sell and/ or distribute copies of the Software in a commercial context, subject to the following conditions:
