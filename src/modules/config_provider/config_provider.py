@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Developed by KuiToi Dev
-# File core.config_provider.py
+# File modules.config_provider.config_provider.py
 # Written by: SantaSpeen
 # Version 1.0
 # Licence: FPA
@@ -42,3 +42,7 @@ class ConfigProvider:
             exit(1)
 
         return self.config
+
+    def save_config(self):
+        with open(self.config_patch, "w", encoding="utf-8") as f:
+            yaml.dump(self.config, f)
