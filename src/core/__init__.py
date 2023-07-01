@@ -51,6 +51,25 @@ if config.Server['debug'] is True:
     log = get_logger("main")
     log.debug("Debug mode enabled!")
     log.debug(f"Server config: {config}")
+
+if not config.Auth['key']:
+    log.warn("Key needed for starting the server!")
+    url = "https://beammp.com/k/keys"
+    if yes_no_dialog(
+            title='BEAMP Server Key',
+            text='Key needed for starting the server!\n'
+                 'Do you need to open the web link to obtain the key?').run():
+        webbrowser.open(url, new=2)
+
+    config.Auth['key'] = input_dialog(
+        title='BEAMP Server Key',
+        text='Please type your key:').run()
+    config_provider.save_config()
+if not config.Auth['key']:
+    log.error("Key is empty!")
+    log.error("Server stopped!")
+    exit(1)
+
 console.builtins_hook()
 console.logger_hook()
 console.add_command("stop", console.stop, "stop - Just shutting down the server.\nUsage: stop", "Server shutdown.")
