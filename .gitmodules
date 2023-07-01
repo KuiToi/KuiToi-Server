@@ -1,3 +1,0 @@
-[submodule ".\\src\\modules\\console"]
-	path = .\\src\\modules\\console
-	url = https://github.com/SantaSpeen/cli-in-python
