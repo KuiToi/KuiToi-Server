@@ -4,7 +4,7 @@
 # Developed by KuiToi Dev
 # File main.py
 # Written by: SantaSpeen
-# Version 0.1.0
+# Version 1.0
 # Licence: FPA
 # (c) kuitoi.su 2023
 import argparse
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     try:
         core.start()
     except KeyboardInterrupt:
-        print("Exiting..")
+        pass
     except Exception as e:
         print(e)
     core.stop()
