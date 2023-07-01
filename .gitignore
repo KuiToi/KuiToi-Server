@@ -132,3 +132,6 @@ dmypy.json
 /src/kuitoi.yml
 # cmdhistory from prompt_toolkit
 .cmdhistory
+# Resources directories
+/src/mods
+/src/plugins
