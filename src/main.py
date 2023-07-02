@@ -14,11 +14,11 @@ parser.add_argument('-v', '--version', action="store_true", help='Print version 
 parser.add_argument('--config', help='Patch to config file.', nargs='?', default=None, type=str)
 
 if __name__ == '__main__':
-    import core
+    from core import Core
+    core = Core()
     try:
         core.start()
     except KeyboardInterrupt:
         pass
-    except Exception as e:
-        print(e)
-    core.stop()
+    finally:
+        core.stop()
