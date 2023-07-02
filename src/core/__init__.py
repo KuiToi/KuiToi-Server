@@ -1,7 +1,7 @@
 # Developed by KuiToi Dev
 # File core.__init__.py
 # Written by: SantaSpeen
-# Version 1.0
+# Version 1.1
 # Licence: FPA
 # (c) kuitoi.su 2023
 
@@ -9,13 +9,14 @@ __title__ = 'KuiToi-Server'
 __description__ = 'BeamingDrive Multiplayer server compatible with BeamMP clients.'
 __url__ = 'https://github.com/kuitoi/kuitoi-Server'
 __version__ = '0.1.1'
-__build__ = 81
+__build__ = 176
 __author__ = 'SantaSpeen'
 __author_email__ = 'admin@kuitoi.su'
 __license__ = "FPA"
 __copyright__ = 'Copyright 2023 © SantaSpeen (Maxim Khomutov)'
 
 import asyncio
+import builtins
 import os
 import webbrowser
 
@@ -24,8 +25,7 @@ from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog
 from modules import ConfigProvider
 from main import parser
 from modules import Console
-from core.core import start
-from core.core import stop
+from core.core import Core
 from core.utils import get_logger
 
 loop = asyncio.get_event_loop()
@@ -70,6 +70,7 @@ if not config.Auth['key']:
     log.error("Server stopped!")
     exit(1)
 
+builtins.config = config
 console.builtins_hook()
 console.logger_hook()
 console.add_command("stop", console.stop, "stop - Just shutting down the server.\nUsage: stop", "Server shutdown.")
