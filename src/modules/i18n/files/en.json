@@ -1,0 +1,8 @@
+{
+  "hello": "Hello from KuiToi-Server!",
+  "config_file": "Use kuitoi.yml for config.",
+  "debug": "Getting new logging with DEBUG level!",
+  "config_info": "Server config: %s",
+  "init": "Initializing ready.",
+  "ready": "Server started!"
+}
