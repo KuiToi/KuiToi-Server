@@ -17,7 +17,7 @@ class Config:
         self.Game = game or {"map": "gridmap_v2", "players": 8, "max_cars": 1}
         self.Server = server or {"name": "KuiToi-Server",
                                  "description": "This server uses KuiToi!",
-                                 "port": 30814, "server_ip": "0.0.0.0", "debug": False}
+                                 "server_port": 30814, "server_ip": "0.0.0.0", "debug": False}
 
     def __repr__(self):
         return "%s(Auth=%r, Game=%r, Server=%r)" % (self.__class__.__name__, self.Auth, self.Game, self.Server)
