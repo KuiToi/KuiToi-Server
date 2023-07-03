@@ -88,7 +88,7 @@ class Core:
     async def main(self):
         server_ip = config.Server["server_ip"]
         server_port = config.Server["server_port"]
-        self.log.info("Server started!")
+        self.log.info(i18n.ready)
 
         while True:
             try:
