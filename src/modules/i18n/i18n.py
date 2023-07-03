@@ -9,7 +9,7 @@
 import builtins
 import json
 
-from core import get_logger
+from core.utils import get_logger
 
 
 class i18n:
@@ -25,11 +25,12 @@ class i18n:
 
 class MultiLanguage:
 
-    def __init__(self, language: str = None, files_dir="modules/i18n/files/"):
+    def __init__(self, language: str = None, files_dir="modules/i18n/files/", encoding="utf-8"):
         if language is None:
             language = "en"
         self.__data = {}
         self.__i18n = None
+        self.__encoding = encoding
         self.language = language
         self.files_dir = files_dir
         self.log = get_logger("i18n")
@@ -45,7 +46,7 @@ class MultiLanguage:
         else:
             self.__data = {
                 "hello": "Hello from KuiToi-Server!",
-                "config_file": "Use kuitoi.yml for config.",
+                "config_file": "Use %s for config.",
                 "debug": "Getting new logging with DEBUG level!",
                 "config_info": "Server config: %s",
                 "init": "Initializing ready.",
@@ -57,7 +58,7 @@ class MultiLanguage:
         self.log.debug("open_file")
         file = self.files_dir + self.language + ".json"
         try:
-            with open(file) as f:
+            with open(file, encoding=self.__encoding) as f:
                 self.__data.update(json.load(f))
         except FileNotFoundError:
             self.log.warning(f"Localisation {self.language} not found; Setting language to: en.")
