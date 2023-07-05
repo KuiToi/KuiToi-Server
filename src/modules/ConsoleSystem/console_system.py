@@ -152,11 +152,8 @@ class Console:
         self.__debug(f"Used __builtins_print; is_run: {self.__is_run}")
         val = list(values)
         if len(val) > 0:
-            # val.insert(0, "\r" + self.__prompt_out)
             if self.__is_run:
                 self.__print_logger.info(f"{' '.join([''.join(str(i)) for i in values])}\r\n{self.__prompt_in}")
-                # val.append("\r\n" + self.__prompt_in)
-                # end = "" if end is None else end
             else:
                 if end is None:
                     end = "\n"
