@@ -35,7 +35,7 @@ from modules import Console
 from modules import MultiLanguage
 from core.core import Core
 
-loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 log = get_logger("init")
 
@@ -88,7 +88,7 @@ builtins.config = config
 log.debug("Initializing console...")
 console = Console()
 console.builtins_hook()
-console.logger_hook()
+# console.logger_hook()
 console.add_command("stop", console.stop, "stop - Just shutting down the server.\nUsage: stop", "Server shutdown.")
 console.add_command("exit", console.stop, "stop - Just shutting down the server.\nUsage: stop", "Server shutdown.")
 

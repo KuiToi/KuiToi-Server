@@ -5,10 +5,51 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import socket
 import struct
-from asyncio import StreamWriter, StreamReader
+import traceback
 
 from core import utils
+from .tcp_server import TCPServer
+from .udp_server import UDPServer
+
+
+class Client:
+
+    def __init__(self, sock):
+        self.cid = 0
+        self.nick = None
+        self.log = utils.get_logger("client")
+        self.addr = sock.getsockname()
+        self.socket = sock
+        self.loop = asyncio.get_event_loop()
+        self.alive = True
+
+    def is_disconnected(self):
+        if not self.alive:
+            return True
+        try:
+            keep_alive = self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE)
+            if keep_alive:
+                return False
+        except OSError:
+            pass
+        self.alive = False
+        return True
+
+    def kick(self, reason):
+        self.log.info(f"Client: \"IP: {self.addr!r}; ID: {self.cid}\" - kicked with reason: \"{reason}\"")
+        self.socket.send(b"K" + bytes(reason, "utf-8"))
+        self.socket.close()
+        self.alive = False
+
+    def tcp_send(self, data):
+        header = b"C\x00\x00\x00\x00"
+        # size = len(data)
+        # to_send = bytearray(size + len(data))
+        # to_send[0:len(data)] = size.to_bytes(len(data), byteorder='big')
+        # to_send[len(data):] = data
+        self.socket.send(header + b"\x00" + data + b"\x00")
 
 
 class Core:
@@ -16,88 +57,40 @@ class Core:
     def __init__(self):
         self.log = utils.get_logger("core")
         self.clients = {}
-        self.loop = None
+        self.clients_counter = 0
+        self.server_ip = config.Server["server_ip"]
+        self.server_port = config.Server["server_port"]
+        self.loop = asyncio.get_event_loop()
+        self.tcp = TCPServer
+        self.udp = UDPServer
 
-    async def tpc_send(self, data, sync):
-        pass
+    def create_client(self, *args, **kwargs):
+        cl = Client(*args, **kwargs)
+        self.clients_counter += 1
+        cl.id = self.clients_counter
+        self.clients.update({cl.id: cl})
+        return cl
 
-    async def tcp_rcv(self, writer: StreamWriter):
-
-        sock = writer.get_extra_info('socket')
-        print(writer.transport)
-        recv = writer._loop.sock_recv
-        header_data = b''
-        while True:
-            chunk = await recv(sock, 1024)
-            if not chunk:
-                break
-            header_data += chunk
-        print(header_data)
-        return
-
-    async def kick_client(self, writer: StreamWriter, reason: str):
-        self.log.info(
-            f"Client: \"IP: {writer.get_extra_info('peername')!r}; Nick: {None}\" - kicked with reason: \"{reason}\"")
-        writer.write(b"K" + bytes(reason, "utf-8"))
-        await writer.drain()
-        writer.close()
-
-    async def auth_client(self, writer: StreamWriter):
-        # TODO: Authentication
-        addr = writer.get_extra_info('peername')
-        self.log.debug(f"Client: \"IP: {addr!r}; Nick: {None}\" - started authentication!")
-        data = await self.tcp_rcv(writer)
-        self.log.info(data)
-        await self.kick_client(writer, "TODO")
-
-    async def tpc_handle_client(self, reader, writer: StreamWriter):
-        while True:
-            data = await reader.read(2048)
-            if not data:
-                break
-            message = data.decode("utf-8").strip()
-            addr = writer.get_extra_info('peername')
-            self.log.debug(f"Received {message!r} from {addr!r}")
-            code = message[0]
-            self.log.debug(f"Client code: {code!r}")
-            match code:
-                case "C":
-                    await self.auth_client(writer)
-                case "D":
-                    # TODO: HandleDownload
-                    await self.kick_client(writer, "TODO: HandleDownload")
-                case "P":
-                    # TODO: Понять что это и зачем...
-                    writer.write(b"P")
-                    # writer.close()
-                case _:
-                    self.log.error(f"Unknown code: {code}")
-                    await self.kick_client(writer, "Unknown code")
-        await self.kick_client(writer, "Error while connecting..")
-
-    async def tcp_part(self, host, port):
-        server = await asyncio.start_server(self.tpc_handle_client, host, port)
-        self.loop = server.get_loop()
-        print(f"TCP Serving on {server.sockets[0].getsockname()}")
-        async with server:
-            await server.serve_forever()
-
-    async def udp_part(self, server_ip, server_port):
-        pass
+    async def check_alive(self):
+        await asyncio.sleep(5)
+        self.log.debug(f"Checking if clients is alive")
+        for cl in self.clients.values():
+            d = await cl.is_disconnected()
+            if d:
+                self.log.debug(f"Client ID: {cl.id} died...")
 
     async def main(self):
-        server_ip = config.Server["server_ip"]
-        server_port = config.Server["server_port"]
-        self.log.info(i18n.ready)
-
-        while True:
+            self.tcp = self.tcp(self, self.server_ip, self.server_port)
+            self.udp = self.udp(self, self.server_ip, self.server_port)
+            self.log.info(i18n.ready)
+        # while True:
             try:
-                tasks = [console.start(), self.tcp_part(server_ip, server_port), self.udp_part(server_ip, server_port)]
+                tasks = [console.start(), self.tcp.start(), self.udp.start()] # self.check_alive()
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
             except Exception as e:
                 await asyncio.sleep(1)
                 print("Error: " + str(e))
-                # traceback.print_exc()
+                traceback.print_exc()
             except KeyboardInterrupt:
                 raise KeyboardInterrupt
 
