@@ -7,6 +7,7 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 from .console import Console
-from .config_provider import ConfigProvider, Config
+from .ConfigProvider import ConfigProvider, Config
 from .i18n import MultiLanguage
 from .EventsSystem import EventsSystem
+from .PluginsLoader import PluginsLoader
