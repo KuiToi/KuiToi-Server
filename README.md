@@ -10,13 +10,13 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
   - [ ] Authorization
   - [ ] Connect to world
   - [ ] Upload mods
-  - [ ] Events
-  - [ ] Plugins support
+  - [x] Events
+  - [x] Plugins support
 - [ ] Console:
   - [x] ~~Tabulation~~
   - [ ] Normal text scroll
 - [x] ~~MultiLanguage~~
-
+- [ ] Documentation...
 ## Installation
 
 1. Clone the repository in a location of your choice with: `git clone -b Stable https://github.com/kuitoi/kuitoi-Server.git`.
