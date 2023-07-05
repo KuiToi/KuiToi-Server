@@ -9,3 +9,4 @@
 from .console import Console
 from .config_provider import ConfigProvider, Config
 from .i18n import MultiLanguage
+from .EventsSystem import EventsSystem
