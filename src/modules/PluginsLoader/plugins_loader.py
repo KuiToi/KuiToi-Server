@@ -9,7 +9,7 @@ class BEAMP:
     def __init__(self, name=None):
         if name is None:
             raise Exception("BEAMP: Name is required")
-        self.log = get_logger(f"BEAMP({name})")
+        self.log = get_logger(f"PluginsLoader | {name}")
         self.name = name
 
     def set_name(self, name):
@@ -41,6 +41,7 @@ class PluginsLoader:
                     self.log.debug(f"Loading plugin: {file}")
                     plugin = types.ModuleType('plugin')
                     plugin.BEAMP = BEAMP
+                    plugin.print = print
                     file = os.path.join(self.__plugins_dir, file)
                     with open(f'{file}', 'r') as f:
                         code = f.read().replace("import BEAMP\n", "")

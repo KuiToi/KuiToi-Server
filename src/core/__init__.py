@@ -9,7 +9,7 @@ __title__ = 'KuiToi-Server'
 __description__ = 'BeamingDrive Multiplayer server compatible with BeamMP clients.'
 __url__ = 'https://github.com/kuitoi/kuitoi-Server'
 __version__ = '0.1.3'
-__build__ = 214
+__build__ = 218
 __author__ = 'SantaSpeen'
 __author_email__ = 'admin@kuitoi.su'
 __license__ = "FPA"
@@ -64,13 +64,6 @@ log.info(i18n.hello)
 ev = EventsSystem()
 ev.builtins_hook()
 
-if not os.path.exists("plugins"):
-    os.mkdir("plugins")
-pl = PluginsLoader("plugins")
-pl.load_plugins()
-
-ev.call_event("on_starting")
-
 # Key handler..
 if not config.Auth['key']:
     log.warn("Key needed for starting the server!")
@@ -101,5 +94,11 @@ console.add_command("exit", console.stop, "stop - Just shutting down the server.
 
 if not os.path.exists("mods"):
     os.mkdir("mods")
+if not os.path.exists("plugins"):
+    os.mkdir("plugins")
+
+pl = PluginsLoader("plugins")
+pl.load_plugins()
+ev.call_event("on_started")
 
 log.info(i18n.init)

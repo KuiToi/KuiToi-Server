@@ -7,7 +7,6 @@ class EventsSystem:
 
     def __init__(self):
         self.__events = {
-            "on_starting": [self.on_starting],
             "on_started": [self.on_started],
             "on_stop": [self.on_stop],
             "on_auth": [self.on_auth]
@@ -35,9 +34,6 @@ class EventsSystem:
                 event(*data)
         else:
             self.log.warning(f"Event {event_name} does not exist. Just skipping it...")
-
-    def on_starting(self):
-        pass
 
     def on_started(self):
         pass
