@@ -154,7 +154,7 @@ class Console:
         if len(val) > 0:
             # val.insert(0, "\r" + self.__prompt_out)
             if self.__is_run:
-                self.__print_logger.info(f"{' '.join(val)}\r\n{self.__prompt_in}")
+                self.__print_logger.info(f"{[i for i in val]}\r\n{self.__prompt_in}")
                 # val.append("\r\n" + self.__prompt_in)
                 # end = "" if end is None else end
             else:
