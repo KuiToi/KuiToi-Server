@@ -6,4 +6,4 @@
 # Version 1.0
 # Licence: FPA
 # (c) kuitoi.su 2023
-from .console import Console
+from .console_system import Console
