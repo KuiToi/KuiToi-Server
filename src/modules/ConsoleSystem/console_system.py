@@ -16,6 +16,8 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.history import FileHistory
 
+from core import get_logger
+
 
 class Console:
 
@@ -34,6 +36,7 @@ class Console:
         self.__alias = dict()
         self.__man = dict()
         self.__desc = dict()
+        self.__print_logger = get_logger("print")
         self.add_command("man", self.__create_man_message, "man - display the manual page.\n"
                                                            "Usage: man COMMAND", "Display the manual page",
                          custom_completer={"man": {}})
@@ -145,20 +148,19 @@ class Console:
                          sep: str or None = " ",
                          end: str or None = None,
                          file: str or None = None,
-                         flush: bool = False,
-                         loading: bool = False) -> None:
+                         flush: bool = False) -> None:
         self.__debug(f"Used __builtins_print; is_run: {self.__is_run}")
         val = list(values)
         if len(val) > 0:
-            val.insert(0, "\r" + self.__prompt_out)
-            if not loading:
-                if self.__is_run:
-                    val.append("\r\n" + self.__prompt_in + " ")
-                    end = "" if end is None else end
-                else:
-                    if end is None:
-                        end = "\n"
-        self.__print(*tuple(val), sep=sep, end=end, file=file, flush=flush)
+            # val.insert(0, "\r" + self.__prompt_out)
+            if self.__is_run:
+                self.__print_logger.info(f"{' '.join(val)}\r\n{self.__prompt_in}")
+                # val.append("\r\n" + self.__prompt_in)
+                # end = "" if end is None else end
+            else:
+                if end is None:
+                    end = "\n"
+                self.__print(*tuple(val), sep=sep, end=end, file=file, flush=flush)
 
     def logger_hook(self) -> None:
         self.__debug("used logger_hook")
@@ -167,7 +169,7 @@ class Console:
             try:
                 msg = cls.format(record)
                 if cls.stream.name == "<stderr>":
-                    self.write(f"{msg}")
+                    self.write(f"\r{msg}")
                 else:
                     cls.stream.write(msg + cls.terminator)
                 cls.flush()
@@ -216,11 +218,11 @@ class Console:
         raise KeyboardInterrupt
 
 
-if __name__ == '__main__':
-    c = Console()
-    c.logger_hook()
-    c.builtins_hook()
-    log = logging.getLogger(name="name")
-    log.info("Starting console")
-    print("Starting console")
-    asyncio.run(c.start())
+# if __name__ == '__main__':
+#     c = Console()
+#     c.logger_hook()
+#     c.builtins_hook()
+#     log = logging.getLogger(name="name")
+#     log.info("Starting console")
+#     print("Starting console")
+#     asyncio.run(c.start())
