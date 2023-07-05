@@ -8,6 +8,7 @@
 # (c) kuitoi.su 2023
 import builtins
 import json
+from json import JSONDecodeError
 
 from core.utils import get_logger
 
@@ -60,9 +61,12 @@ class MultiLanguage:
         try:
             with open(file, encoding=self.__encoding) as f:
                 self.__data.update(json.load(f))
+            return
+        except JSONDecodeError:
+            self.log.error(f"Localisation \"{self.language}.json\" have JsonDecodeError. Using default localisation: en.")
         except FileNotFoundError:
-            self.log.warning(f"Localisation {self.language} not found; Setting language to: en.")
-            self.set_language("en")
+            self.log.warning(f"Localisation \"{self.language}.json\" not found; Using default localisation: en.")
+        self.set_language("en")
 
     def builtins_hook(self) -> None:
         self.log.debug("used builtins_hook")
