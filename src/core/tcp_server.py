@@ -5,8 +5,9 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
-import socket
 import traceback
+
+import aiohttp
 
 from core import utils
 
@@ -52,30 +53,57 @@ class TCPServer:
             # return DeComp(Data);
         return data
 
-    async def auth_client(self, sock):
+    async def auth_client(self, reader, writer):
         # TODO: Authentication
-        client = self.Core.create_client(sock)
-        self.log.debug(f"Client: \"IP: {client.addr!r}; ID: {client.cid}\" - Authentication!")
+        client = self.Core.create_client(reader, writer)
+        self.log.info(f"Identifying new ClientConnection...")
         data = await self.recv(client)
         self.log.debug(f"recv1 data: {data}")
         if len(data) > 50:
-            client.kick("Too long data")
+            await client.kick("Too long data")
             return
         if "VC2.0" not in data.decode("utf-8"):
-            client.kick("Outdated Version.")
+            await client.kick("Outdated Version.")
             return
         else:
-            pass
-            # self.log.debug('tcp_send(b"A")')
-            # client.tcp_send(b"A")
+            await client.tcp_send(b"A")  # Accepted client version
+            # await client.tcp_send(b"S")  # Ask client key
 
-        # data = await self.recv(client)
-        # self.log.debug(f"recv2 data: {data}")
+        data = await self.recv(client)
+        self.log.debug(f"recv2 data: {data}")
+        if len(data) > 50:
+            await client.kick("Invalid Key (too long)!")
+            return
+        client.key = data.decode("utf-8")
+        async with aiohttp.ClientSession() as session:
+            url = 'https://auth.beammp.com/pkToUser'
+            async with session.post(url, data={'key': client.key}) as response:
+                res = await response.json()
+        self.log.debug(f"res: {res}")
+        try:
+            if res.get("error"):
+                await client.kick('Invalid key! Please restart your game.')
+                return
+            client.nick = res["username"]
+            client.roles = res["roles"]
+            client.guest = res["guest"]
+        except Exception as e:
+            self.log.error(f"Auth error: {e}")
+            await client.kick('Invalid authentication data! Try to econnect in 5 minutes.')
 
-        client.kick("TODO Authentication")
-        return False
+        # TODO: Password party
 
-    async def handle_download(self, sock):
+        ev.call_event("on_auth", client)
+
+        if len(self.Core.clients) > config.Game["players"]:
+            await client.kick("Server full!")
+        else:
+            self.log.info("Identification success")
+            self.Core.insert_client(client)
+
+        return True, client
+
+    async def handle_download(self, writer):
         # TODO: HandleDownload
         self.log.debug(f"Client: \"IP: {0!r}; ID: {0}\" - HandleDownload!")
         return False

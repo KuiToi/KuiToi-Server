@@ -10,11 +10,11 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
   - [ ] TCP Server part:
     - [x] Handle code
     - [x] Understanding beamp header
-    - [ ] Authorization
+    - [X] Authorization
     - [ ] Upload mods
-  - [ ] UDP Server part:
     - [ ] Connecting to the world
-    - [ ] Any....
+  - [ ] UDP Server part:
+    - [ ] Players synchronizations
   - [x] Additional:
     - [x] Events System
     - [x] Plugins support
