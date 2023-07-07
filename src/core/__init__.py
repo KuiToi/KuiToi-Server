@@ -101,4 +101,10 @@ pl = PluginsLoader("plugins")
 pl.load_plugins()
 ev.call_event("on_started")
 
+builtins.B = 1
+builtins.KB = B * 1024
+builtins.MB = KB * 1024
+builtins.GB = MB * 1024
+builtins.TB = GB * 1024
+
 log.info(i18n.init)
