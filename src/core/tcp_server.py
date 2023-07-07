@@ -80,35 +80,39 @@ class TCPServer:
         self.log.debug(f"Client: \"IP: {0!r}; ID: {0}\" - HandleDownload!")
         return False
 
-    async def handle_code(self, code, sock):
+    async def handle_code(self, code, reader, writer):
         match code:
             case "C":
-                return await self.auth_client(sock)
+                result, client = await self.auth_client(reader, writer)
+                if result:
+                    await client.kick("Authentication success! Server not ready.")
+                    return True
             case "D":
-                return await self.handle_download(sock)
+                return await self.handle_download(writer)
             case "P":
-                sock.send(b"P")
+                writer.write(b"P")
+                await writer.drain()
                 return True
             case _:
                 self.log.error(f"Unknown code: {code}")
                 return False
 
-    async def handle_client(self, sock):
+    async def handle_client(self, reader, writer):
         while True:
             try:
-                data = sock.recv(1)
+                data = await reader.read(1)
                 if not data:
                     break
                 code = data.decode()
-                self.log.debug(f"Received {code!r} from {sock.getsockname()!r}")
-                if not await self.handle_code(code, sock):
+                self.log.debug(f"Received {code!r} from {writer.get_extra_info('sockname')!r}")
+                result = await self.handle_code(code, reader, writer)
+                if not result:
                     break
             except Exception as e:
+                self.log.error("Error while connecting..")
                 self.log.error(f"Error: {e}")
                 traceback.print_exc()
                 break
-        sock.close()
-        self.log.error("Error while connecting..")
 
     async def start(self):
         self.log.debug("Starting TCP server.")
