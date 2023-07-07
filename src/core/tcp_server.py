@@ -17,19 +17,15 @@ class TCPServer:
         self.Core = core
         self.host = host
         self.port = port
+        self.loop = asyncio.get_event_loop()
 
     async def recv(self, client):
-        if not client.is_disconnected():
-            self.log.debug(f"Client with {client.nick}({client.cid}) disconnected")
-            return
+        # if not client.is_disconnected():
+        #     self.log.debug(f"Client with {client.nick}({client.cid}) disconnected")
+        #     return
 
-        header = await client.loop.sock_recv(client.socket, 4)  # header: 4 bytes
-        data = b""
-        while True:
-            chunk = await client.loop.sock_recv(client.socket, 1)
-            if not chunk:
-                break
-            data += chunk
+        header = await client.reader.read(4)  # header: 4 bytes
+        data = await client.reader.read(101 * MB)
 
         int_header = 0
         for i in range(len(header)):
@@ -37,16 +33,15 @@ class TCPServer:
         self.log.debug(f"header: `{header}`; int_header: `{int_header}`; data: `{data}`;")
 
         if int_header <= 0:
-            client.kick("Invalid packet - header negative")
+            await client.kick("Invalid packet - header negative")
             return
 
         if not int_header < 100 * MB:
-            client.kick("Header size limit exceeded")
+            await client.kick("Header size limit exceeded")
             self.log.warn(f"Client {client.nick}({client.cid}) sent header of >100MB - "
                           f"assuming malicious intent and disconnecting the client.")
             return
 
-        # TODO: read Data
         if len(data) != int_header:
             self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
 
