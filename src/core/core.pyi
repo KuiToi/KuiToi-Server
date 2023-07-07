@@ -5,6 +5,7 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import socket
 from asyncio import StreamWriter, AbstractEventLoop, StreamReader
 from asyncio.trsock import TransportSocket
 
@@ -12,15 +13,14 @@ from core import utils
 from .tcp_server import TCPServer
 from .udp_server import UDPServer
 class Client:
-    def __init__(self, reader: StreamReader, writer: StreamWriter):
-        self.cid: int = 0
-        self.nick: str = None
+
+    def __init__(self, sock: socket.socket):
+        self.cid = 0
+        self.nick = None
         self.log = utils.get_logger("client")
-        self.writer: StreamWriter = writer
-        self.reader: StreamReader = reader
-        self.addr: tuple = writer.get_extra_info('peername')
-        self.socket: TransportSocket = writer.get_extra_info('socket')
-        self.loop: AbstractEventLoop = asyncio.get_event_loop()
+        self.addr = sock.getsockname()
+        self.socket = sock
+        self.loop = asyncio.get_event_loop()
         self.alive = True
     def is_disconnected(self) -> bool: ...
     def kick(self, reason: str) -> None: ...

@@ -39,17 +39,24 @@ class Client:
 
     def kick(self, reason):
         self.log.info(f"Client: \"IP: {self.addr!r}; ID: {self.cid}\" - kicked with reason: \"{reason}\"")
-        self.socket.send(b"K" + bytes(reason, "utf-8"))
+        self.tcp_send(b"K" + bytes(reason, "utf-8"))
         self.socket.close()
         self.alive = False
 
     def tcp_send(self, data):
-        header = b"C\x00\x00\x00\x00"
-        # size = len(data)
-        # to_send = bytearray(size + len(data))
-        # to_send[0:len(data)] = size.to_bytes(len(data), byteorder='big')
-        # to_send[len(data):] = data
-        self.socket.send(header + b"\x00" + data + b"\x00")
+
+        # TNetwork.cpp; Line: 383
+        # BEAMP TCP protocol sends a header of 4 bytes, followed by the data.
+        # [][][][][][]...[]
+        # ^------^^---...-^
+        # size    data
+
+        data = data.replace(b" ", b"_")
+        if len(data) == 10:
+            data += b"."
+        header = len(data).to_bytes(4, "little")
+        self.log.debug(f'len(data) {len(data)}; header: {header}; send {header + data}')
+        self.socket.send(header + data)
 
 
 class Core:
@@ -63,6 +70,12 @@ class Core:
         self.loop = asyncio.get_event_loop()
         self.tcp = TCPServer
         self.udp = UDPServer
+
+    def get_client(self, sock=None, cid=None):
+        if cid:
+            return self.clients.get(cid)
+        if sock:
+            return self.clients.get(sock.getsockname())
 
     def create_client(self, *args, **kwargs):
         cl = Client(*args, **kwargs)
