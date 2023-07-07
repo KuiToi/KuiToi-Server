@@ -48,7 +48,7 @@ config_provider = ConfigProvider(config_path)
 config = config_provider.open_config()
 log.info("Use %s for config." % config_path)
 if config.Server['debug'] is True:
-    core.utils.set_debug_status()
+    utils.set_debug_status()
     log.info("Getting new logging with DEBUG level!")
     log = get_logger("init")
     log.debug("Debug mode enabled!")
