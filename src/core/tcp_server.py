@@ -117,12 +117,20 @@ class TCPServer:
 
     async def start(self):
         self.log.debug("Starting TCP server.")
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind((self.host, self.port))
-        server_socket.listen(config.Game["players"])
-        self.log.debug(f"Serving on {server_socket.getsockname()}")
-        server_socket.setblocking(False)
+        srv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        srv_sock.bind((self.host, self.port))
+        srv_sock.listen(config.Game["players"])
+        self.log.debug(f"Serving on {srv_sock.getsockname()}")
         loop = asyncio.get_event_loop()
-        while True:
-            sock, _ = await loop.sock_accept(server_socket)
-            loop.create_task(self.handle_client(sock))
+        try:
+            while True:
+                sock, _ = await loop.sock_accept(srv_sock)
+                loop.create_task(self.handle_client(sock))
+        except Exception as e:
+            self.log.error(f"Error: {e}")
+            traceback.print_exc()
+        finally:
+            await self.stop()
+
+    async def stop(self):
+        self.log.debug("Stopping TCP server")
