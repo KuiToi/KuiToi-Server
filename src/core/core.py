@@ -42,26 +42,28 @@ class Client:
         self.alive = False
         return True
 
-    def kick(self, reason):
+    async def kick(self, reason):
         self.log.info(f"Client: \"IP: {self.addr!r}; ID: {self.cid}\" - kicked with reason: \"{reason}\"")
-        self.tcp_send(b"K" + bytes(reason, "utf-8"))
-        self.socket.close()
+        await self.tcp_send(b"K" + bytes(reason, "utf-8"))
+        # self.writer.close()
+        # await self.writer.wait_closed()
         self.alive = False
 
-    def tcp_send(self, data):
+    async def tcp_send(self, data):
 
         # TNetwork.cpp; Line: 383
         # BEAMP TCP protocol sends a header of 4 bytes, followed by the data.
         # [][][][][][]...[]
         # ^------^^---...-^
-        # size    data
+        #  size     data
 
-        data = data.replace(b" ", b"_")
+        self.log.debug(f"tcp_send({data})")
         if len(data) == 10:
             data += b"."
-        header = len(data).to_bytes(4, "little")
-        self.log.debug(f'len(data) {len(data)}; header: {header}; send {header + data}')
-        self.socket.send(header + data)
+        header = len(data).to_bytes(4, "little", signed=True)
+        self.log.debug(f'len(data) {len(data)}; send {header + data}')
+        self.writer.write(header + data)
+        await self.writer.drain()
 
 
 class Core:
