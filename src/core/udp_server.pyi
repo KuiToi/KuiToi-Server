@@ -4,6 +4,8 @@
 # Version 0.0
 # Licence: FPA
 # (c) kuitoi.su 2023
+import asyncio
+
 from core import utils
 
 
@@ -14,6 +16,7 @@ class UDPServer:
         self.Core = core
         self.host = host
         self.port = port
+        self.loop = asyncio.get_event_loop()
     async def handle_client(self, srv_sock) -> None: ...
     async def start(self) -> None: ...
 

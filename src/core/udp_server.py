@@ -5,7 +5,6 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
-import socket
 import traceback
 
 from core import utils
@@ -18,12 +17,12 @@ class UDPServer:
         self.Core = core
         self.host = host
         self.port = port
+        self.loop = asyncio.get_event_loop()
 
     async def handle_client(self, srv_sock):
-        loop = asyncio.get_event_loop()
         while True:
             try:
-                data, addr = await loop.sock_recv(srv_sock, 1024)
+                data, addr = await self.loop.sock_recv(srv_sock, 1024)
                 if not data:
                     break
                 code = data.decode()
@@ -34,21 +33,22 @@ class UDPServer:
                 self.log.error(f"Error: {e}")
                 traceback.print_exc()
                 break
-        # srv_sock.close()
+        srv_sock.close()
         self.log.error("Error while connecting..")
 
     async def start(self):
         self.log.debug("Starting UDP server.")
-        srv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        srv_sock.bind((self.host, self.port))
-        self.log.debug(f"Serving on {srv_sock.getsockname()}")
-        try:
-            await self.handle_client(srv_sock)
-        except Exception as e:
-            self.log.error(f"Error: {e}")
-            traceback.print_exc()
-        finally:
-            await self.stop()
+        await self.stop()
+        # srv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # srv_sock.bind((self.host, self.port))
+        # self.log.debug(f"Serving on {srv_sock.getsockname()}")
+        # try:
+        #     await self.handle_client(srv_sock)
+        # except Exception as e:
+        #     self.log.error(f"Error: {e}")
+        #     traceback.print_exc()
+        # finally:
+        #     await self.stop()
 
     async def stop(self):
         self.log.debug("Stopping UDP server")
