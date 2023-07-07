@@ -22,8 +22,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 - [ ] Console:
   - [x] Tabulation
   - [ ] _(Deferred)_ Normal text scroll
-- [ ] Documentation:
-  - [x] [Plugins and Events](docs/plugins-and-events.md)
+- [x] [Documentation](docs/readme.md)
 
 ## Installation
 
