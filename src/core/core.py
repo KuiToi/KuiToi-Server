@@ -84,11 +84,14 @@ class Core:
         if sock:
             return self.clients.get(sock.getsockname())
 
+    def insert_client(self, client):
+        self.clients.update({client.cid: client, client.nick: client})
+
     def create_client(self, *args, **kwargs):
         cl = Client(*args, **kwargs)
         self.clients_counter += 1
         cl.id = self.clients_counter
-        self.clients.update({cl.id: cl})
+        cl._update_logger()
         return cl
 
     async def check_alive(self):
@@ -100,19 +103,24 @@ class Core:
                 self.log.debug(f"Client ID: {cl.id} died...")
 
     async def main(self):
-            self.tcp = self.tcp(self, self.server_ip, self.server_port)
-            self.udp = self.udp(self, self.server_ip, self.server_port)
-            self.log.info(i18n.ready)
+        self.tcp = self.tcp(self, self.server_ip, self.server_port)
+        self.udp = self.udp(self, self.server_ip, self.server_port)
+        tasks = [self.tcp.start(), self.udp.start(), console.start()]  # self.check_alive()
+        t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+        self.log.info(i18n.ready)
+        ev.call_event("on_started")
+        await t
         # while True:
-            try:
-                tasks = [console.start(), self.tcp.start(), self.udp.start()] # self.check_alive()
-                await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
-            except Exception as e:
-                await asyncio.sleep(1)
-                print("Error: " + str(e))
-                traceback.print_exc()
-            except KeyboardInterrupt:
-                raise KeyboardInterrupt
+        #     try:
+        #         tasks = [console.start(), self.tcp.start(), self.udp.start()] # self.check_alive()
+        #         await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+        #     except Exception as e:
+        #         await asyncio.sleep(1)
+        #         print("Error: " + str(e))
+        #         traceback.print_exc()
+        #         break
+        #     except KeyboardInterrupt:
+        #         raise KeyboardInterrupt
 
     def start(self):
         asyncio.run(self.main())

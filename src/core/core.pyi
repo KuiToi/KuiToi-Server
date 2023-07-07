@@ -14,17 +14,21 @@ from .tcp_server import TCPServer
 from .udp_server import UDPServer
 class Client:
 
-    def __init__(self, sock: socket.socket):
-        self.cid = 0
-        self.nick = None
-        self.log = utils.get_logger("client")
-        self.addr = sock.getsockname()
-        self.socket = sock
+    def __init__(self, reader: StreamReader, writer: StreamWriter):
+        self.reader = reader
+        self.writer = writer
+        self.log = utils.get_logger("client(id: )")
+        self.addr = writer.get_extra_info("sockname")
         self.loop = asyncio.get_event_loop()
+        self.cid = 0
+        self.key: str = None
+        self.nick: str = None
+        self.roles: str = None
+        self.guest = True
         self.alive = True
     def is_disconnected(self) -> bool: ...
-    def kick(self, reason: str) -> None: ...
-    def tcp_send(self, data: bytes) -> None: ...
+    async def kick(self, reason: str) -> None: ...
+    async def tcp_send(self, data: bytes) -> None: ...
 
 
 class Core:
@@ -37,6 +41,7 @@ class Core:
         self.loop = asyncio.get_event_loop()
         self.tcp = TCPServer
         self.udp = UDPServer
+    def insert_client(self, client: Client) -> None: ...
     def create_client(self, *args, **kwargs) -> Client: ...
     async def check_alive(self) -> None: ...
     async def main(self) -> None: ...
