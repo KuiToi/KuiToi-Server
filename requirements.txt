@@ -1,2 +1,3 @@
 PyYAML~=6.0
 prompt-toolkit~=3.0.38
+aiohttp~=3.8.4
