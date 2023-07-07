@@ -14,14 +14,21 @@ from .udp_server import UDPServer
 
 class Client:
 
-    def __init__(self, sock):
-        self.cid = 0
-        self.nick = None
-        self.log = utils.get_logger("client")
-        self.addr = sock.getsockname()
-        self.socket = sock
+    def __init__(self, reader, writer):
+        self.reader = reader
+        self.writer = writer
+        self.log = utils.get_logger("client(id: )")
+        self.addr = writer.get_extra_info("sockname")
         self.loop = asyncio.get_event_loop()
+        self.cid = 0
+        self.key = None
+        self.nick = None
+        self.roles = None
+        self.guest = True
         self.alive = True
+
+    def _update_logger(self):
+        self.log = utils.get_logger(f"client(id:{self.cid})")
 
     def is_disconnected(self):
         if not self.alive:
