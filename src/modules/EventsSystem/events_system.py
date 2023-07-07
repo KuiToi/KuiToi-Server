@@ -42,5 +42,5 @@ class EventsSystem:
     def on_stop(self):
         pass
 
-    def on_auth(self):
+    def on_auth(self, client):
         pass
