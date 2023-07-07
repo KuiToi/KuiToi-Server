@@ -6,8 +6,6 @@
 # (c) kuitoi.su 2023
 import asyncio
 import socket
-import struct
-import traceback
 
 from core import utils
 from .tcp_server import TCPServer
