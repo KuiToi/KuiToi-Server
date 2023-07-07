@@ -183,7 +183,7 @@ class Console:
         builtins.Console = Console
         builtins.console = self
 
-        builtins.print = self.__builtins_print
+        # builtins.print = self.__builtins_print
 
     async def read_input(self):
         session = PromptSession(history=FileHistory('./.cmdhistory'))
