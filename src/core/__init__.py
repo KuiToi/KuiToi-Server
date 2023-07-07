@@ -4,6 +4,7 @@
 # Version 1.1
 # Licence: FPA
 # (c) kuitoi.su 2023
+# Special thanks to: AI Sage(https://poe.com/Sage), AI falcon-40b-v7(https://OpenBuddy.ai)
 
 __title__ = 'KuiToi-Server'
 __description__ = 'BeamingDrive Multiplayer server compatible with BeamMP clients.'
