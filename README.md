@@ -7,16 +7,24 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 ## TODOs
 
 - [ ] Server core
-  - [ ] Authorization
-  - [ ] Connect to world
-  - [ ] Upload mods
-  - [x] Events
-  - [x] Plugins support
+  - [ ] TCP Server part:
+    - [x] Handle code
+    - [x] Understanding beamp header
+    - [ ] Authorization
+    - [ ] Upload mods
+  - [ ] UDP Server part:
+    - [ ] Connecting to the world
+    - [ ] Any....
+  - [x] Additional:
+    - [x] Events System
+    - [x] Plugins support
+    - [x] MultiLanguage (i18n support)
 - [ ] Console:
-  - [x] ~~Tabulation~~
-  - [ ] Normal text scroll
-- [x] ~~MultiLanguage~~
-- [ ] Documentation...
+  - [x] Tabulation
+  - [ ] _(Deferred)_ Normal text scroll
+- [ ] Documentation:
+  - [x] [Plugins and Events](docs/plugins.md)
+
 ## Installation
 
 1. Install **Python 3.10**
