@@ -100,7 +100,6 @@ if not os.path.exists("plugins"):
 
 pl = PluginsLoader("plugins")
 pl.load_plugins()
-ev.call_event("on_started")
 
 builtins.B = 1
 builtins.KB = B * 1024
