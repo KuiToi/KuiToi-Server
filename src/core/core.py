@@ -33,14 +33,15 @@ class Client:
     def is_disconnected(self):
         if not self.alive:
             return True
-        try:
-            keep_alive = self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE)
-            if keep_alive:
-                return False
-        except OSError:
-            pass
-        self.alive = False
-        return True
+        res = self.writer.is_closing()
+        if res:
+            self.log.debug(f"Client Disconnected")
+            self.alive = False
+            return True
+        else:
+            self.log.debug(f"Client Alive")
+            self.alive = True
+            return False
 
     async def kick(self, reason):
         self.log.info(f"Client: \"IP: {self.addr!r}; ID: {self.cid}\" - kicked with reason: \"{reason}\"")
