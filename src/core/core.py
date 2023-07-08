@@ -5,6 +5,7 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import zlib
 
 from core import utils
 from .tcp_server import TCPServer
@@ -87,17 +88,16 @@ class Client:
             return b""
 
         data = await self.reader.read(101 * MB)
+        self.log.debug(f"header: `{header}`; int_header: `{int_header}`; data: `{data}`;")
 
         if len(data) != int_header:
             self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
 
-        self.log.debug(f"header: `{header}`; int_header: `{int_header}`; data: `{data}`;")
-        # TODO: ABG: DeComp(Data)
         abg = b"ABG:"
         if len(data) > len(abg) and data.startswith(abg):
-            data = data[len(abg):]
-            return b""
-            # return DeComp(Data);
+            data = zlib.decompress(data[len(abg):])
+            self.log.debug(f"ABG: {data}")
+            return data
         return data
 
     async def sync_resources(self):
