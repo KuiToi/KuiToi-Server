@@ -20,44 +20,10 @@ class TCPServer:
         self.port = port
         self.loop = asyncio.get_event_loop()
 
-    async def recv(self, client):
-        # if not client.is_disconnected():
-        #     self.log.debug(f"Client with {client.nick}({client.cid}) disconnected")
-        #     return
-
-        header = await client.reader.read(4)  # header: 4 bytes
-        data = await client.reader.read(101 * MB)
-
-        int_header = 0
-        for i in range(len(header)):
-            int_header += header[i]
-        self.log.debug(f"header: `{header}`; int_header: `{int_header}`; data: `{data}`;")
-
-        if int_header <= 0:
-            await client.kick("Invalid packet - header negative")
-            return
-
-        if not int_header < 100 * MB:
-            await client.kick("Header size limit exceeded")
-            self.log.warn(f"Client {client.nick}({client.cid}) sent header of >100MB - "
-                          f"assuming malicious intent and disconnecting the client.")
-            return
-
-        if len(data) != int_header:
-            self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
-
-        # TODO: ABG: DeComp(Data)
-        abg = b"ABG:"
-        if len(data) > len(abg) and data.startswith(abg):
-            data = data[len(abg):]
-            # return DeComp(Data);
-        return data
-
     async def auth_client(self, reader, writer):
-        # TODO: Authentication
         client = self.Core.create_client(reader, writer)
         self.log.info(f"Identifying new ClientConnection...")
-        data = await self.recv(client)
+        data = await client.recv()
         self.log.debug(f"recv1 data: {data}")
         if len(data) > 50:
             await client.kick("Too long data")
@@ -67,9 +33,8 @@ class TCPServer:
             return
         else:
             await client.tcp_send(b"A")  # Accepted client version
-            # await client.tcp_send(b"S")  # Ask client key
 
-        data = await self.recv(client)
+        data = await client.recv()
         self.log.debug(f"recv2 data: {data}")
         if len(data) > 50:
             await client.kick("Invalid Key (too long)!")
@@ -87,11 +52,13 @@ class TCPServer:
             client.nick = res["username"]
             client.roles = res["roles"]
             client.guest = res["guest"]
+            client._update_logger()
         except Exception as e:
             self.log.error(f"Auth error: {e}")
-            await client.kick('Invalid authentication data! Try to econnect in 5 minutes.')
+            await client.kick('Invalid authentication data! Try to connect in 5 minutes.')
 
         # TODO: Password party
+        # await client.tcp_send(b"S")  # Ask client key
 
         ev.call_event("on_auth", client)
 
@@ -113,8 +80,10 @@ class TCPServer:
             case "C":
                 result, client = await self.auth_client(reader, writer)
                 if result:
-                    await client.kick("Authentication success! Server not ready.")
+                    await client.sync_resources()
+                    # await client.kick("Authentication success! Server not ready.")
                     return True
+                return False
             case "D":
                 return await self.handle_download(writer)
             case "P":
@@ -144,7 +113,8 @@ class TCPServer:
 
     async def start(self):
         self.log.debug("Starting TCP server.")
-        server = await asyncio.start_server(self.handle_client, self.host, self.port, backlog=config.Game["players"]+1)
+        server = await asyncio.start_server(self.handle_client, self.host, self.port,
+                                            backlog=config.Game["players"] + 1)
         try:
             self.log.debug(f"TCP server started on {server.sockets[0].getsockname()!r}")
             while True:

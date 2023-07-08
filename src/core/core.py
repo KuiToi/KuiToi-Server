@@ -5,7 +5,6 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
-import socket
 
 from core import utils
 from .tcp_server import TCPServer
@@ -17,7 +16,7 @@ class Client:
     def __init__(self, reader, writer):
         self.reader = reader
         self.writer = writer
-        self.log = utils.get_logger("client(id: )")
+        self.log = utils.get_logger("client(None:0)")
         self.addr = writer.get_extra_info("sockname")
         self.loop = asyncio.get_event_loop()
         self.cid = 0
@@ -28,7 +27,8 @@ class Client:
         self.alive = True
 
     def _update_logger(self):
-        self.log = utils.get_logger(f"client(id:{self.cid})")
+        self.log.debug(f"Update logger")
+        self.log = utils.get_logger(f"client({self.nick}:{self.cid})")
 
     def is_disconnected(self):
         if not self.alive:
@@ -157,7 +157,7 @@ class Core:
 
     def create_client(self, *args, **kwargs):
         cl = Client(*args, **kwargs)
-        self.clients_counter += 1
+        self.clients_counter = self.clients_counter + 1
         cl.id = self.clients_counter
         cl._update_logger()
         return cl
