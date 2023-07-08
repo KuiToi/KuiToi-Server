@@ -66,6 +66,73 @@ class Client:
         self.writer.write(header + data)
         await self.writer.drain()
 
+    async def recv(self):
+        # if not self.is_disconnected():
+        #     self.log.debug(f"Client with {self.nick}({self.cid}) disconnected")
+        #     return b""
+
+        header = await self.reader.read(4)  # header: 4 bytes
+
+        int_header = 0
+        for i in range(len(header)):
+            int_header += header[i]
+
+        if int_header <= 0:
+            await self.kick("Invalid packet - header negative")
+            return b""
+
+        if int_header > 100 * MB:
+            await self.kick("Header size limit exceeded")
+            self.log.warn(f"Client {self.nick}({self.cid}) sent header of >100MB - "
+                          f"assuming malicious intent and disconnecting the client.")
+            return b""
+
+        data = await self.reader.read(101 * MB)
+
+        if len(data) != int_header:
+            self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
+
+        # TODO: ABG: DeComp(Data)
+        abg = b"ABG:"
+        if len(data) > len(abg) and data.startswith(abg):
+            data = data[len(abg):]
+            return b""
+            # return DeComp(Data);
+        self.log.debug(f"header: `{header}`; int_header: `{int_header}`; data: `{data}`;")
+        return data
+
+    async def sync_resources(self):
+        await self.tcp_send(b"P" + bytes(f"{self.cid}", "utf-8"))
+        data = await self.recv()
+        if data.startswith(b"SR"):
+            await self.tcp_send(b"-")  # Cannot handle mods for now.
+        data = await self.recv()
+        if data == b"Done":
+            await self.tcp_send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
+        await self.last_handle()
+
+    async def last_handle(self):
+        # self.is_disconnected()
+        self.log.debug(f"Alive: {self.alive}")
+        while self.alive:
+            data = await self.recv()
+            if data == b"":
+                if not self.alive:
+                    break
+                elif self.is_disconnected():
+                    break
+                else:
+                    continue
+            code = data.decode()[0]
+            self.log.debug(f"Code: {code}, data: {data}")
+            match code:
+                case "H":
+                    # Client connected
+                    await self.tcp_send(b"Sn"+bytes(self.nick, "utf-8"))
+                case "C":
+                    # Chat
+                    await self.tcp_send(data)
+
 
 class Core:
 
