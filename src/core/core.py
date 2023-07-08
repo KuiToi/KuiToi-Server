@@ -67,9 +67,9 @@ class Client:
         await self.writer.drain()
 
     async def recv(self):
-        if not self.is_disconnected():
-            self.log.debug(f"Client with {self.nick}({self.cid}) disconnected")
-            return b""
+        # if not self.is_disconnected():
+        #     self.log.debug(f"Client with {self.nick}({self.cid}) disconnected")
+        #     return b""
         header = await self.reader.read(4)  # header: 4 bytes
 
         int_header = 0

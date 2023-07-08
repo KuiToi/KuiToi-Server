@@ -27,10 +27,10 @@ class TCPServer:
         self.log.debug(f"recv1 data: {data}")
         if len(data) > 50:
             await client.kick("Too long data")
-            return
+            return False, None
         if "VC2.0" not in data.decode("utf-8"):
             await client.kick("Outdated Version.")
-            return
+            return False, None
         else:
             await client.tcp_send(b"A")  # Accepted client version
 
@@ -38,7 +38,7 @@ class TCPServer:
         self.log.debug(f"recv2 data: {data}")
         if len(data) > 50:
             await client.kick("Invalid Key (too long)!")
-            return
+            return False, None
         client.key = data.decode("utf-8")
         async with aiohttp.ClientSession() as session:
             url = 'https://auth.beammp.com/pkToUser'
