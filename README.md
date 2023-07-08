@@ -12,6 +12,8 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Understanding beamp header
     - [X] Authorization
     - [ ] Upload mods
+    - [ ] Private server
+    - [ ] Server authentication in BEAMP System
     - [x] Connecting to the world
     - [x] Chat
     - [ ] ABG: (compressed data)
