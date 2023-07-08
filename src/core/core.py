@@ -67,10 +67,9 @@ class Client:
         await self.writer.drain()
 
     async def recv(self):
-        # if not self.is_disconnected():
-        #     self.log.debug(f"Client with {self.nick}({self.cid}) disconnected")
-        #     return b""
-
+        if not self.is_disconnected():
+            self.log.debug(f"Client with {self.nick}({self.cid}) disconnected")
+            return b""
         header = await self.reader.read(4)  # header: 4 bytes
 
         int_header = 0
@@ -92,13 +91,13 @@ class Client:
         if len(data) != int_header:
             self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
 
+        self.log.debug(f"header: `{header}`; int_header: `{int_header}`; data: `{data}`;")
         # TODO: ABG: DeComp(Data)
         abg = b"ABG:"
         if len(data) > len(abg) and data.startswith(abg):
             data = data[len(abg):]
             return b""
             # return DeComp(Data);
-        self.log.debug(f"header: `{header}`; int_header: `{int_header}`; data: `{data}`;")
         return data
 
     async def sync_resources(self):
