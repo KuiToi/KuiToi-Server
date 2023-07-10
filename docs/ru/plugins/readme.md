@@ -5,9 +5,9 @@
 ###### (Библиотека ещё в разработке)
 
 * Используя pip:\
-    `$ pip install ...`
+    `$ pip install KuiToi`
 * Из исходников:\
-    `git clone https://github.com/kuitoi/...`
+    `git clone https://github.com/KuiToi/KuiToi-PyLib`
 
 ## Пример
 

@@ -4,16 +4,16 @@
 ###### (Lib can't ready to use)
 
 * From pip:\
-    `$ pip install ...`
+    `$ pip install KuiToi`
 * From source:\
-    `git clone https://github.com/kuitoi/...`
+    `git clone https://github.com/KuiToi/KuiToi-PyLib`
 
 ## Example
 
 ```python
-import BEAMP
+import KuiToi
 
-beam = BEAMP("TestPlugin")
+beam = KuiToi("TestPlugin")
 logger = beam.log
 
 def load():  # Plugins load from here
