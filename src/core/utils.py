@@ -1,7 +1,7 @@
 # Developed by KuiToi Dev
 # File core.utils.py
 # Written by: SantaSpeen
-# Version 0.1.0
+# Version 0.1.6
 # Licence: FPA
 # (c) kuitoi.su 2023
 
