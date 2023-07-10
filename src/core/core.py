@@ -14,12 +14,13 @@ from .udp_server import UDPServer
 
 class Client:
 
-    def __init__(self, reader, writer):
+    def __init__(self, reader, writer, core):
         self.reader = reader
         self.writer = writer
         self.log = utils.get_logger("client(None:0)")
         self.addr = writer.get_extra_info("sockname")
         self.loop = asyncio.get_event_loop()
+        self.Core = core
         self.cid = 0
         self.key = None
         self.nick = None
@@ -137,11 +138,11 @@ class Core:
 
     def __init__(self):
         self.log = utils.get_logger("core")
+        self.loop = asyncio.get_event_loop()
         self.clients = {}
         self.clients_counter = 0
         self.server_ip = config.Server["server_ip"]
         self.server_port = config.Server["server_port"]
-        self.loop = asyncio.get_event_loop()
         self.tcp = TCPServer
         self.udp = UDPServer
 
@@ -152,14 +153,16 @@ class Core:
             return self.clients.get(sock.getsockname())
 
     def insert_client(self, client):
+        self.log.debug(f"Inserting client: {client.cid}")
         self.clients.update({client.cid: client, client.nick: client})
 
     def create_client(self, *args, **kwargs):
-        cl = Client(*args, **kwargs)
-        self.clients_counter = self.clients_counter + 1
-        cl.id = self.clients_counter
-        cl._update_logger()
-        return cl
+        client = Client(*args, **kwargs)
+        self.clients_counter += 1
+        client.id = self.clients_counter
+        client._update_logger()
+        self.log.debug(f"Create client: {client.cid}; clients_counter: {self.clients_counter}")
+        return client
 
     async def check_alive(self):
         await asyncio.sleep(5)
@@ -174,7 +177,8 @@ class Core:
         self.udp = self.udp(self, self.server_ip, self.server_port)
         tasks = [self.tcp.start(), self.udp.start(), console.start()]  # self.check_alive()
         t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
-        self.log.info(i18n.ready)
+        self.log.info(i18n.start)
+        # TODO: Server auth
         ev.call_event("on_started")
         await t
         # while True:
@@ -193,5 +197,5 @@ class Core:
         asyncio.run(self.main())
 
     def stop(self):
-        self.log.info("Goodbye!")
+        self.log.info(i18n.stop)
         exit(0)

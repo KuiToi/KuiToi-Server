@@ -6,7 +6,6 @@
 # Version 1.1
 # Licence: FPA
 # (c) kuitoi.su 2023
-import asyncio
 import builtins
 import logging
 from typing import AnyStr
@@ -37,14 +36,9 @@ class Console:
         self.__man = dict()
         self.__desc = dict()
         self.__print_logger = get_logger("print")
-        self.add_command("man", self.__create_man_message, "man - display the manual page.\n"
-                                                           "Usage: man COMMAND", "Display the manual page",
+        self.add_command("man", self.__create_man_message, i18n.man_message_man, i18n.help_message_man,
                          custom_completer={"man": {}})
-        self.add_command("help", self.__create_help_message,
-                         "help - display names and brief descriptions of available commands.\n"
-                         "Usage: help [--raw]\n"
-                         "The `help` command displays a list of all available commands along with a brief description "
-                         "of each command.", "Display names and brief descriptions of available commands.",
+        self.add_command("help", self.__create_help_message, i18n.man_message_help, i18n.help_message_help,
                          custom_completer={"help": {"--raw": None}})
         self.completer = NestedCompleter.from_nested_dict(self.__alias)
 
@@ -68,16 +62,19 @@ class Console:
         return i
 
     def __create_man_message(self, argv: list) -> AnyStr:
+        if len(argv) == 0:
+            return self.__man.get("man")
         x = argv[0]
-        if x in ['']:
-            return "man COMMAND"
+        if self.__alias.get(x) is None:
+            return i18n.man_command_not_found.format(x)
+
         man_message = self.__man.get(x)
-        if man_message is None:
-            return "man: Manual message not found."
         if man_message:
             return man_message
-        return f'man: command "{x}" not found'
+        else:
+            return i18n.man_message_not_found
 
+    # noinspection PyStringFormat
     def __create_help_message(self, argv: list) -> AnyStr:
         self.__debug("creating help message")
         raw = False
@@ -95,7 +92,7 @@ class Console:
         if raw:
             message += f"%-{max_len}s; %-{max_len_v}s; %s\n" % ("Key", "Function", "Description")
         else:
-            message += f"   %-{max_len}s : %s\n" % ("Command", "Help message")
+            message += f"   %-{max_len}s : %s\n" % (i18n.help_command, i18n.help_message)
 
         for k, v in self.__func.items():
             doc = self.__desc.get(k)
@@ -105,7 +102,7 @@ class Console:
 
             else:
                 if doc is None:
-                    doc = "No help message found"
+                    doc = i18n.help_message_not_found
                 message += f"   %-{max_len}s : %s\n" % (k, doc)
 
         return message
@@ -122,7 +119,7 @@ class Console:
         self.__alias.update(custom_completer or {key: None})
         self.__alias["man"].update({key: None})
         self.__func.update({key: {"f": func}})
-        self.__man.update({key: f'html<seagreen>Manual for command <b>{key}</b>\n{man}</seagreen>' if man else None})
+        self.__man.update({key: f'html<seagreen>{i18n.man_for} <b>{key}</b>\n{man}</seagreen>' if man else None})
         self.__desc.update({key: desc})
         self.__update_completer()
         return self.__alias.copy()

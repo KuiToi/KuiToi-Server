@@ -5,21 +5,22 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
-import socket
-from asyncio import StreamWriter, AbstractEventLoop, StreamReader
-from asyncio.trsock import TransportSocket
+from asyncio import StreamWriter, StreamReader
 
 from core import utils
 from .tcp_server import TCPServer
 from .udp_server import UDPServer
+
+
 class Client:
 
-    def __init__(self, reader: StreamReader, writer: StreamWriter):
+    def __init__(self, reader: StreamReader, writer: StreamWriter, core: Core) -> "Client":
         self.reader = reader
         self.writer = writer
         self.log = utils.get_logger("client(id: )")
         self.addr = writer.get_extra_info("sockname")
         self.loop = asyncio.get_event_loop()
+        self.Core = core
         self.cid = 0
         self.key: str = None
         self.nick: str = None
@@ -32,6 +33,7 @@ class Client:
     async def sync_resources(self) -> None: ...
     async def recv(self) -> bytes: ...
     async def last_handle(self) -> bytes: ...
+    def _update_logger(self) -> None: ...
 
 
 class Core:

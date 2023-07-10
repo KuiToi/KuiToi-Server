@@ -25,16 +25,16 @@ class Config:
 
 class ConfigProvider:
 
-    def __init__(self, config_patch):
-        self.config_patch = config_patch
+    def __init__(self, config_path):
+        self.config_path = config_path
         self.config = Config()
 
     def open_config(self):
-        if not os.path.exists(self.config_patch):
-            with open(self.config_patch, "w", encoding="utf-8") as f:
+        if not os.path.exists(self.config_path):
+            with open(self.config_path, "w", encoding="utf-8") as f:
                 yaml.dump(self.config, f)
         try:
-            with open(self.config_patch, "r", encoding="utf-8") as f:
+            with open(self.config_path, "r", encoding="utf-8") as f:
                 self.config = yaml.load(f.read(), yaml.Loader)
         except yaml.YAMLError:
             print("You have errors in the YAML syntax.")
@@ -44,5 +44,5 @@ class ConfigProvider:
         return self.config
 
     def save_config(self):
-        with open(self.config_patch, "w", encoding="utf-8") as f:
+        with open(self.config_path, "w", encoding="utf-8") as f:
             yaml.dump(self.config, f)

@@ -1,7 +1,7 @@
 # Developed by KuiToi Dev
 # File core.__init__.py
 # Written by: SantaSpeen
-# Version 1.1
+# Version 1.2
 # Licence: FPA
 # (c) kuitoi.su 2023
 # Special thanks to: AI Sage(https://poe.com/Sage), AI falcon-40b-v7(https://OpenBuddy.ai)
@@ -28,7 +28,7 @@ import builtins
 import os
 import webbrowser
 
-from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog
+import prompt_toolkit.shortcuts as shortcuts
 
 from .utils import get_logger
 from modules import ConfigProvider, EventsSystem, PluginsLoader
@@ -46,13 +46,12 @@ if args.config:
     config_path = args.config
 config_provider = ConfigProvider(config_path)
 config = config_provider.open_config()
-log.info("Use %s for config." % config_path)
 if config.Server['debug'] is True:
     utils.set_debug_status()
-    log.info("Getting new logging with DEBUG level!")
+    log.info("Debug enabled!")
     log = get_logger("init")
     log.debug("Debug mode enabled!")
-    log.debug("Use %s for config." % config)
+    log.debug(f"Server config: {config}")
 
 # i18n init
 log.debug("Initializing i18n...")
@@ -60,28 +59,44 @@ ml = MultiLanguage()
 ml.set_language(args.language)
 ml.builtins_hook()
 
-log.info(i18n.hello)
-
+log.debug("Initializing EventsSystem...")
 ev = EventsSystem()
 ev.builtins_hook()
 
-# Key handler..
-if not config.Auth['key']:
-    log.warn("Key needed for starting the server!")
-    url = "https://beammp.com/k/keys"
-    if yes_no_dialog(
-            title='BEAMP Server Key',
-            text='Key needed for starting the server!\n'
-                 'Do you need to open the web link to obtain the key?').run():
-        webbrowser.open(url, new=2)
+log.info(i18n.hello)
+log.info(i18n.config_path.format(config_path))
 
-    config.Auth['key'] = input_dialog(
+log.debug("Initializing BEAMP Server system...")
+# Key handler..
+private = ((config.Auth['key'] is None or config.Auth['key'] == "") and config.Auth['private'])
+if not private:
+    log.warn(i18n.auth_need_key)
+    url = "https://beammp.com/k/keys"
+    if shortcuts.yes_no_dialog(
+            title='BEAMP Server Key',
+            text=i18n.GUI_need_key_message,
+            yes_text=i18n.GUI_yes,
+            no_text=i18n.GUI_no).run():
+        try:
+            log.debug("Opening browser...")
+            webbrowser.open(url, new=2)
+        except Exception as e:
+            log.error(i18n.auth_cannot_open_browser.format(e))
+            log.info(i18n.auth_use_link.format(url))
+            shortcuts.message_dialog(
+                title='BEAMP Server Key',
+                text=i18n.GUI_cannot_open_browser.format(url),
+                ok_text=i18n.GUI_ok).run()
+
+    config.Auth['key'] = shortcuts.input_dialog(
         title='BEAMP Server Key',
-        text='Please type your key:').run()
+        text=i18n.GUI_enter_key_message,
+        ok_text=i18n.GUI_ok,
+        cancel_text=i18n.GUI_cancel).run()
     config_provider.save_config()
-if not config.Auth['key']:
-    log.error("Key is empty!")
-    log.error("Server stopped!")
+if not private:
+    log.error(i18n.auth_empty_key)
+    log.info(i18n.stop)
     exit(1)
 builtins.config = config
 
@@ -90,14 +105,16 @@ log.debug("Initializing console...")
 console = Console()
 console.builtins_hook()
 # console.logger_hook()
-console.add_command("stop", console.stop, "stop - Just shutting down the server.\nUsage: stop", "Server shutdown.")
-console.add_command("exit", console.stop, "stop - Just shutting down the server.\nUsage: stop", "Server shutdown.")
+console.add_command("stop", console.stop, i18n.man_message_stop, i18n.help_message_stop)
+console.add_command("exit", console.stop, i18n.man_message_exit, i18n.help_message_exit)
 
 if not os.path.exists("mods"):
     os.mkdir("mods")
+
+
+log.debug("Initializing PluginsLoader...")
 if not os.path.exists("plugins"):
     os.mkdir("plugins")
-
 pl = PluginsLoader("plugins")
 pl.load_plugins()
 
@@ -107,4 +124,4 @@ builtins.MB = KB * 1024
 builtins.GB = MB * 1024
 builtins.TB = GB * 1024
 
-log.info(i18n.init)
+log.info(i18n.init_ok)
