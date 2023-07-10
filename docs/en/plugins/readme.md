@@ -1,9 +1,8 @@
 # Plugins System
 
 ## Install
+###### (Lib can't ready to use)
 
-[//]: # (TODO: BEAM LIB)
-Lib can't ready to use
 * From pip:\
     `$ pip install ...`
 * From source:\

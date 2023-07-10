@@ -1,5 +1,4 @@
-# Documentation for KuiToi Server
+# Choose your language
 
-1. Setup and Start server - [here](./setup)
-2. Plugins and Events system - [here](./plugins)
-3. Something new
+### [English](./en)
+### [Русский](./ru)
