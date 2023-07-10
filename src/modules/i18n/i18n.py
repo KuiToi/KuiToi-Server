@@ -78,7 +78,7 @@ class MultiLanguage:
 
     def set_language(self, language):
         if language is None:
-            return
+            language = "en"
         self.log.debug(f"set_language({language})")
         self.language = language
         if language != "en":

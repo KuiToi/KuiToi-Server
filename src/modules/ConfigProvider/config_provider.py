@@ -7,17 +7,19 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import os
+import secrets
 
 import yaml
 
 
 class Config:
-    def __init__(self, auth=None, game=None, server=None):
+    def __init__(self, auth=None, game=None, server=None, web=None):
         self.Auth = auth or {"key": None, "private": True}
         self.Game = game or {"map": "gridmap_v2", "players": 8, "max_cars": 1}
-        self.Server = server or {"name": "KuiToi-Server",
-                                 "description": "This server uses KuiToi!",
-                                 "server_port": 30814, "server_ip": "0.0.0.0", "debug": False}
+        self.Server = server or {"name": "KuiToi-Server", "description": "Welcome to KuiToi Server!", "language": "en",
+                                 "server_ip": "0.0.0.0", "server_port": 30814, "debug": False}
+        # self.WebAPI = web or {"enabled": False, "server_ip": "127.0.0.1", "server_port": 8433,
+        #                       "secret_key": secrets.token_hex(16)}
 
     def __repr__(self):
         return "%s(Auth=%r, Game=%r, Server=%r)" % (self.__class__.__name__, self.Auth, self.Game, self.Server)

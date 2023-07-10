@@ -56,7 +56,7 @@ if config.Server['debug'] is True:
 # i18n init
 log.debug("Initializing i18n...")
 ml = MultiLanguage()
-ml.set_language(args.language)
+ml.set_language(args.language or config.Server['language'])
 ml.builtins_hook()
 
 log.debug("Initializing EventsSystem...")
