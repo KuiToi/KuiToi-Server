@@ -7,16 +7,17 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 ## TODOs
 
 - [ ] Server core
+  - [ ] BEAMP System
+    - [x] Private access without key
+    - [ ] Server authentication (For public access)
+    - [X] Player authentication
   - [ ] TCP Server part:
     - [x] Handle code
     - [x] Understanding beamp header
-    - [X] Authorization
     - [ ] Upload mods
-    - [ ] Private server
-    - [ ] Server authentication in BEAMP System
     - [x] Connecting to the world
     - [x] Chat
-    - [ ] ABG: (compressed data)
+    - [ ] "ABG:" (compressed data)
       - [x] Decompress data
       - [ ] Vehicle data
     - [ ] Players synchronizations
@@ -28,10 +29,12 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Events System
     - [x] Plugins support
     - [x] MultiLanguage (i18n support)
+    - [ ] HTTP REST API Server
 - [ ] Console:
   - [x] Tabulation
   - [ ] _(Deferred)_ Normal text scroll
-- [x] [Documentation](docs/readme.md)
+  - [x] MultiLanguage (i18n support)
+- [ ] [Documentation](docs/readme.md)
 
 ## Installation
 
