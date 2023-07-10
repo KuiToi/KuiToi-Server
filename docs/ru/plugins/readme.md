@@ -12,9 +12,9 @@
 ## Пример
 
 ```python
-import BEAMP
+import KuiToi
 
-beam = BEAMP("TestPlugin")
+beam = KuiToi("TestPlugin")
 logger = beam.log
 
 def load():  # Plugins load from here

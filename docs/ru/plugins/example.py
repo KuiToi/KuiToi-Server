@@ -1,6 +1,6 @@
-import BEAMP  # Import server object
+import KuiToi  # Import server object
 
-beam = BEAMP("TestPlugin")  # Init plugin with name "TestPlugin"
+beam = KuiToi("TestPlugin")  # Init plugin with name "TestPlugin"
 log = beam.log  # Use logger from server
 
 

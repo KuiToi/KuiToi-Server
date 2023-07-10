@@ -4,7 +4,7 @@ import types
 from core import get_logger
 
 
-class BEAMP:
+class KuiToi:
 
     def __init__(self, name=None):
         if name is None:
@@ -24,7 +24,6 @@ class BEAMP:
         ev.call_event(event_name, *data)
 
 
-
 class PluginsLoader:
 
     def __init__(self, plugins_dir):
@@ -40,7 +39,7 @@ class PluginsLoader:
                 try:
                     self.log.debug(f"Loading plugin: {file}")
                     plugin = types.ModuleType('plugin')
-                    plugin.BEAMP = BEAMP
+                    plugin.KuiToi = KuiToi
                     plugin.print = print
                     file = os.path.join(self.__plugins_dir, file)
                     with open(f'{file}', 'r') as f:
