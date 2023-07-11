@@ -25,15 +25,23 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [ ] Players synchronizations
     - [ ] Ping
     - [ ] Player counter
-  - [x] Additional:
-    - [x] Events System
-    - [x] Plugins support
-    - [x] MultiLanguage (i18n support)
-    - [ ] HTTP REST API Server
-- [ ] Console:
-  - [x] Tabulation
-  - [ ] _(Deferred)_ Normal text scroll
+- [x] Additional:
+  - [x] Console:
+    - [x] Tabulation
+    - [ ] _(Deferred)_ Static text
+  - [x] Events System
+    - [x] Call events
+    - [x] Create custom events
+    - [ ] Return from events
+  - [x] Plugins support
   - [x] MultiLanguage (i18n support)
+    - [x] Core
+    - [x] Console
+    - [x] WebAPI
+  - [x] HTTP API Server (fastapi)
+    - [x] Stop and Start with core
+    - [x] Custom logger
+    - [ ] Sync with event system
 - [ ] [Documentation](docs/en/readme.md)
 
 ## Installation
