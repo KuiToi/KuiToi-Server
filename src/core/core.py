@@ -209,12 +209,9 @@ class Core:
             self.web_thread = web_thread
             self.web_stop = webapp._stop
         self.log.info(i18n.start)
-        # watch = Thread(target=self.stop_me)
-        # watch.start()
         # TODO: Server auth
         ev.call_event("on_started")
         await t
-        # watch.join()
         # while True:
         #     try:
         #         tasks = [console.start(), self.tcp.start(), self.udp.start()] # self.check_alive()
