@@ -8,15 +8,16 @@
 import logging
 import os
 
-log_format = "[%(asctime)s | %(name)s | %(levelname)-5s] %(message)s"
+log_format = "[%(asctime)s | %(name)-14s | %(levelname)-5s] %(message)s"
+log_format_access = '[%(asctime)s | %(name)-14s | %(levelname)-5s] %(client_addr)s - "%(request_line)s" %(status_code)s'
 log_file = "server.log"
 log_level = logging.INFO
 # Инициализируем логирование
 logging.basicConfig(level=log_level, format=log_format)
 # Настройка логирование в файл.
-if os.path.exists(log_file):
-    os.remove(log_file)
-fh = logging.FileHandler(log_file)
+# if os.path.exists(log_file):
+#     os.remove(log_file)
+fh = logging.FileHandler(log_file, encoding='utf-8')
 fh.setFormatter(logging.Formatter(log_format))
 
 

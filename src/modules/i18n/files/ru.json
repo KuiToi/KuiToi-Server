@@ -21,6 +21,9 @@
   "GUI_enter_key_message": "Пожалуйста введите ключ:",
   "GUI_cannot_open_browser": "Не получилось открыть браузер.\nИспользуй эту ссылку: {}",
 
+  "": "Web phases",
+  "web_start": "WebAPI запустился на {} (CTRL+C для выключения)",
+
   "": "Command: man",
   "man_message_man": "man - Показывает страничку помощи для COMMAND.\nИспользование: man COMMAND",
   "help_message_man": "Показывает страничку помощи для COMMAND.",

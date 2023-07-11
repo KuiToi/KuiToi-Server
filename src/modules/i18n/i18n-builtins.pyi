@@ -21,6 +21,9 @@ class i18n:
     GUI_enter_key_message: str = data["GUI_enter_key_message"]
     GUI_cannot_open_browser: str = data["GUI_cannot_open_browser"]
 
+    # Web phases
+    web_start: str = data["web_start"]
+
     # Command: man
     man_message_man: str = data["man_message_man"]
     help_message_man: str = data["help_message_man"]

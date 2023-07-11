@@ -38,6 +38,9 @@ class i18n:
         self.GUI_enter_key_message: str = data["GUI_enter_key_message"]
         self.GUI_cannot_open_browser: str = data["GUI_cannot_open_browser"]
 
+        # Web phases
+        self.web_start: str = data["web_start"]
+
         # Command: man
         self.man_message_man: str = data["man_message_man"]
         self.help_message_man: str = data["help_message_man"]
@@ -107,6 +110,9 @@ class MultiLanguage:
                 "GUI_need_key_message": "BEAM key needed for starting the server!\nDo you need to open the web link to obtain the key?",
                 "GUI_enter_key_message": "Please type your key:",
                 "GUI_cannot_open_browser": "Cannot open browser.\nUse this link: {}",
+
+                "": "Web phases",
+                "web_start": "WebAPI running on {} (Press CTRL+C to quit)",
 
                 "": "Command: man",
                 "man_message_man": "man - display the manual page for COMMAND.\nUsage: man COMMAND",

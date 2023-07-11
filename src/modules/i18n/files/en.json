@@ -21,6 +21,9 @@
   "GUI_enter_key_message": "Please type your key:",
   "GUI_cannot_open_browser": "Cannot open browser.\nUse this link: {}",
 
+  "": "Web phases",
+  "web_start": "WebAPI running on {} (Press CTRL+C to quit)",
+
   "": "Command: man",
   "man_message_man": "man - display the manual page for COMMAND.\nUsage: man COMMAND",
   "help_message_man": "Display the manual page for COMMAND.",

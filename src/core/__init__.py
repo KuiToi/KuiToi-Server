@@ -16,13 +16,6 @@ __author_email__ = 'admin@kuitoi.su'
 __license__ = "FPA"
 __copyright__ = 'Copyright 2023 © SantaSpeen (Maxim Khomutov)'
 
-from main import parser
-
-args = parser.parse_args()
-if args.version:
-    print(f"{__title__}:\n\tVersion: {__version__}\n\tBuild: {__build__}")
-    exit(0)
-
 import asyncio
 import builtins
 import os
@@ -31,14 +24,20 @@ import webbrowser
 import prompt_toolkit.shortcuts as shortcuts
 
 from .utils import get_logger
+from core.core import Core
+from main import parser
 from modules import ConfigProvider, EventsSystem, PluginsLoader
 from modules import Console
 from modules import MultiLanguage
-from core.core import Core
+
+args = parser.parse_args()
+if args.version:
+    print(f"{__title__}:\n\tVersion: {__version__}\n\tBuild: {__build__}")
+    exit(0)
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
-log = get_logger("init")
+log = get_logger("core.init")
 
 # Config file init
 config_path = "kuitoi.yml"
@@ -49,7 +48,7 @@ config = config_provider.open_config()
 if config.Server['debug'] is True:
     utils.set_debug_status()
     log.info("Debug enabled!")
-    log = get_logger("init")
+    log = get_logger("core.init")
     log.debug("Debug mode enabled!")
     log.debug(f"Server config: {config}")
 
@@ -110,7 +109,6 @@ console.add_command("exit", console.stop, i18n.man_message_exit, i18n.help_messa
 
 if not os.path.exists("mods"):
     os.mkdir("mods")
-
 
 log.debug("Initializing PluginsLoader...")
 if not os.path.exists("plugins"):

@@ -5,11 +5,16 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import time
 import zlib
+from threading import Thread
+
+import uvicorn
 
 from core import utils
-from .tcp_server import TCPServer
-from .udp_server import UDPServer
+from modules.WebAPISystem import app as webapp
+from core.tcp_server import TCPServer
+from core.udp_server import UDPServer
 
 
 class Client:
@@ -145,6 +150,9 @@ class Core:
         self.server_port = config.Server["server_port"]
         self.tcp = TCPServer
         self.udp = UDPServer
+        self.web_thread = None
+        self.web_pool = webapp.data_pool
+        self.web_stop = None
 
     def get_client(self, sock=None, cid=None):
         if cid:
@@ -172,15 +180,41 @@ class Core:
             if d:
                 self.log.debug(f"Client ID: {cl.id} died...")
 
+    @staticmethod
+    def start_web():
+        global uvserver
+        uvconfig = uvicorn.Config("modules.WebAPISystem.app:web_app",
+                                  host=config.WebAPI["server_ip"],
+                                  port=config.WebAPI["server_port"],
+                                  loop="asyncio")
+        uvserver = uvicorn.Server(uvconfig)
+        webapp.uvserver = uvserver
+        uvserver.run()
+
+    @staticmethod
+    async def stop_me():
+        while webapp.data_run[0]:
+            await asyncio.sleep(1)
+        raise KeyboardInterrupt
+
     async def main(self):
         self.tcp = self.tcp(self, self.server_ip, self.server_port)
         self.udp = self.udp(self, self.server_ip, self.server_port)
-        tasks = [self.tcp.start(), self.udp.start(), console.start()]  # self.check_alive()
+        tasks = [self.tcp.start(), self.udp.start(), console.start(), self.stop_me()]  # self.check_alive()
         t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+        if config.WebAPI["enabled"]:
+            self.log.debug("Initializing WebAPI...")
+            web_thread = Thread(target=self.start_web)
+            web_thread.start()
+            self.web_thread = web_thread
+            self.web_stop = webapp._stop
         self.log.info(i18n.start)
+        # watch = Thread(target=self.stop_me)
+        # watch.start()
         # TODO: Server auth
         ev.call_event("on_started")
         await t
+        # watch.join()
         # while True:
         #     try:
         #         tasks = [console.start(), self.tcp.start(), self.udp.start()] # self.check_alive()
@@ -198,4 +232,5 @@ class Core:
 
     def stop(self):
         self.log.info(i18n.stop)
+        asyncio.run(self.web_stop())
         exit(0)
