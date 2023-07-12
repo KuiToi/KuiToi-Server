@@ -28,8 +28,11 @@ if os.path.exists(log_file):
             break
         index += 1
     with tarfile.open(gz_path % index, "w:gz") as tar:
-        tar.add(log_file, os.path.basename(log_file))
-    os.remove(log_file)
+        logs_files = [log_file, "./logs/web.log", "./logs/web_access.log"]
+        for file in logs_files:
+            if os.path.exists(file):
+                tar.add(file, os.path.basename(file))
+                os.remove(file)
 fh = logging.FileHandler(log_file, encoding='utf-8')
 fh.setFormatter(logging.Formatter(log_format))
 

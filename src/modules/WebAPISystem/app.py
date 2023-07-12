@@ -7,7 +7,6 @@ from fastapi.exceptions import RequestValidationError
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse
-from uvicorn.config import LOGGING_CONFIG
 
 import core.utils
 from . import utils
@@ -20,30 +19,6 @@ log = core.utils.get_logger("web")
 uvserver = None
 data_pool = []
 data_run = [True]
-
-LOGGING_CONFIG["formatters"]["default"]['fmt'] = core.utils.log_format
-LOGGING_CONFIG["formatters"]["access"]["fmt"] = core.utils.log_format_access
-LOGGING_CONFIG["formatters"].update({
-    "file_default": {
-        "fmt": core.utils.log_format
-    },
-    "file_access": {
-        "fmt": core.utils.log_format_access
-    }
-})
-LOGGING_CONFIG["handlers"]["default"]['stream'] = "ext://sys.stdout"
-LOGGING_CONFIG["handlers"].update({
-    "file_default": {
-        "class": "logging.handlers.RotatingFileHandler",
-        "filename": "webserver.log"
-    },
-    "file_access": {
-        "class": "logging.handlers.RotatingFileHandler",
-        "filename": "webserver.log"
-    }
-})
-LOGGING_CONFIG["loggers"]["uvicorn"]["handlers"].append("file_default")
-LOGGING_CONFIG["loggers"]["uvicorn.access"]["handlers"].append("file_access")
 
 
 def response(data=None, code=status.HTTP_200_OK, error_code=0, error_message=None):

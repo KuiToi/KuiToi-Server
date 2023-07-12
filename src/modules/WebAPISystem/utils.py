@@ -2,9 +2,16 @@ import asyncio
 import sys
 
 import click
-from uvicorn.server import Server, logger
+import uvicorn.server as uvs
+from uvicorn.config import LOGGING_CONFIG
 
 from uvicorn.lifespan import on
+
+import core.utils
+
+# logger = core.utils.get_logger("uvicorn")
+# uvs.logger = logger
+logger = uvs.logger
 
 
 def ev_log_started_message(self, listeners) -> None:
@@ -42,7 +49,7 @@ async def ev_shutdown(self, sockets=None) -> None:
     try:
         await asyncio.wait_for(self._wait_tasks_to_complete(), timeout=self.config.timeout_graceful_shutdown)
     except asyncio.TimeoutError:
-        logger.error("Cancel %s running task(s), timeout graceful shutdown exceeded",len(self.server_state.tasks))
+        logger.error("Cancel %s running task(s), timeout graceful shutdown exceeded", len(self.server_state.tasks))
         for t in self.server_state.tasks:
             if sys.version_info < (3, 9):
                 t.cancel()
@@ -81,7 +88,34 @@ async def on_shutdown(self) -> None:
 
 
 def hack_fastapi():
-    Server.shutdown = ev_shutdown
-    Server._log_started_message = ev_log_started_message
+    uvs.Server.shutdown = ev_shutdown
+    uvs.Server._log_started_message = ev_log_started_message
     on.LifespanOn.startup = on_startup
     on.LifespanOn.shutdown = on_shutdown
+
+    LOGGING_CONFIG["formatters"]["default"]['fmt'] = core.utils.log_format
+    LOGGING_CONFIG["formatters"]["access"]["fmt"] = core.utils.log_format_access
+    LOGGING_CONFIG["formatters"].update({
+        "file_default": {
+            "fmt": core.utils.log_format
+        },
+        "file_access": {
+            "fmt": core.utils.log_format_access
+        }
+    })
+    LOGGING_CONFIG["handlers"]["default"]['stream'] = "ext://sys.stdout"
+    LOGGING_CONFIG["handlers"].update({
+        "file_default": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "./logs/web.log",
+            "encoding": "utf-8",
+        },
+        "file_access": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "./logs/web_access.log",
+        }
+    })
+    LOGGING_CONFIG["loggers"]["uvicorn"]["handlers"].append("file_default")
+    LOGGING_CONFIG["loggers"]["uvicorn.access"]["handlers"].append("file_access")
+
+
