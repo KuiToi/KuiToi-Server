@@ -29,7 +29,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
   - [x] Logger
     - [x] Just logging
     - [x] Log in file
-    - [ ] Lig history (.1.log, .2.log, ...)
+    - [x] Log history (.1.log, .2.log, ...)
   - [x] Console:
     - [x] Tabulation
     - [ ] _(Deferred)_ Static text (bug)
