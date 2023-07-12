@@ -25,10 +25,7 @@ class TCPServer:
         self.log.info(f"Identifying new ClientConnection...")
         data = await client.recv()
         self.log.debug(f"recv1 data: {data}")
-        if len(data) > 50:
-            await client.kick("Too long data")
-            return False, None
-        if "VC2.0" not in data.decode("utf-8"):
+        if data.decode("utf-8") != f"VC{self.Core.client_major_version}":
             await client.kick("Outdated Version.")
             return False, None
         else:
