@@ -13,7 +13,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [X] Player authentication
   - [ ] TCP Server part:
     - [x] Handle code
-    - [x] Understanding beamp header
+    - [x] Understanding BeamMP header
     - [ ] Upload mods
     - [x] Connecting to the world
     - [x] Chat
@@ -26,6 +26,10 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [ ] Players synchronizations _(Code: Zp)_
     - [ ] Ping _(Code: p)_
 - [x] Additional:
+  - [x] Logger
+    - [x] Just logging
+    - [x] Log in file
+    - [ ] Lig history (.1.log, .2.log, ...)
   - [x] Console:
     - [x] Tabulation
     - [ ] _(Deferred)_ Static text (bug)
@@ -35,7 +39,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [ ] Return from events
   - [x] Plugins support
     - [x] Load Python plugins
-    - [ ] Load Lua plugins (Original BEAMP compatibility)
+    - [ ] Load Lua plugins (Original BeamMP compatibility)
   - [x] MultiLanguage (i18n support)
     - [x] Core
     - [x] Console
