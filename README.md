@@ -1,7 +1,7 @@
 # KuiToi-Server
 
 ## About
-**_[In deep developing...]_** \
+**_[Status: Alpha]_** \
 BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 
 ## TODOs
