@@ -137,3 +137,4 @@ dmypy.json
 /src/plugins
 /test/
 *test.py
+logs/
