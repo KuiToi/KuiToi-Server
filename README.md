@@ -7,9 +7,9 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 ## TODOs
 
 - [ ] Server core
-  - [ ] BEAMP System
-    - [x] Private access without key
-    - [ ] Server authentication (For public access)
+  - [x] BEAMP System
+    - [x] Private access without key (Direct connect)
+    - [x] Server authentication (For public access)
     - [X] Player authentication
   - [ ] TCP Server part:
     - [x] Handle code
