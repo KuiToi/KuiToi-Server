@@ -7,9 +7,9 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 ## TODOs
 
 - [ ] Server core
-  - [x] BEAMP System
-    - [x] Private access without key (Direct connect)
-    - [x] Server authentication (For public access)
+  - [x] BeamMP System
+    - [x] Private access (Without key, Direct connect)
+    - [x] Public access  (With key, listing in Launcher)
     - [X] Player authentication
   - [ ] TCP Server part:
     - [x] Handle code
@@ -17,18 +17,18 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [ ] Upload mods
     - [x] Connecting to the world
     - [x] Chat
+    - [ ] Player counter _(Code: Ss)_
+    - [ ] Car state synchronizations _(Codes: We, Vi)_
     - [ ] "ABG:" (compressed data)
       - [x] Decompress data
       - [ ] Vehicle data
-    - [ ] Players synchronizations
   - [ ] UDP Server part:
-    - [ ] Players synchronizations
-    - [ ] Ping
-    - [ ] Player counter
+    - [ ] Players synchronizations _(Code: Zp)_
+    - [ ] Ping _(Code: p)_
 - [x] Additional:
   - [x] Console:
     - [x] Tabulation
-    - [ ] _(Deferred)_ Static text
+    - [ ] _(Deferred)_ Static text (bug)
   - [x] Events System
     - [x] Call events
     - [x] Create custom events
