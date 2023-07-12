@@ -54,8 +54,9 @@ class TCPServer:
             self.log.error(f"Auth error: {e}")
             await client.kick('Invalid authentication data! Try to connect in 5 minutes.')
 
-        # TODO: Password party
-        # await client.tcp_send(b"S")  # Ask client key (How?)
+        for _client in self.Core.clients:
+            if _client.nick == client.nick and _client.guest == client.guest:
+                await client.kick('Stale Client (replaced by new client)')
 
         ev.call_event("on_auth", client)
 
@@ -112,7 +113,7 @@ class TCPServer:
         self.log.debug("Starting TCP server.")
         try:
             server = await asyncio.start_server(self.handle_client, self.host, self.port,
-                                                backlog=config.Game["players"] + 1)
+                                                backlog=int(config.Game["players"] * 1.3))
         except OSError as e:
             self.log.error(f"Error: {e}")
             self.Core.run = False
