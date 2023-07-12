@@ -18,14 +18,12 @@ run = True
 
 
 def main():
-    global run
     from core import Core
     core = Core()
-    while run:
-        try:
-            core.start()
-        except KeyboardInterrupt:
-            run = False
+    try:
+        core.start()
+    except KeyboardInterrupt:
+        core.run = False
     core.stop()
 
 
