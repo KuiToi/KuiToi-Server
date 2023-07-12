@@ -94,13 +94,15 @@ def hack_fastapi():
     on.LifespanOn.shutdown = on_shutdown
 
     LOGGING_CONFIG["formatters"]["default"]['fmt'] = core.utils.log_format
-    LOGGING_CONFIG["formatters"]["access"]["fmt"] = core.utils.log_format_access
+    LOGGING_CONFIG["formatters"]["access"]["fmt"] = core.utils.log_format
     LOGGING_CONFIG["formatters"].update({
         "file_default": {
+            "()": "logging.Formatter",
             "fmt": core.utils.log_format
         },
         "file_access": {
-            "fmt": core.utils.log_format_access
+            "()": "logging.Formatter",
+            "fmt": core.utils.log_format
         }
     })
     LOGGING_CONFIG["handlers"]["default"]['stream'] = "ext://sys.stdout"
@@ -109,13 +111,17 @@ def hack_fastapi():
             "class": "logging.handlers.RotatingFileHandler",
             "filename": "./logs/web.log",
             "encoding": "utf-8",
+            "formatter": "file_default"
         },
         "file_access": {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": "./logs/web_access.log",
+            "encoding": "utf-8",
+            "formatter": "file_access"
         }
     })
     LOGGING_CONFIG["loggers"]["uvicorn"]["handlers"].append("file_default")
     LOGGING_CONFIG["loggers"]["uvicorn.access"]["handlers"].append("file_access")
+    print(LOGGING_CONFIG)
 
 

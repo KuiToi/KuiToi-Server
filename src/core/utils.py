@@ -10,7 +10,6 @@ import os
 import tarfile
 
 log_format = "[%(asctime)s | %(name)-14s | %(levelname)-5s] %(message)s"
-log_format_access = '[%(asctime)s | %(name)-14s | %(levelname)-5s] %(client_addr)s - "%(request_line)s" %(status_code)s'
 log_dir = "./logs/"
 log_file = log_dir + "server.log"
 log_level = logging.INFO
