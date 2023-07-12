@@ -68,22 +68,29 @@ class TCPServer:
 
         return True, client
 
-    async def handle_download(self, writer):
-        # TODO: HandleDownload
-        self.log.debug(f"Client: \"IP: {0!r}; ID: {0}\" - HandleDownload!")
-        return False
+    async def set_down_rw(self, reader, writer):
+        try:
+            cid = (await reader.read(1)).decode()  # FIXME: wtf? 1 byte?
+            self.log.debug(f"Client: \"ID: {cid}\" - HandleDownload!")
+            if not cid.isdigit():
+                return False
+            for _client in self.Core.clients:
+                if _client.cid == cid:
+                    _client.down_rw = (reader, writer)
+            return True
+        finally:
+            return False
 
     async def handle_code(self, code, reader, writer):
         match code:
             case "C":
                 result, client = await self.auth_client(reader, writer)
                 if result:
-                    await client.sync_resources()
-                    # await client.kick("Authentication success! Server not ready.")
+                    await client.looper()
                     return True
                 return False
             case "D":
-                return await self.handle_download(writer)
+                return await self.set_down_rw(reader, writer)
             case "P":
                 writer.write(b"P")
                 await writer.drain()

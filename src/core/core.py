@@ -23,6 +23,7 @@ class Client:
     def __init__(self, reader, writer, core):
         self.reader = reader
         self.writer = writer
+        self.down_rw = (None, None)
         self.log = utils.get_logger("client(None:0)")
         self.addr = writer.get_extra_info("sockname")
         self.loop = asyncio.get_event_loop()
@@ -108,18 +109,31 @@ class Client:
         return data
 
     async def sync_resources(self):
-        await self.tcp_send(b"P" + bytes(f"{self.cid}", "utf-8"))
-        data = await self.recv()
-        if data.startswith(b"SR"):
-            await self.tcp_send(b"-")  # Cannot handle mods for now.
-        data = await self.recv()
-        if data == b"Done":
-            await self.tcp_send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
-        await self.last_handle()
+        while True:
+            data = await self.recv()
+            if data.startswith(b"f"):
+                # TODO: SendFile
+                pass
+            elif data.startswith(b"SR"):
+                # TODO: Create mods list
+                self.log.debug("Sending Mod Info")
+                mods = []
+                mod_list = b''
+                # * code *
+                if len(mods) == 0:
+                    await self.tcp_send(b"-")
+                else:
+                    await self.tcp_send(mod_list)
+            data = await self.recv()
+            if data == b"Done":
+                await self.tcp_send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
+                break
 
-    async def last_handle(self):
+    async def looper(self):
         # self.is_disconnected()
         self.log.debug(f"Alive: {self.alive}")
+        await self.tcp_send(b"P" + bytes(f"{self.cid}", "utf-8"))
+        await self.sync_resources()
         while self.alive:
             data = await self.recv()
             if data == b"":
