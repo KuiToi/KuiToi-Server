@@ -32,7 +32,7 @@ class TCPServer:
             await client.kick("Outdated Version.")
             return False, None
         else:
-            await client.tcp_send(b"A")  # Accepted client version
+            await client.tcp_send(b"S")  # Accepted client version
 
         data = await client.recv()
         self.log.debug(f"recv2 data: {data}")
@@ -58,7 +58,7 @@ class TCPServer:
             await client.kick('Invalid authentication data! Try to connect in 5 minutes.')
 
         # TODO: Password party
-        # await client.tcp_send(b"S")  # Ask client key
+        # await client.tcp_send(b"S")  # Ask client key (How?)
 
         ev.call_event("on_auth", client)
 
@@ -113,18 +113,17 @@ class TCPServer:
 
     async def start(self):
         self.log.debug("Starting TCP server.")
-        server = await asyncio.start_server(self.handle_client, self.host, self.port,
-                                            backlog=config.Game["players"] + 1)
         try:
-            self.log.debug(f"TCP server started on {server.sockets[0].getsockname()!r}")
-            while True:
-                async with server:
-                    await server.serve_forever()
-        except Exception as e:
+            server = await asyncio.start_server(self.handle_client, self.host, self.port,
+                                                backlog=config.Game["players"] + 1)
+        except OSError as e:
             self.log.error(f"Error: {e}")
-            traceback.print_exc()
-        finally:
-            await self.stop()
+            self.Core.run = False
+            raise e
+        self.log.debug(f"TCP server started on {server.sockets[0].getsockname()!r}")
+        while True:
+            async with server:
+                await server.serve_forever()
 
-    async def stop(self):
+    def stop(self):
         self.log.debug("Stopping TCP server")
