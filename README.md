@@ -46,8 +46,9 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] WebAPI
   - [x] HTTP API Server (fastapi)
     - [x] Stop and Start with core
-    - [x] Custom logger
+    - [x] Configure FastAPI logger
     - [ ] Sync with event system
+    - [ ] Add methods...
 - [ ] [Documentation](docs/en/readme.md)
 
 ## Installation
