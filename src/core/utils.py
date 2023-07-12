@@ -1,7 +1,7 @@
 # Developed by KuiToi Dev
 # File core.utils.py
 # Written by: SantaSpeen
-# Version 1.0
+# Version 1.1
 # Licence: FPA
 # (c) kuitoi.su 2023
 import datetime
