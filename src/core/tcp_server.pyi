@@ -6,7 +6,6 @@
 # (c) kuitoi.su 2023
 import asyncio
 from asyncio import StreamWriter, StreamReader
-import socket
 from typing import Tuple
 
 from core import utils, Core

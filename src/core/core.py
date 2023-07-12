@@ -6,8 +6,6 @@
 # (c) kuitoi.su 2023
 import asyncio
 import os
-import time
-import traceback
 import zlib
 from threading import Thread
 

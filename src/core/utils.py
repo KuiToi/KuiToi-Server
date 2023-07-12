@@ -6,7 +6,6 @@
 # (c) kuitoi.su 2023
 
 import logging
-import os
 
 log_format = "[%(asctime)s | %(name)-14s | %(levelname)-5s] %(message)s"
 log_format_access = '[%(asctime)s | %(name)-14s | %(levelname)-5s] %(client_addr)s - "%(request_line)s" %(status_code)s'
