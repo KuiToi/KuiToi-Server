@@ -21,7 +21,7 @@ class EventsSystem:
         self.log.debug(f"register_event({event_name}, {event_func}):")
         if not callable(event_func):
             self.log.error(f"Cannot add event '{event_name}'. "
-                           f"Use `BEAMP.add_event({event_name}', function)` instead. Skipping it...")
+                           f"Use `KuiToi.add_event({event_name}', function)` instead. Skipping it...")
             return
         if event_name not in self.__events:
             self.__events.update({str(event_name): [event_func]})

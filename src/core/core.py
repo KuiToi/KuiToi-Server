@@ -61,7 +61,7 @@ class Client:
     async def tcp_send(self, data):
 
         # TNetwork.cpp; Line: 383
-        # BEAMP TCP protocol sends a header of 4 bytes, followed by the data.
+        # BeamMP TCP protocol sends a header of 4 bytes, followed by the data.
         # [][][][][][]...[]
         # ^------^^---...-^
         #  size     data
@@ -160,7 +160,7 @@ class Core:
         self.web_stop = None
 
         self.client_major_version = "2.0"
-        self.BEAMP_version = "3.2.0"
+        self.BeamMP_version = "3.2.0"
 
     def get_client(self, sock=None, cid=None):
         if cid:
@@ -224,7 +224,7 @@ class Core:
         while self.run:
             data = {"uuid": config.Auth["key"], "players": len(self.clients), "maxplayers": config.Game["players"],
                     "port": config.Server["server_port"], "map": f"/levels/{config.Game['map']}/info.json",
-                    "private": config.Auth['private'], "version": self.BEAMP_version,
+                    "private": config.Auth['private'], "version": self.BeamMP_version,
                     "clientversion": self.client_major_version,
                     "name": config.Server["name"], "modlist": modlist, "modstotalsize": modstotalsize,
                     "modstotal": modstotal, "playerslist": "", "desc": config.Server['description'], "pass": False}

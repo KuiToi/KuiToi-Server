@@ -8,7 +8,7 @@ class KuiToi:
 
     def __init__(self, name=None):
         if name is None:
-            raise Exception("BEAMP: Name is required")
+            raise Exception("BeamMP: Name is required")
         self.log = get_logger(f"PluginsLoader | {name}")
         self.name = name
 
@@ -43,7 +43,7 @@ class PluginsLoader:
                     plugin.print = print
                     file = os.path.join(self.__plugins_dir, file)
                     with open(f'{file}', 'r') as f:
-                        code = f.read().replace("import BEAMP\n", "")
+                        code = f.read().replace("import KuiToi\n", "")
                         exec(code, plugin.__dict__)
                     plugin.load()
                     self.__plugins.update({file[:-3]: plugin})

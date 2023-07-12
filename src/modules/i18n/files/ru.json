@@ -7,8 +7,8 @@
   "stop": "Сервер остановлен!",
 
   "": "Server auth",
-  "auth_need_key": "Нужен BEAMP ключ для запуска!",
-  "auth_empty_key": "BEAMP ключ пустой!",
+  "auth_need_key": "Нужен BeamMP ключ для запуска!",
+  "auth_empty_key": "BeamMP ключ пустой!",
   "auth_cannot_open_browser": "Не получилось открыть браузер: {}",
   "auth_use_link": "Используй эту ссылку: {}",
 
@@ -17,7 +17,7 @@
   "GUI_no": "Нет",
   "GUI_ok": "Окей",
   "GUI_cancel": "Отмена",
-  "GUI_need_key_message": "Нужен BEAMP ключ для запуска!\nХотите открыть ссылку в браузере для получения ключа?",
+  "GUI_need_key_message": "Нужен BeamMP ключ для запуска!\nХотите открыть ссылку в браузере для получения ключа?",
   "GUI_enter_key_message": "Пожалуйста введите ключ:",
   "GUI_cannot_open_browser": "Не получилось открыть браузер.\nИспользуй эту ссылку: {}",
 

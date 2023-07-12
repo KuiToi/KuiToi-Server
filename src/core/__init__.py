@@ -67,13 +67,13 @@ ev.builtins_hook()
 log.info(i18n.hello)
 log.info(i18n.config_path.format(config_path))
 
-log.debug("Initializing BEAMP Server system...")
+log.debug("Initializing BeamMP Server system...")
 # Key handler..
 if not config.Auth['private'] and not config.Auth['key']:
     log.warn(i18n.auth_need_key)
     url = "https://beammp.com/k/keys"
     if shortcuts.yes_no_dialog(
-            title='BEAMP Server Key',
+            title='BeamMP Server Key',
             text=i18n.GUI_need_key_message,
             yes_text=i18n.GUI_yes,
             no_text=i18n.GUI_no).run():
@@ -84,12 +84,12 @@ if not config.Auth['private'] and not config.Auth['key']:
             log.error(i18n.auth_cannot_open_browser.format(e))
             log.info(i18n.auth_use_link.format(url))
             shortcuts.message_dialog(
-                title='BEAMP Server Key',
+                title='BeamMP Server Key',
                 text=i18n.GUI_cannot_open_browser.format(url),
                 ok_text=i18n.GUI_ok).run()
 
     config.Auth['key'] = shortcuts.input_dialog(
-        title='BEAMP Server Key',
+        title='BeamMP Server Key',
         text=i18n.GUI_enter_key_message,
         ok_text=i18n.GUI_ok,
         cancel_text=i18n.GUI_cancel).run()
