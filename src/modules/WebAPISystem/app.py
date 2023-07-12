@@ -53,7 +53,8 @@ async def _method(method, secret_key: str = None):
 
 async def _stop():
     await asyncio.sleep(1)
-    uvserver.should_exit = True
+    if uvserver is not None:
+        uvserver.should_exit = True
     data_run[0] = False
 
 
