@@ -1,7 +1,7 @@
 {
   "": "Basic phases",
   "hello": "Привет из KuiToi-Server!",
-  "config_path": "Используя {} для настройки.",
+  "config_path": "Используй {} для настройки.",
   "init_ok": "Инициализация окончена.",
   "start": "Сервер запущен!",
   "stop": "Сервер остановлен!",
@@ -20,6 +20,9 @@
   "GUI_need_key_message": "Нужен BEAMP ключ для запуска!\nХотите открыть ссылку в браузере для получения ключа?",
   "GUI_enter_key_message": "Пожалуйста введите ключ:",
   "GUI_cannot_open_browser": "Не получилось открыть браузер.\nИспользуй эту ссылку: {}",
+
+  "": "Web phases",
+  "web_start": "WebAPI запустился на {} (CTRL+C для выключения)",
 
   "": "Command: man",
   "man_message_man": "man - Показывает страничку помощи для COMMAND.\nИспользование: man COMMAND",
