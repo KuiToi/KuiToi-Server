@@ -7,7 +7,7 @@
 import asyncio
 from asyncio import StreamWriter, StreamReader
 from threading import Thread
-from typing import Callable
+from typing import Callable, List, Dict, Tuple
 
 from core import utils
 from .tcp_server import TCPServer
@@ -44,7 +44,9 @@ class Core:
         self.loop = asyncio.get_event_loop()
         self.run = False
         self.direct = False
-        self.clients = dict()
+        self.clients: List[Client]= []
+        self.clients_by_id: Dict[{int: Client}]= {}
+        self.clients_by_nick: Dict[{str: Client}] = {}
         self.clients_counter: int = 0
         self.mods_dir: str = "mods"
         self.mods_list: list = []

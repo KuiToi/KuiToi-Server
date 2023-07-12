@@ -147,8 +147,9 @@ class Core:
         self.loop = asyncio.get_event_loop()
         self.run = False
         self.direct = False
-        self.clients = {}
-        self.clients_counter = 0
+        self.clients = []
+        self.clients_by_id = {}
+        self.clients_by_nick = {}
         self.mods_dir = "./mods"
         self.mods_list = [0, ]
         self.server_ip = config.Server["server_ip"]
@@ -162,31 +163,40 @@ class Core:
         self.client_major_version = "2.0"
         self.BeamMP_version = "3.2.0"
 
-    def get_client(self, sock=None, cid=None):
+    def get_client(self, sock=None, cid=None, nick=None):
         if cid:
-            return self.clients.get(cid)
+            return self.clients_by_id.get(cid)
+        if nick:
+            return self.clients_by_nick.get(nick)
         if sock:
-            return self.clients.get(sock.getsockname())
+            return self.clients_by_nick.get(sock.getsockname())
 
     def insert_client(self, client):
         self.log.debug(f"Inserting client: {client.cid}")
-        self.clients.update({client.cid: client, client.nick: client})
+        self.clients_by_nick.update({client.nick: client})
+        self.clients_by_id.update({client.cid: client})
+        self.clients[client.cid] = client
 
     def create_client(self, *args, **kwargs):
         client = Client(*args, **kwargs)
-        self.clients_counter += 1
-        client.id = self.clients_counter
+        cid = 1
+        for client in self.clients:
+            if client.cid == cid:
+                cid += 1
+            else:
+                break
+        client.cid = cid
         client._update_logger()
-        self.log.debug(f"Create client: {client.cid}; clients_counter: {self.clients_counter}")
+        self.log.debug(f"Create client; client.cid: {client.cid};")
         return client
 
     async def check_alive(self):
         await asyncio.sleep(5)
         self.log.debug(f"Checking if clients is alive")
-        for cl in self.clients.values():
-            d = await cl.is_disconnected()
+        for client in self.clients:
+            d = client.is_disconnected()
             if d:
-                self.log.debug(f"Client ID: {cl.id} died...")
+                self.log.debug(f"Client ID: {client.cid} died...")
 
     @staticmethod
     def start_web():
