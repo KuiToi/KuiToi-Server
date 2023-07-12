@@ -37,8 +37,9 @@ class UDPServer:
         self.log.error("Error while connecting..")
 
     async def start(self):
-        self.log.debug("Starting UDP server.")
-        await self.stop()
+        pass
+        # self.log.debug("Starting UDP server.")
+        # await self.stop()
         # srv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # srv_sock.bind((self.host, self.port))
         # self.log.debug(f"Serving on {srv_sock.getsockname()}")
@@ -50,5 +51,6 @@ class UDPServer:
         # finally:
         #     await self.stop()
 
-    async def stop(self):
-        self.log.debug("Stopping UDP server")
+    def stop(self):
+        pass
+        # self.log.debug("Stopping UDP server")
