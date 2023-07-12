@@ -40,23 +40,30 @@ class Client:
 
 class Core:
     def __init__(self):
-        self.clients_counter: int = 0
         self.log = utils.get_logger("core")
+        self.loop = asyncio.get_event_loop()
+        self.run = False
+        self.direct = False
         self.clients = dict()
+        self.clients_counter: int = 0
+        self.mods_dir: str = "mods"
+        self.mods_list: list = []
         self.server_ip = config.Server["server_ip"]
         self.server_port = config.Server["server_port"]
-        self.loop = asyncio.get_event_loop()
         self.tcp = TCPServer
         self.udp = UDPServer
         self.web_thread: Thread = None
         self.web_stop: Callable = lambda: None
+        self.client_major_version = "2.0"
+        self.BEAMP_version = "3.2.0"
     def insert_client(self, client: Client) -> None: ...
     def create_client(self, *args, **kwargs) -> Client: ...
     async def check_alive(self) -> None: ...
     @staticmethod
     def start_web() -> None: ...
     @staticmethod
-    def stop_me(self) -> None: ...
+    def stop_me() -> None: ...
+    async def authenticate(self, test=False) -> None: ...
     async def main(self) -> None: ...
     def start(self) -> None: ...
     def stop(self) -> None: ...

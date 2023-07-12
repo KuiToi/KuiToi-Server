@@ -45,6 +45,7 @@ if args.config:
     config_path = args.config
 config_provider = ConfigProvider(config_path)
 config = config_provider.open_config()
+builtins.config = config
 if config.Server['debug'] is True:
     utils.set_debug_status()
     log.info("Debug enabled!")
@@ -67,8 +68,7 @@ log.info(i18n.config_path.format(config_path))
 
 log.debug("Initializing BEAMP Server system...")
 # Key handler..
-private = ((config.Auth['key'] is None or config.Auth['key'] == "") and config.Auth['private'])
-if not private:
+if not config.Auth['private'] and not config.Auth['key']:
     log.warn(i18n.auth_need_key)
     url = "https://beammp.com/k/keys"
     if shortcuts.yes_no_dialog(
@@ -93,11 +93,10 @@ if not private:
         ok_text=i18n.GUI_ok,
         cancel_text=i18n.GUI_cancel).run()
     config_provider.save_config()
-if not private:
+if not config.Auth['private'] and not config.Auth['key']:
     log.error(i18n.auth_empty_key)
     log.info(i18n.stop)
     exit(1)
-builtins.config = config
 
 # Console Init
 log.debug("Initializing console...")
@@ -106,9 +105,6 @@ console.builtins_hook()
 # console.logger_hook()
 console.add_command("stop", console.stop, i18n.man_message_stop, i18n.help_message_stop)
 console.add_command("exit", console.stop, i18n.man_message_exit, i18n.help_message_exit)
-
-if not os.path.exists("mods"):
-    os.mkdir("mods")
 
 log.debug("Initializing PluginsLoader...")
 if not os.path.exists("plugins"):

@@ -5,16 +5,19 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import os
 import time
+import traceback
 import zlib
 from threading import Thread
 
+import aiohttp
 import uvicorn
 
 from core import utils
-from modules.WebAPISystem import app as webapp
 from core.tcp_server import TCPServer
 from core.udp_server import UDPServer
+from modules.WebAPISystem import app as webapp
 
 
 class Client:
@@ -133,7 +136,7 @@ class Client:
             match code:
                 case "H":
                     # Client connected
-                    await self.tcp_send(b"Sn"+bytes(self.nick, "utf-8"))
+                    await self.tcp_send(b"Sn" + bytes(self.nick, "utf-8"))
                 case "C":
                     # Chat
                     await self.tcp_send(data)
@@ -144,8 +147,12 @@ class Core:
     def __init__(self):
         self.log = utils.get_logger("core")
         self.loop = asyncio.get_event_loop()
+        self.run = False
+        self.direct = False
         self.clients = {}
         self.clients_counter = 0
+        self.mods_dir = "./mods"
+        self.mods_list = [0, ]
         self.server_ip = config.Server["server_ip"]
         self.server_port = config.Server["server_port"]
         self.tcp = TCPServer
@@ -153,6 +160,9 @@ class Core:
         self.web_thread = None
         self.web_pool = webapp.data_pool
         self.web_stop = None
+
+        self.client_major_version = "2.0"
+        self.BEAMP_version = "3.2.0"
 
     def get_client(self, sock=None, cid=None):
         if cid:
@@ -197,37 +207,132 @@ class Core:
             await asyncio.sleep(1)
         raise KeyboardInterrupt
 
+    # noinspection SpellCheckingInspection,PyPep8Naming
+    async def authenticate(self, test=False):
+        if config.Auth["private"] or self.direct:
+            if test:
+                self.log.info(f"Server runnig in Direct connect mode.")
+            self.direct = True
+            return
+
+        BEAM_backend = ["backend.beammp.com", "backup1.beammp.com", "backup2.beammp.com"]
+        modlist = ""
+        for mod in self.mods_list:
+            if type(mod) == int:
+                continue
+            modlist += f"/{os.path.basename(mod['path'])};"
+        modstotalsize = self.mods_list[0]
+        modstotal = len(self.mods_list) - 1
+        while self.run:
+            data = {"uuid": config.Auth["key"], "players": len(self.clients), "maxplayers": config.Game["players"],
+                    "port": config.Server["server_port"], "map": f"/levels/{config.Game['map']}/info.json",
+                    "private": config.Auth['private'], "version": self.BEAMP_version, "clientversion": self.client_major_version,
+                    "name": config.Server["name"], "modlist": modlist, "modstotalsize": modstotalsize,
+                    "modstotal": modstotal, "playerslist": "", "desc": config.Server['description'], "pass": False}
+            self.log.debug(f"Auth: data {data}")
+
+            # Sentry?
+            ok = False
+            body = {}
+            code = 0
+            for server_url in BEAM_backend:
+                url = "https://" + server_url + "/heartbeat"
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(url, data=data, headers={"api-v": "2"}) as response:
+                            code = response.status
+                            body = await response.json()
+                            self.log.debug(f"Auth: code {code}, body {body}")
+                            ok = True
+                    break
+                except Exception as e:
+                    self.log.debug(f"Auth: Error `{e}` while auth with `{server_url}`")
+                    continue
+
+            if ok:
+                if not (body.get("status") is not None and
+                        body.get("code") is not None and
+                        body.get("msg") is not None):
+                    self.log.error("Missing/invalid json members in backend response")
+                    raise KeyboardInterrupt
+
+                if test:
+                    status = body.get("status")
+                    msg = body.get("msg")
+                    if status == "2000":
+                        self.log.info(f"Authenticated! {msg}")
+                    elif status == "200":
+                        self.log.info(f"Resumed authenticated session. {msg}")
+                    else:
+                        self.log.error(f"Backend REFUSED the auth key. Reason: "
+                                       f"{msg or 'Backend did not provide a reason'}")
+                        self.log.info(f"Server still runnig, but only in Direct connect mode.")
+                        self.direct = True
+            else:
+                self.direct = True
+                if test:
+                    self.log.error("Cannot auth...")
+                if not config.Auth['private']:
+                    raise KeyboardInterrupt
+                if test:
+                    self.log.info(f"Server still runnig, but only in Direct connect mode.")
+
+            if test:
+                return ok
+
+            await asyncio.sleep(5)
+
     async def main(self):
-        self.tcp = self.tcp(self, self.server_ip, self.server_port)
-        self.udp = self.udp(self, self.server_ip, self.server_port)
-        tasks = [self.tcp.start(), self.udp.start(), console.start(), self.stop_me()]  # self.check_alive()
-        t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
-        if config.WebAPI["enabled"]:
-            self.log.debug("Initializing WebAPI...")
-            web_thread = Thread(target=self.start_web)
-            web_thread.start()
-            self.web_thread = web_thread
-            self.web_stop = webapp._stop
-        self.log.info(i18n.start)
-        # TODO: Server auth
-        ev.call_event("on_started")
-        await t
-        # while True:
-        #     try:
-        #         tasks = [console.start(), self.tcp.start(), self.udp.start()] # self.check_alive()
-        #         await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
-        #     except Exception as e:
-        #         await asyncio.sleep(1)
-        #         print("Error: " + str(e))
-        #         traceback.print_exc()
-        #         break
-        #     except KeyboardInterrupt:
-        #         raise KeyboardInterrupt
+        try:
+            self.run = True
+            self.tcp = self.tcp(self, self.server_ip, self.server_port)
+            self.udp = self.udp(self, self.server_ip, self.server_port)
+
+            # WebApi Start
+            if config.WebAPI["enabled"]:
+                self.log.debug("Initializing WebAPI...")
+                web_thread = Thread(target=self.start_web)
+                web_thread.start()
+                self.web_thread = web_thread
+                self.web_stop = webapp._stop
+
+            # Mods handler
+            self.log.debug("Listing mods..")
+            if not os.path.exists(self.mods_dir):
+                os.mkdir(self.mods_dir)
+            for file in os.listdir(self.mods_dir):
+                path = os.path.join(self.mods_dir, file).replace("\\", "/")
+                if os.path.isfile(path) and path.endswith(".zip"):
+                    size = os.path.getsize(path)
+                    self.mods_list.append({"path": path, "size": size})
+                    self.mods_list[0] += size
+            self.log.debug(f"mods_list: {self.mods_list}")
+            lmods = len(self.mods_list) - 1
+            if lmods > 0:
+                self.log.info(f"Loaded {lmods} mods: {round(self.mods_list[0] / MB, 2)}mb")
+
+            await self.authenticate(True)
+            tasks = [self.tcp.start(), self.udp.start(), console.start(),
+                     self.stop_me(), self.authenticate(),]  #  self.check_alive()
+            t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+
+            self.log.info(i18n.start)
+            ev.call_event("on_started")
+            await t
+            # Wait the end.
+        except Exception as e:
+            self.log.error(f"Exception: {e}")
+            traceback.print_exc()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.run = False
 
     def start(self):
         asyncio.run(self.main())
 
     def stop(self):
+        self.run = False
         self.log.info(i18n.stop)
         asyncio.run(self.web_stop())
         exit(0)
