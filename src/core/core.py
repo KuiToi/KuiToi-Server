@@ -226,7 +226,8 @@ class Core:
         while self.run:
             data = {"uuid": config.Auth["key"], "players": len(self.clients), "maxplayers": config.Game["players"],
                     "port": config.Server["server_port"], "map": f"/levels/{config.Game['map']}/info.json",
-                    "private": config.Auth['private'], "version": self.BEAMP_version, "clientversion": self.client_major_version,
+                    "private": config.Auth['private'], "version": self.BEAMP_version,
+                    "clientversion": self.client_major_version,
                     "name": config.Server["name"], "modlist": modlist, "modstotalsize": modstotalsize,
                     "modstotal": modstotal, "playerslist": "", "desc": config.Server['description'], "pass": False}
             self.log.debug(f"Auth: data {data}")
@@ -283,11 +284,10 @@ class Core:
             await asyncio.sleep(5)
 
     async def main(self):
+        self.run = True
+        self.tcp = self.tcp(self, self.server_ip, self.server_port)
+        self.udp = self.udp(self, self.server_ip, self.server_port)
         try:
-            self.run = True
-            self.tcp = self.tcp(self, self.server_ip, self.server_port)
-            self.udp = self.udp(self, self.server_ip, self.server_port)
-
             # WebApi Start
             if config.WebAPI["enabled"]:
                 self.log.debug("Initializing WebAPI...")
@@ -312,8 +312,11 @@ class Core:
                 self.log.info(f"Loaded {lmods} mods: {round(self.mods_list[0] / MB, 2)}mb")
 
             await self.authenticate(True)
-            tasks = [self.tcp.start(), self.udp.start(), console.start(),
-                     self.stop_me(), self.authenticate(),]  #  self.check_alive()
+            tasks = []
+            # self.check_alive()
+            nrtasks = [self.tcp.start, self.udp.start, console.start, self.stop_me, self.authenticate, ]
+            for task in nrtasks:
+                tasks.append(asyncio.create_task(task()))
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
             self.log.info(i18n.start)
@@ -322,10 +325,12 @@ class Core:
             # Wait the end.
         except Exception as e:
             self.log.error(f"Exception: {e}")
-            traceback.print_exc()
+            self.log.exception(e)
         except KeyboardInterrupt:
             pass
         finally:
+            self.tcp.stop()
+            self.udp.stop()
             self.run = False
 
     def start(self):
