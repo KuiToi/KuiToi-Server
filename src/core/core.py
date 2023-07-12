@@ -337,5 +337,6 @@ class Core:
     def stop(self):
         self.run = False
         self.log.info(i18n.stop)
-        asyncio.run(self.web_stop())
+        if config.WebAPI["enabled"]:
+            asyncio.run(self.web_stop())
         exit(0)

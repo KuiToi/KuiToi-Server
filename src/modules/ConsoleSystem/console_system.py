@@ -14,6 +14,7 @@ from prompt_toolkit import PromptSession, print_formatted_text, HTML
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit.patch_stdout import patch_stdout
 
 from core import get_logger
 
@@ -186,8 +187,12 @@ class Console:
         session = PromptSession(history=FileHistory('./.cmdhistory'))
         while True:
             try:
-                cmd_in = await session.prompt_async(self.__prompt_in,
-                                                    completer=self.completer, auto_suggest=AutoSuggestFromHistory())
+                with patch_stdout():
+                    cmd_in = await session.prompt_async(
+                        self.__prompt_in,
+                        completer=self.completer,
+                        auto_suggest=AutoSuggestFromHistory()
+                    )
                 cmd_s = cmd_in.split(" ")
                 cmd = cmd_s[0]
                 if cmd == "":
@@ -210,13 +215,3 @@ class Console:
     def stop(self, *args, **kwargs):
         self.__is_run = False
         raise KeyboardInterrupt
-
-
-# if __name__ == '__main__':
-#     c = Console()
-#     c.logger_hook()
-#     c.builtins_hook()
-#     log = logging.getLogger(name="name")
-#     log.info("Starting console")
-#     print("Starting console")
-#     asyncio.run(c.start())
