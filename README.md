@@ -11,6 +11,10 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Private access (Without key, Direct connect)
     - [x] Public access  (With key, listing in Launcher)
     - [X] Player authentication
+  - [ ] KuiToi System
+    - [ ] Servers counter
+    - [ ] Players counter
+    - [ ] Etc.
   - [ ] TCP Server part:
     - [x] Handle code
     - [x] Understanding BeamMP header
