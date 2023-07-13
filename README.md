@@ -21,11 +21,11 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [ ] Upload mods
     - [x] Connecting to the world
     - [x] Chat
-    - [ ] Player counter _(Code: Ss)_
+    - [x] Players online counter
     - [ ] Car state synchronizations _(Codes: We, Vi)_
     - [ ] "ABG:" (compressed data)
       - [x] Decompress data
-      - [ ] Vehicle data
+      - [ ] Vehicle data _(Code: Os)_
   - [ ] UDP Server part:
     - [ ] Players synchronizations _(Code: Zp)_
     - [ ] Ping _(Code: p)_
