@@ -72,6 +72,8 @@ class TCPServer:
             return False, None
         else:
             self.log.info("Identification success")
+            await client.tcp_send(b"P" + bytes(f"{client.cid}", "utf-8"))
+            await client.sync_resources()
             await self.Core.insert_client(client)
 
         return True, client

@@ -77,7 +77,7 @@ class Client:
                 await client.tcp_send(data)
             return
 
-        self.log.debug(f"tcp_send({data})")
+        # self.log.debug(f"tcp_send({data})")
         if len(data) == 10:
             data += b"."
         header = len(data).to_bytes(4, "little", signed=True)
@@ -138,10 +138,6 @@ class Client:
     async def sync_resources(self):
         while True:
             data = await self.recv()
-            if not data:
-                await asyncio.sleep(.1)
-                continue
-            self.log.debug(f"Received: {data}")
             if data.startswith(b"f"):
                 # TODO: SendFile
                 file = data[1:].decode("utf-8")
@@ -166,8 +162,6 @@ class Client:
 
     async def looper(self):
         # self.is_disconnected()
-        await self.tcp_send(b"P" + bytes(f"{self.cid}", "utf-8"))
-        await self.sync_resources()
         while self.alive:
             data = await self.recv()
             if data == b"":
