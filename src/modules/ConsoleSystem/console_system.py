@@ -26,6 +26,7 @@ class Console:
                  prompt_out="",
                  not_found="Command \"%s\" not found in alias.",
                  debug=False) -> None:
+        self.__logger = get_logger("console")
         self.__is_run = False
         self.__prompt_in = prompt_in
         self.__prompt_out = prompt_out
@@ -44,10 +45,11 @@ class Console:
         self.completer = NestedCompleter.from_nested_dict(self.__alias)
 
     def __debug(self, *x):
-        if self.__is_debug:
-            x = list(x)
-            x.insert(0, "\r CONSOLE DEBUG:")
-            self.__print(*x)
+        self.__logger.debug(f"{x}")
+        # if self.__is_debug:
+        #     x = list(x)
+        #     x.insert(0, "\r CONSOLE DEBUG:")
+        #     self.__print(*x)
 
     def __getitem__(self, item):
         print(item)
@@ -132,7 +134,8 @@ class Console:
             print_formatted_text(s)
 
     def log(self, s: AnyStr) -> None:
-        self.write(s)
+        self.__logger.log(f"\n{s}")
+        # self.write(s)
 
     def __lshift__(self, s: AnyStr) -> None:
         self.write(s)
