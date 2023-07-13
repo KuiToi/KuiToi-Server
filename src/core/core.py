@@ -230,7 +230,7 @@ class Core:
         raise KeyboardInterrupt
 
     # noinspection SpellCheckingInspection,PyPep8Naming
-    async def authenticate(self, test=False):
+    async def heartbeat(self, test=False):
         if config.Auth["private"] or self.direct:
             if test:
                 self.log.info(f"Server runnig in Direct connect mode.")
@@ -315,8 +315,10 @@ class Core:
                 self.log.debug("Initializing WebAPI...")
                 web_thread = Thread(target=self.start_web)
                 web_thread.start()
+                self.log.debug(f"WebAPI started at new thread: {web_thread.name}")
                 self.web_thread = web_thread
                 self.web_stop = webapp._stop
+                await asyncio.sleep(.3)
 
             # Mods handler
             self.log.debug("Listing mods..")
@@ -333,10 +335,10 @@ class Core:
             if lmods > 0:
                 self.log.info(f"Loaded {lmods} mods: {round(self.mods_list[0] / MB, 2)}mb")
 
-            await self.authenticate(True)
+            await self.heartbeat(True)
             tasks = []
             # self.check_alive()
-            nrtasks = [self.tcp.start, self.udp.start, console.start, self.stop_me, self.authenticate, ]
+            nrtasks = [self.tcp.start, self.udp.start, console.start, self.stop_me, self.heartbeat, ]
             for task in nrtasks:
                 tasks.append(asyncio.create_task(task()))
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
