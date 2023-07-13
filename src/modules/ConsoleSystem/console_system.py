@@ -134,7 +134,7 @@ class Console:
             print_formatted_text(s)
 
     def log(self, s: AnyStr) -> None:
-        self.__logger.log(f"\n{s}")
+        self.__logger.info(f"{s}")
         # self.write(s)
 
     def __lshift__(self, s: AnyStr) -> None:
@@ -199,17 +199,20 @@ class Console:
                 cmd_s = cmd_in.split(" ")
                 cmd = cmd_s[0]
                 if cmd == "":
-                    pass
+                    continue
                 else:
                     command_object = self.__func.get(cmd)
                     if command_object:
-                        self.log(str(command_object['f'](cmd_s[1:])))
+                        out = command_object['f'](cmd_s[1:])
+                        if out:
+                            self.log(out)
                     else:
                         self.log(self.__not_found % cmd)
             except KeyboardInterrupt:
                 raise KeyboardInterrupt
             except Exception as e:
                 print(f"Error in console.py: {e}")
+                self.__logger.exception(e)
 
     async def start(self):
         self.__is_run = True
