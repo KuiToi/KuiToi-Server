@@ -13,10 +13,11 @@ class UDPServer:
 
     def __init__(self, core, host, port):
         self.log = utils.get_logger("UDPServer")
+        self.loop = asyncio.get_event_loop()
         self.Core = core
         self.host = host
         self.port = port
-        self.loop = asyncio.get_event_loop()
+        self.run = False
     async def handle_client(self, srv_sock) -> None: ...
     async def start(self) -> None: ...
 
