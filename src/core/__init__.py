@@ -2,7 +2,7 @@
 # File core.__init__.py
 # Written by: SantaSpeen
 # Version 1.3
-# Core version: 0.2.0
+# Core version: 0.2.1
 # Licence: FPA
 # (c) kuitoi.su 2023
 # Special thanks to: AI Sage(https://poe.com/Sage), AI falcon-40b-v7(https://OpenBuddy.ai)
