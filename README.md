@@ -18,7 +18,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
   - [ ] TCP Server part:
     - [x] Handle code
     - [x] Understanding BeamMP header
-    - [ ] Upload mods
+    - [x] Upload mods
     - [x] Connecting to the world
     - [x] Chat
     - [x] Players online counter
