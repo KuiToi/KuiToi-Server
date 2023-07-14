@@ -23,10 +23,12 @@ class TCPServer:
 
     async def auth_client(self, reader, writer):
         client = self.Core.create_client(reader, writer)
+        # TODO: i18n
         self.log.info(f"Identifying new ClientConnection...")
         data = await client.recv()
         self.log.debug(f"Version: {data}")
         if data.decode("utf-8") != f"VC{self.Core.client_major_version}":
+            # TODO: i18n
             await client.kick("Outdated Version.")
             return False, client
         else:
@@ -35,6 +37,7 @@ class TCPServer:
         data = await client.recv()
         self.log.debug(f"Key: {data}")
         if len(data) > 50:
+            # TODO: i18n
             await client.kick("Invalid Key (too long)!")
             return False, client
         client.key = data.decode("utf-8")
@@ -46,6 +49,7 @@ class TCPServer:
                     res = await response.json()
             self.log.debug(f"res: {res}")
             if res.get("error"):
+                # TODO: i18n
                 await client.kick('Invalid key! Please restart your game.')
                 return False, client
             client.nick = res["username"]
@@ -54,6 +58,7 @@ class TCPServer:
             # noinspection PyProtectedMember
             client._update_logger()
         except Exception as e:
+            # TODO: i18n
             self.log.error(f"Auth error: {e}")
             await client.kick('Invalid authentication data! Try to reconnect in 5 minutes.')
             return False, client
@@ -62,15 +67,18 @@ class TCPServer:
             if not _client:
                 continue
             if _client.nick == client.nick and _client.guest == client.guest:
+                # TODO: i18n
                 await client.kick('Stale Client (replaced by new client)')
                 return False, client
 
         ev.call_event("auth_ok", client)
 
         if len(self.Core.clients_by_id) > config.Game["players"]:
+            # TODO: i18n
             await client.kick("Server full!")
             return False, client
         else:
+            # TODO: i18n
             self.log.info("Identification success")
             await self.Core.insert_client(client)
 
@@ -103,6 +111,7 @@ class TCPServer:
                 await writer.drain()
                 writer.close()
             case _:
+                # TODO: i18n
                 self.log.error(f"Unknown code: {code}")
                 writer.close()
         return False, None
@@ -123,6 +132,7 @@ class TCPServer:
                     del cl
                 break
             except Exception as e:
+                # TODO: i18n
                 self.log.error("Error while connecting..")
                 self.log.exception(e)
                 traceback.print_exc()
@@ -139,6 +149,7 @@ class TCPServer:
                 async with server:
                     await server.serve_forever()
         except OSError as e:
+            # TODO: i18n
             self.log.error("Cannot bind port")
             raise e
         except BaseException as e:

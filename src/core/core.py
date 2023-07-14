@@ -121,6 +121,7 @@ class Core:
     async def heartbeat(self, test=False):
         if config.Auth["private"] or self.direct:
             if test:
+                # TODO: i18n
                 self.log.info(f"Server runnig in Direct connect mode.")
             self.direct = True
             return
@@ -171,6 +172,7 @@ class Core:
                         status = body.get("status")
                         msg = body.get("msg")
                         if status == "2000":
+                            # TODO: i18n
                             self.log.info(f"Authenticated! {msg}")
                         elif status == "200":
                             self.log.info(f"Resumed authenticated session. {msg}")
@@ -186,6 +188,7 @@ class Core:
                     if not config.Auth['private']:
                         raise KeyboardInterrupt
                     if test:
+                        # TODO: i18n
                         self.log.info(f"Server still runnig, but only in Direct connect mode.")
 
                 if test:
@@ -226,24 +229,24 @@ class Core:
                     self.mods_list.append({"path": path, "size": size})
                     self.mods_list[0] += size
             self.log.debug(f"mods_list: {self.mods_list}")
-            lmods = len(self.mods_list) - 1
-            if lmods > 0:
-                self.log.info(f"Loaded {lmods} mods: {round(self.mods_list[0] / MB, 2)}mb")
+            len_mods = len(self.mods_list) - 1
+            if len_mods > 0:
+                # TODO: i18n
+                self.log.info(f"Loaded {len_mods} mods: {round(self.mods_list[0] / MB, 2)}mb")
 
             await self.heartbeat(True)
-            for i in range(int(config.Game["players"] * 1.3)):
+            for i in range(int(config.Game["players"] * 2.3)):  # * 2.3 For down sock and buffer.
                 self.clients.append(None)
             tasks = []
             # self.udp.start,
-            nrtasks = [self.tcp.start, console.start, self.stop_me, self.heartbeat, self.check_alive]
-            for task in nrtasks:
+            f_tasks = [self.tcp.start, console.start, self.stop_me, self.heartbeat, self.check_alive]
+            for task in f_tasks:
                 tasks.append(asyncio.create_task(task()))
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
             self.log.info(i18n.start)
             ev.call_event("on_started")
-            await t
-            # Wait the end.
+            await t  # Wait end.
         except Exception as e:
             self.log.error(f"Exception: {e}")
             self.log.exception(e)

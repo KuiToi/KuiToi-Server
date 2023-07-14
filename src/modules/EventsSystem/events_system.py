@@ -3,9 +3,11 @@ import builtins
 from core import get_logger
 
 
+# noinspection PyShadowingBuiltins
 class EventsSystem:
 
     def __init__(self):
+        # TODO: default events
         self.__events = {
             "on_started": [self.on_started],
             "on_stop": [self.on_stop],
@@ -20,6 +22,7 @@ class EventsSystem:
     def register_event(self, event_name, event_func):
         self.log.debug(f"register_event({event_name}, {event_func}):")
         if not callable(event_func):
+            # TODO: i18n
             self.log.error(f"Cannot add event '{event_name}'. "
                            f"Use `KuiToi.add_event({event_name}', function)` instead. Skipping it...")
             return
@@ -34,13 +37,5 @@ class EventsSystem:
             for event in self.__events[event_name]:
                 event(*data)
         else:
+            # TODO: i18n
             self.log.warning(f"Event {event_name} does not exist. Just skipping it...")
-
-    def on_started(self):
-        pass
-
-    def on_stop(self):
-        pass
-
-    def on_auth(self, client):
-        pass

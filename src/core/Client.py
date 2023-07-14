@@ -32,11 +32,11 @@ class Client:
             return True
         res = self.writer.is_closing()
         if res:
-            self.log.debug(f"Client Disconnected")
+            self.log.debug(f"Disconnected.")
             self.alive = False
             return True
         else:
-            self.log.debug(f"Client Alive")
+            self.log.debug(f"Alive.")
             self.alive = True
             return False
 
@@ -44,10 +44,10 @@ class Client:
         if not self.alive:
             self.log.debug(f"Kick({reason}) skipped;")
             return
+        # TODO: i18n
         self.log.info(f"Kicked with reason: \"{reason}\"")
         await self.tcp_send(b"K" + bytes(reason, "utf-8"))
         self.alive = False
-        # await self.remove_me()
 
     async def tcp_send(self, data, to_all=False, writer=None):
 
@@ -67,7 +67,6 @@ class Client:
                 await client.tcp_send(data)
             return
 
-        # self.log.debug(f"tcp_send({data})")
         if len(data) == 10:
             data += b"."
         header = len(data).to_bytes(4, "little", signed=True)
@@ -81,7 +80,7 @@ class Client:
 
     async def recv(self):
         try:
-            header = await self.reader.read(4)  # header: 4 bytes
+            header = await self.reader.read(4)
 
             int_header = 0
             for i in range(len(header)):
@@ -121,7 +120,8 @@ class Client:
         real_size = end - start
         writer = self.down_rw[1] if d_sock else self.writer
         who = 'dwn' if d_sock else 'srv'
-        self.log.debug(f"[{who}] Real size: {real_size / MB}mb; {real_size == end}, {real_size * 2 == end}")
+        if config.Server["debug"]:
+            self.log.debug(f"[{who}] Real size: {real_size / MB}mb; {real_size == end}, {real_size * 2 == end}")
 
         with open(filename, 'rb') as f:
             f.seek(start)
@@ -133,38 +133,7 @@ class Client:
             except ConnectionError:
                 self.alive = False
                 self.log.debug(f"[{who}] Disconnected.")
-        #         break
         return real_size
-
-        # chunk_size = 125 * MB
-        # if chunk_size > real_size:
-        #     chunk_size = real_size
-        # chunks = math.floor(real_size / chunk_size)
-        # self.log.debug(f"[{who}] s:{start}, e:{end}, c:{chunks}, cz:{chunk_size/MB}mb, rs:{real_size/MB}mb")
-        # dw = 0
-        # for chunk in range(1, chunks + 1):
-        #     chunk_end = start + (chunk_size * chunk)
-        #     chunk_start = chunk_end - chunk_size
-        #     # if chunk_start != 0:
-        #     #     chunk_start -= 1
-        #     real_size -= chunk_size
-        #     if chunk_size > real_size:
-        #         chunk_end = real_size
-        #     self.log.debug(f"[{who}] Chunk: {chunk}; Start: {chunk_start}; End: {chunk_end/MB};")
-        #     with open(filename, 'rb') as f:
-        #         f.seek(chunk_start)
-        #         data = f.read(chunk_end)
-        #         try:
-        #             writer.write(data)
-        #             await writer.drain()
-        #         except ConnectionError:
-        #             self.alive = False
-        #             self.log.debug(f"[{who}] Disconnected")
-        #             break
-        #         dw += len(data)
-        #         del data
-        # self.log.debug(f"[{who}] File sent.")
-        # return dw
 
     async def sync_resources(self):
         while self.alive:
@@ -172,7 +141,8 @@ class Client:
             self.log.debug(f"data: {data!r}")
             if data.startswith(b"f"):
                 file = data[1:].decode("utf-8")
-                self.log.debug(f"Sending File: {file}")
+                # TODO: i18n
+                self.log.info(f"Requested mode: {file!r}")
                 size = -1
                 for mod in self.Core.mods_list:
                     if type(mod) == int:
@@ -181,6 +151,7 @@ class Client:
                         size = mod['size']
                         self.log.debug("File is accept.")
                         break
+                self.log.debug(f"Mode size: {size}")
                 if size == -1:
                     await self.tcp_send(b"CO")
                     await self.kick(f"Not allowed mod: " + file)
@@ -193,28 +164,20 @@ class Client:
                     if t > 50:
                         await self.kick("Missing download socket")
                         return
-                self.log.info(f"Requested mode: {file!r}")
-                self.log.debug(f"Mode size: {size / MB}")
 
-                msize = math.floor(size / 2)
-                # uploads = [
-                #     asyncio.create_task(self._split_load(0, msize, False, file)),  # SplitLoad_0
-                #     asyncio.create_task(self._split_load(msize, size, True, file))  # SplitLoad_1
-                # ]
-                # await asyncio.wait(uploads)
+                half_size = math.floor(size / 2)
                 uploads = [
-                    self._split_load(0, msize, False, file),
-                    self._split_load(msize, size, True, file)
+                    self._split_load(0, half_size, False, file),
+                    self._split_load(half_size, size, True, file)
                 ]
                 sl0, sl1 = await asyncio.gather(*uploads)
                 sent = sl0 + sl1
                 ok = sent == size
                 lost = size - sent
                 self.log.debug(f"SplitLoad_0: {sl0}; SplitLoad_1: {sl1}; At all ({ok}): Sent: {sent}; Lost: {lost}")
-                self.log.debug(f"SplitLoad_0: {sl0 / MB}mb; "
-                               f"SplitLoad_1: {sl1 / MB}MB; At all ({ok}): Sent: {sent / MB}mb; Lost: {lost / MB}mb")
                 if not ok:
                     self.alive = False
+                    # TODO: i18n
                     self.log.error(f"Error while sending.")
                     return
             elif data.startswith(b"SR"):
@@ -245,7 +208,7 @@ class Client:
                 if not self.alive:
                     break
                 else:
-                    await asyncio.sleep(.2)
+                    await asyncio.sleep(.1)
                     self.is_disconnected()
                     continue
             code = data.decode()[0]
@@ -257,6 +220,7 @@ class Client:
                     await self.tcp_send(b"Sn" + bytes(self.nick, "utf-8"), to_all=True)
                 case "C":
                     # Chat
+                    ev.call_event("chat_receive", f"{data}")
                     await self.tcp_send(data, to_all=True)
 
     async def remove_me(self):
@@ -267,6 +231,7 @@ class Client:
             # if self.ready:
             #     await self.tcp_send(b"", to_all=True)  # I'm disconnected.
             self.log.debug(f"Removing client {self.nick}:{self.cid}")
+            # TODO: i18n
             self.log.info("Disconnected")
             self.Core.clients[self.cid] = None
             self.Core.clients_by_id.pop(self.cid)
