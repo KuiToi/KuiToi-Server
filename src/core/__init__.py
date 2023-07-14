@@ -2,7 +2,7 @@
 # File core.__init__.py
 # Written by: SantaSpeen
 # Version 1.3
-# Core version: 0.2.1
+# Core version: 0.2.2
 # Licence: FPA
 # (c) kuitoi.su 2023
 # Special thanks to: AI Sage(https://poe.com/Sage), AI falcon-40b-v7(https://OpenBuddy.ai)
@@ -10,8 +10,8 @@
 __title__ = 'KuiToi-Server'
 __description__ = 'BeamingDrive Multiplayer server compatible with BeamMP clients.'
 __url__ = 'https://github.com/kuitoi/kuitoi-Server'
-__version__ = '0.2.1'
-__build__ = 874
+__version__ = '0.2.2'
+__build__ = 1113  # Я это считаю лог файлами
 __author__ = 'SantaSpeen'
 __author_email__ = 'admin@kuitoi.su'
 __license__ = "FPA"
