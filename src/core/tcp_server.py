@@ -6,8 +6,6 @@
 # (c) kuitoi.su 2023
 import asyncio
 import traceback
-from asyncio import AbstractEventLoop
-from threading import Thread
 
 import aiohttp
 
@@ -27,19 +25,20 @@ class TCPServer:
         client = self.Core.create_client(reader, writer)
         self.log.info(f"Identifying new ClientConnection...")
         data = await client.recv()
-        self.log.debug(f"recv1 data: {data}")
+        self.log.debug(f"Version: {data}")
         if data.decode("utf-8") != f"VC{self.Core.client_major_version}":
             await client.kick("Outdated Version.")
-            return False, None
+            return False, client
         else:
             await client.tcp_send(b"S")  # Accepted client version
 
         data = await client.recv()
-        self.log.debug(f"recv2 data: {data}")
+        self.log.debug(f"Key: {data}")
         if len(data) > 50:
             await client.kick("Invalid Key (too long)!")
-            return False, None
+            return False, client
         client.key = data.decode("utf-8")
+        ev.call_event("auth_sent_key", client)
         try:
             async with aiohttp.ClientSession() as session:
                 url = 'https://auth.beammp.com/pkToUser'
@@ -48,32 +47,31 @@ class TCPServer:
             self.log.debug(f"res: {res}")
             if res.get("error"):
                 await client.kick('Invalid key! Please restart your game.')
-                return False, None
+                return False, client
             client.nick = res["username"]
             client.roles = res["roles"]
             client.guest = res["guest"]
+            # noinspection PyProtectedMember
             client._update_logger()
         except Exception as e:
             self.log.error(f"Auth error: {e}")
             await client.kick('Invalid authentication data! Try to reconnect in 5 minutes.')
-            return False, None
+            return False, client
 
         for _client in self.Core.clients:
             if not _client:
                 continue
             if _client.nick == client.nick and _client.guest == client.guest:
                 await client.kick('Stale Client (replaced by new client)')
-                return False, None
+                return False, client
 
-        ev.call_event("on_auth", client)
+        ev.call_event("auth_ok", client)
 
         if len(self.Core.clients_by_id) > config.Game["players"]:
             await client.kick("Server full!")
-            return False, None
+            return False, client
         else:
             self.log.info("Identification success")
-            await client.tcp_send(b"P" + bytes(f"{client.cid}", "utf-8"))
-            await client.sync_resources()
             await self.Core.insert_client(client)
 
         return True, client
@@ -81,17 +79,13 @@ class TCPServer:
     async def set_down_rw(self, reader, writer):
         try:
             cid = (await reader.read(1))[0]
-            ok = False
-            for _client in self.Core.clients:
-                if not _client:
-                    continue
-                if _client.cid == cid:
-                    _client.down_rw = (reader, writer)
-                    ok = True
-                    self.log.debug(f"Client: {_client.nick}:{cid} - HandleDownload!")
-            if not ok:
+            client = self.Core.get_client(cid=cid)
+            if client:
+                client.down_rw = (reader, writer)
+                self.log.debug(f"Client: {client.nick}:{cid} - HandleDownload!")
+            else:
                 writer.close()
-                self.log.debug(f"Unknown client - HandleDownload")
+                self.log.debug(f"Unknown client id:{cid} - HandleDownload")
         finally:
             return
 
@@ -126,6 +120,7 @@ class TCPServer:
                 _, cl = await self.handle_code(code, reader, writer)
                 if cl:
                     await cl.remove_me()
+                    del cl
                 break
             except Exception as e:
                 self.log.error("Error while connecting..")
