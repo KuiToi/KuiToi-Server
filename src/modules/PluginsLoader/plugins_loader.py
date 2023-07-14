@@ -63,26 +63,38 @@ class KuiToi:
 class PluginsLoader:
 
     def __init__(self, plugins_dir):
-        self.__plugins = {}
-        self.__plugins_dir = plugins_dir
+        self.plugins = {}
+        self.plugins_dir = plugins_dir
         self.log = get_logger("PluginsLoader")
 
     def load_plugins(self):
         self.log.debug("Loading plugins...")
-        files = os.listdir(self.__plugins_dir)
+        files = os.listdir(self.plugins_dir)
         for file in files:
             if file.endswith(".py"):
                 try:
-                    self.log.debug(f"Loading plugin: {file}")
-                    plugin = types.ModuleType('plugin')
+                    self.log.debug(f"Loading plugin: {file[:-3]}")
+                    plugin = types.ModuleType(file[:-3])
                     plugin.KuiToi = KuiToi
+                    plugin.KuiToi._plugins_dir = self.plugins_dir
+                    plugin.kt = None
                     plugin.print = print
-                    file = os.path.join(self.__plugins_dir, file)
-                    with open(f'{file}', 'r') as f:
-                        code = f.read().replace("import KuiToi\n", "")
+                    file_path = os.path.join(self.plugins_dir, file)
+                    plugin.__file__ = file_path
+                    with open(f'{file_path}', 'r') as f:
+                        code = f.read()
                         exec(code, plugin.__dict__)
+                    if type(plugin.kt) != KuiToi:
+                        raise AttributeError(f'Attribute "kt" isn\'t KuiToi class. Plugin file: "{file_path}"')
+                    pl_name = plugin.kt.name
+                    if self.plugins.get(pl_name) is not None:
+                        raise NameError(f'Having plugins with identical names is not allowed; '
+                                        f'Plugin name: "{pl_name}"; Plugin file "{file_path}"')
+                    plugin.open = plugin.kt.open
                     plugin.load()
-                    self.__plugins.update({file[:-3]: plugin})
+                    self.plugins.update({pl_name: plugin})
                     self.log.debug(f"Plugin loaded: {file}")
                 except Exception as e:
-                    self.log.error(f"Error loading plugin: {file}; Error: {e}")
+                    # TODO: i18n
+                    self.log.error(f"Error while loading plugin: {file}; Error: {e}")
+                    self.log.exception(e)
