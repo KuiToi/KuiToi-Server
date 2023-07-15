@@ -19,7 +19,6 @@ __copyright__ = 'Copyright 2023 © SantaSpeen (Maxim Khomutov)'
 
 import asyncio
 import builtins
-import os
 import webbrowser
 
 import prompt_toolkit.shortcuts as shortcuts
@@ -27,7 +26,7 @@ import prompt_toolkit.shortcuts as shortcuts
 from .utils import get_logger
 from core.core import Core
 from main import parser
-from modules import ConfigProvider, EventsSystem, PluginsLoader
+from modules import ConfigProvider, EventsSystem
 from modules import Console
 from modules import MultiLanguage
 
@@ -107,16 +106,8 @@ console.builtins_hook()
 console.add_command("stop", console.stop, i18n.man_message_stop, i18n.help_message_stop)
 console.add_command("exit", console.stop, i18n.man_message_exit, i18n.help_message_exit)
 
-log.debug("Initializing PluginsLoader...")
-if not os.path.exists("plugins"):
-    os.mkdir("plugins")
-pl = PluginsLoader("plugins")
-pl.load_plugins()
-
 builtins.B = 1
 builtins.KB = B * 1024
 builtins.MB = KB * 1024
 builtins.GB = MB * 1024
 builtins.TB = GB * 1024
-
-log.info(i18n.init_ok)
