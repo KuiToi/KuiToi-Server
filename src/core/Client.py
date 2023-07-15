@@ -288,8 +288,14 @@ class Client:
             self.__Core.clients_by_nick.pop(self.nick)
         else:
             self.log.debug(f"Removing client; Closing connection...")
-        if not self.__writer.is_closing():
-            self.__writer.close()
-        _, down_w = self._down_rw
-        if down_w and not down_w.is_closing():
-            down_w.close()
+        try:
+            if not self.__writer.is_closing():
+                self.__writer.close()
+        except Exception as e:
+            self.log.debug(f"Error while closing writer: {e}")
+        try:
+            _, down_w = self._down_rw
+            if down_w and not down_w.is_closing():
+                down_w.close()
+        except Exception as e:
+            self.log.debug(f"Error while closing download writer: {e}")
