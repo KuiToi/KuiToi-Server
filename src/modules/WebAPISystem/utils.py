@@ -122,6 +122,5 @@ def hack_fastapi():
     })
     LOGGING_CONFIG["loggers"]["uvicorn"]["handlers"].append("file_default")
     LOGGING_CONFIG["loggers"]["uvicorn.access"]["handlers"].append("file_access")
-    print(LOGGING_CONFIG)
 
 
