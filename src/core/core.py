@@ -65,7 +65,7 @@ class Core:
                 break
         await asyncio.sleep(random.randint(3, 9) * 0.01)
         if not self.clients[cid]:
-            client.cid = cid
+            client._cid = cid
             self.clients_by_nick.update({client.nick: client})
             self.log.debug(f"Inserting client: {client.nick}:{client.cid}")
             self.clients_by_id.update({client.cid: client})
@@ -85,7 +85,7 @@ class Core:
         for client in self.clients:
             if not client:
                 continue
-            out += f"{client.nick}"
+            out += f"{client._nick}"
             if need_cid:
                 out += f":{client.cid}"
             out += ","
@@ -104,7 +104,7 @@ class Core:
                 if not client.ready:
                     client.is_disconnected()
                     continue
-                await client.tcp_send(bytes(ca, "utf-8"))
+                await client._tcp_send(bytes(ca, "utf-8"))
 
     @staticmethod
     def start_web():

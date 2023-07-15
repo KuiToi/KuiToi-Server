@@ -25,36 +25,36 @@ class TCPServer:
         client = self.Core.create_client(reader, writer)
         # TODO: i18n
         self.log.info(f"Identifying new ClientConnection...")
-        data = await client.recv()
+        data = await client._recv()
         self.log.debug(f"Version: {data}")
         if data.decode("utf-8") != f"VC{self.Core.client_major_version}":
             # TODO: i18n
             await client.kick("Outdated Version.")
             return False, client
         else:
-            await client.tcp_send(b"S")  # Accepted client version
+            await client._tcp_send(b"S")  # Accepted client version
 
-        data = await client.recv()
+        data = await client._recv()
         self.log.debug(f"Key: {data}")
         if len(data) > 50:
             # TODO: i18n
             await client.kick("Invalid Key (too long)!")
             return False, client
-        client.key = data.decode("utf-8")
+        client._key = data.decode("utf-8")
         ev.call_event("auth_sent_key", client)
         try:
             async with aiohttp.ClientSession() as session:
                 url = 'https://auth.beammp.com/pkToUser'
-                async with session.post(url, data={'key': client.key}) as response:
+                async with session.post(url, data={'key': client._key}) as response:
                     res = await response.json()
             self.log.debug(f"res: {res}")
             if res.get("error"):
                 # TODO: i18n
                 await client.kick('Invalid key! Please restart your game.')
                 return False, client
-            client.nick = res["username"]
-            client.roles = res["roles"]
-            client.guest = res["guest"]
+            client._nick = res["username"]
+            client._roles = res["roles"]
+            client._guest = res["guest"]
             # noinspection PyProtectedMember
             client._update_logger()
         except Exception as e:
@@ -89,7 +89,7 @@ class TCPServer:
             cid = (await reader.read(1))[0]
             client = self.Core.get_client(cid=cid)
             if client:
-                client.down_rw = (reader, writer)
+                client._down_rw = (reader, writer)
                 self.log.debug(f"Client: {client.nick}:{cid} - HandleDownload!")
             else:
                 writer.close()
@@ -102,7 +102,7 @@ class TCPServer:
             case "C":
                 result, client = await self.auth_client(reader, writer)
                 if result:
-                    await client.looper()
+                    await client._looper()
                 return result, client
             case "D":
                 await self.set_down_rw(reader, writer)
@@ -128,7 +128,7 @@ class TCPServer:
                 # await asyncio.wait([task], return_when=asyncio.FIRST_EXCEPTION)
                 _, cl = await self.handle_code(code, reader, writer)
                 if cl:
-                    await cl.remove_me()
+                    await cl._remove_me()
                     del cl
                 break
             except Exception as e:
