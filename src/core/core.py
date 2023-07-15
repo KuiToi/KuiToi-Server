@@ -43,7 +43,11 @@ class Core:
         self.client_major_version = "2.0"
         self.BeamMP_version = "3.2.0"
 
-    def get_client(self, cid=None, nick=None):
+        ev.register_event("get_player", self.get_client)
+
+    def get_client(self, cid=None, nick=None, from_ev=None):
+        if from_ev is not None:
+            return self.get_client(*from_ev['args'], **from_ev['kwargs'])
         if cid is not None:
             return self.clients_by_id.get(cid)
         if nick:
@@ -252,30 +256,33 @@ class Core:
                 tasks.append(asyncio.create_task(task()))
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
-            ev.call_event("_plugins_start")
+            await ev.call_async_event("_plugins_start")
 
             self.run = True
             self.log.info(i18n.start)
             ev.call_event("server_started")
+            await ev.call_async_event("server_started")
             await t  # Wait end.
+        except KeyboardInterrupt:
+            pass
         except Exception as e:
             self.log.error(f"Exception: {e}")
             self.log.exception(e)
-        except KeyboardInterrupt:
-            pass
         finally:
+            self.run = False
             self.tcp.stop()
             # self.udp.stop()
-            self.run = False
+            await self.stop()
 
     def start(self):
         asyncio.run(self.main())
 
-    def stop(self):
+    async def stop(self):
         ev.call_event("server_stopped")
-        ev.call_event("_plugins_unload")
+        await ev.call_async_event("server_stopped")
+        await ev.call_async_event("_plugins_unload")
         self.run = False
         self.log.info(i18n.stop)
         if config.WebAPI["enabled"]:
             asyncio.run(self.web_stop())
-        exit(0)
+        # exit(0)
