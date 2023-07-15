@@ -1,5 +1,7 @@
 import asyncio
+import string
 from asyncio import StreamReader, StreamWriter
+from logging import Logger
 from typing import Tuple
 
 from core import Core, utils
@@ -17,38 +19,28 @@ class Client:
         self.__Core = core
         self._cid: int = -1
         self._key: str = None
-        self._nick: str = None
-        self._roles: str = None
+        self.nick: str = None
+        self.roles: str = None
         self._guest = True
         self.__alive = True
         self._ready = False
     @property
-    def log(self):
-        return self._log
+    def _writer(self) -> StreamWriter: ...
     @property
-    def addr(self):
-        return self._addr
+    def log(self) -> Logger: ...
     @property
-    def cid(self):
-        return self._cid
+    def addr(self) -> Tuple[str, int]: ...
     @property
-    def key(self):
-        return self._key
+    def cid(self) -> int: ...
     @property
-    def nick(self):
-        return self._nick
+    def key(self) -> str: ...
     @property
-    def roles(self):
-        return self._roles
+    def guest(self) -> bool: ...
     @property
-    def guest(self):
-        return self._guest
-    @property
-    def ready(self):
-        return self._ready
+    def ready(self) -> bool: ...
     def is_disconnected(self) -> bool: ...
     async def kick(self, reason: str) -> None: ...
-    async def _tcp_send(self, data: bytes, to_all: bool = False, to_self: bool = True, to_udp: bool = False, writer: StreamWriter = None) -> None: ...
+    async def _send(self, data: bytes | str, to_all: bool = False, to_self: bool = True, to_udp: bool = False, writer: StreamWriter = None) -> None: ...
     async def _sync_resources(self) -> None: ...
     async def _recv(self) -> bytes: ...
     async def _split_load(self, start: int, end: int, d_sock: bool, filename: str) -> None: ...

@@ -18,11 +18,15 @@ class Client:
         self._addr = writer.get_extra_info("sockname")
         self._cid = -1
         self._key = None
-        self._nick = None
-        self._roles = None
+        self.nick = None
+        self.roles = None
         self._guest = True
         self._ready = False
         self._cars = []
+
+    @property
+    def _writer(self):
+        return self.__writer
 
     @property
     def log(self):
@@ -39,14 +43,6 @@ class Client:
     @property
     def key(self):
         return self._key
-
-    @property
-    def nick(self):
-        return self._nick
-
-    @property
-    def roles(self):
-        return self._roles
 
     @property
     def guest(self):
@@ -79,14 +75,14 @@ class Client:
 
     async def kick(self, reason):
         if not self.__alive:
-            self.log.debug(f"Kick({reason}) skipped;")
+            self.log.debug(f"{self.nick}.kick('{reason}') skipped: Not alive;")
             return
         # TODO: i18n
         self.log.info(f"Kicked with reason: \"{reason}\"")
-        await self._tcp_send(b"K" + bytes(reason, "utf-8"))
+        await self._send(b"K" + bytes(reason, "utf-8"))
         self.__alive = False
 
-    async def _tcp_send(self, data, to_all=False, to_self=True, to_udp=False, writer=None):
+    async def _send(self, data, to_all=False, to_self=True, to_udp=False, writer=None):
 
         # TNetwork.cpp; Line: 383
         # BeamMP TCP protocol sends a header of 4 bytes, followed by the data.
@@ -94,23 +90,26 @@ class Client:
         # ^------^^---...-^
         #  size     data
 
+        if type(data) == str:
+            data = bytes(data, "utf-8")
+
         if writer is None:
             writer = self.__writer
 
         if to_all:
-            code = data[:1]
+            code = chr(data[0])
             for client in self.__Core.clients:
-                if not client or (client == self and not to_self):
+                if not client or (client is self and not to_self):
                     continue
-                if not to_udp or code in [b'W', b'Y', b'V', b'E']:
-                    if code in [b'O', b'T'] or len(data) > 1000:
+                if not to_udp or code in ['V', 'W', 'Y', 'E']:
+                    if code in ['O', 'T'] or len(data) > 1000:
                         # TODO: Compress data
-                        await client._tcp_send(data)
+                        await client._send(data)
                     else:
-                        await client._tcp_send(data)
+                        await client._send(data)
                 else:
                     # TODO: UDP send
-                    pass
+                    self.log.debug(f"UDP Part not ready: {code}")
             return
 
         header = len(data).to_bytes(4, "little", signed=True)
@@ -198,10 +197,10 @@ class Client:
                         break
                 self.log.debug(f"Mode size: {size}")
                 if size == -1:
-                    await self._tcp_send(b"CO")
+                    await self._send(b"CO")
                     await self.kick(f"Not allowed mod: " + file)
                     return
-                await self._tcp_send(b"AG")
+                await self._send(b"AG")
                 t = 0
                 while not self._down_rw[0]:
                     await asyncio.sleep(0.1)
@@ -236,41 +235,39 @@ class Client:
                 mod_list = path_list + size_list
                 self.log.debug(f"Mods List: {mod_list}")
                 if len(mod_list) == 0:
-                    await self._tcp_send(b"-")
+                    await self._send(b"-")
                 else:
-                    await self._tcp_send(bytes(mod_list, "utf-8"))
+                    await self._send(bytes(mod_list, "utf-8"))
             elif data == b"Done":
-                await self._tcp_send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
+                await self._send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
                 break
         return
 
     async def _looper(self):
-        await self._tcp_send(b"P" + bytes(f"{self.cid}", "utf-8"))  # Send clientID
+        await self._send(b"P" + bytes(f"{self.cid}", "utf-8"))  # Send clientID
         await self._sync_resources()
-        # TODO: GlobalParser
         while self.__alive:
             data = await self._recv()
             if not data:
                 self.__alive = False
                 break
 
+            # V to Y
             if 89 >= data[0] >= 86:
-                # TODO: Network.SendToAll
-                pass
+                await self._send(data, to_all=True, to_self=False)
 
-            code = data.decode()[0]
+            code = chr(data[0])
             self.log.debug(f"Received code: {code}, data: {data}")
             match code:
                 case "H":
                     # Client connected
+
+                    ev.call_event("player_join", player=self)
+                    await ev.call_async_event("player_join", player=self)
+
+                    await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
+                    await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
                     self._ready = True
-
-                    ev.call_event("player_join", self)
-                    await ev.call_async_event("player_join", self)
-
-                    bnick = bytes(self.nick, "utf-8")
-                    await self._tcp_send(b"Sn" + bnick, to_all=True)  # I don't know for what it
-                    await self._tcp_send(b"JWelcome" + bnick + b"!", to_all=True)  # Hello message
 
                     # TODO: Sync cars
                     # for client in self.__Core.clients:
@@ -279,17 +276,40 @@ class Client:
 
                 case "C":
                     # Chat
-                    msg = data[2:].decode()
+                    msg = data.decode()[4 + len(self.nick):]
                     if not msg:
                         self.log.debug("Tried to send an empty event, ignoring")
                         continue
                     self.log.info(f"Received message: {msg}")
                     # TODO: Handle chat event
-                    ev_data = ev.call_event("chat_receive", msg)
-                    d2 = await ev.call_async_event("chat_receive", msg)
-                    ev_data.extend(d2)
-                    self.log.info(f"TODO: Handle chat event; {ev_data}")
-                    await self._tcp_send(data, to_all=True)
+                    to_ev = {"message": msg, "player": self}
+                    ev_data_list = ev.call_event("chat_receive", **to_ev)
+                    d2 = await ev.call_async_event("chat_receive", **to_ev)
+                    ev_data_list.extend(d2)
+                    need_send = True
+                    for ev_data in ev_data_list:
+                        try:
+                            message = ev_data["message"]
+                            to_all = ev_data.get("to_all")
+                            if to_all is None:
+                                if need_send:
+                                    need_send = False
+                                to_all = True
+                            if to_all:
+                                if need_send:
+                                    need_send = False
+                            to_self = ev_data.get("to_self")
+                            if to_self is None:
+                                to_self = True
+                            to_client = ev_data.get("to_client")
+                            writer = None
+                            if to_client:
+                                writer = to_client._writer
+                            await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
+                        except KeyError | AttributeError:
+                            self.log.error(f"Returns invalid data: {ev_data}")
+                    if need_send:
+                        await self._send(data, to_all=True)
 
                 case "O":
                     # TODO: ParseVehicle
