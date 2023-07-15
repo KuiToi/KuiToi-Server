@@ -1,6 +1,9 @@
+import asyncio
+import inspect
 import os
 import types
 from contextlib import contextmanager
+from threading import Thread
 
 from core import get_logger
 
@@ -39,8 +42,9 @@ class KuiToi:
     @contextmanager
     def open(self, file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
         path = os.path.join(self.__dir, file)
-        if not os.path.exists(path):
-            with open(path, 'x'): ...
+        self.log.debug(f'Trying to open "{path}" with mode "{mode}"')
+        # if not os.path.exists(path):
+        #     with open(path, 'x'): ...
         f = None
         try:
             f = open(path, mode, buffering, encoding, errors, newline, closefd, opener)
@@ -51,23 +55,27 @@ class KuiToi:
             if f is not None:
                 f.close()
 
-    @staticmethod
-    def register_event(event_name, event_func):
+    def register_event(self, event_name, event_func):
+        self.log.debug(f"Registering event {event_name}")
         ev.register_event(event_name, event_func)
 
-    @staticmethod
-    def call_event(event_name, *data):
-        ev.call_event(event_name, *data)
+    def call_event(self, event_name, *data, **kwargs):
+        self.log.debug(f"Called event {event_name}")
+        ev.call_event(event_name, *data, **kwargs)
 
 
 class PluginsLoader:
 
     def __init__(self, plugins_dir):
+        self.loop = asyncio.get_event_loop()
         self.plugins = {}
+        self.plugins_tasks = []
         self.plugins_dir = plugins_dir
         self.log = get_logger("PluginsLoader")
+        ev.register_event("_plugins_start", self.start)
+        ev.register_event("_plugins_unload", self.unload)
 
-    def load_plugins(self):
+    async def load(self):
         self.log.debug("Loading plugins...")
         files = os.listdir(self.plugins_dir)
         for file in files:
@@ -77,24 +85,99 @@ class PluginsLoader:
                     plugin = types.ModuleType(file[:-3])
                     plugin.KuiToi = KuiToi
                     plugin.KuiToi._plugins_dir = self.plugins_dir
-                    plugin.kt = None
                     plugin.print = print
                     file_path = os.path.join(self.plugins_dir, file)
                     plugin.__file__ = file_path
-                    with open(f'{file_path}', 'r') as f:
+                    with open(f'{file_path}', 'r', encoding="utf-8") as f:
                         code = f.read()
                         exec(code, plugin.__dict__)
-                    if type(plugin.kt) != KuiToi:
-                        raise AttributeError(f'Attribute "kt" isn\'t KuiToi class. Plugin file: "{file_path}"')
+
+                    ok = True
+                    try:
+                        isfunc = inspect.isfunction
+                        if not isfunc(plugin.load):
+                            self.log.error('Function "def load():" not found.')
+                            ok = False
+                        if not isfunc(plugin.start):
+                            self.log.error('Function "def start():" not found.')
+                            ok = False
+                        if not isfunc(plugin.unload):
+                            self.log.error('Function "def unload():" not found.')
+                            ok = False
+                        if type(plugin.kt) != KuiToi:
+                            self.log.error(f'Attribute "kt" isn\'t KuiToi class. Plugin file: "{file_path}"')
+                            ok = False
+                    except AttributeError:
+                        ok = False
+                    if not ok:
+                        self.log.error(f'Plugin file: "{file_path}" is not a valid KuiToi plugin.')
+                        return
+
                     pl_name = plugin.kt.name
                     if self.plugins.get(pl_name) is not None:
                         raise NameError(f'Having plugins with identical names is not allowed; '
                                         f'Plugin name: "{pl_name}"; Plugin file "{file_path}"')
+
                     plugin.open = plugin.kt.open
-                    plugin.load()
-                    self.plugins.update({pl_name: plugin})
-                    self.log.debug(f"Plugin loaded: {file}")
+                    iscorfunc = inspect.iscoroutinefunction
+                    self.plugins.update(
+                        {
+                            pl_name: {
+                                "plugin": plugin,
+                                "load": {
+                                    "func": plugin.load,
+                                    "async": iscorfunc(plugin.load)
+                                },
+                                "start": {
+                                    "func": plugin.start,
+                                    "async": iscorfunc(plugin.start)
+                                },
+                                "unload": {
+                                    "func": plugin.unload,
+                                    "async": iscorfunc(plugin.unload)
+                                }
+                            }
+                        }
+                    )
+                    if self.plugins[pl_name]["load"]['async']:
+                        plugin.log.debug(f"I'm async")
+                        await plugin.load()
+                    else:
+                        plugin.log.debug(f"I'm sync")
+                        th = Thread(target=plugin.load, name=f"{pl_name}.load()")
+                        th.start()
+                        th.join()
+                    self.log.debug(f"Plugin loaded: {file}. Settings: {self.plugins[pl_name]}")
                 except Exception as e:
                     # TODO: i18n
                     self.log.error(f"Error while loading plugin: {file}; Error: {e}")
                     self.log.exception(e)
+
+    async def start(self, _):
+        for pl_name, pl_data in self.plugins.items():
+            try:
+                if pl_data['start']['async']:
+                    self.log.debug(f"Start async plugin: {pl_name}")
+                    t = self.loop.create_task(pl_data['start']['func']())
+                    self.plugins_tasks.append(t)
+                else:
+                    self.log.debug(f"Start sync plugin: {pl_name}")
+                    th = Thread(target=pl_data['start']['func'], name=f"Thread {pl_name}")
+                    th.start()
+                    self.plugins_tasks.append(th)
+            except Exception as e:
+                self.log.exception(e)
+
+    async def unload(self, _):
+        for pl_name, pl_data in self.plugins.items():
+            try:
+                if pl_data['unload']['async']:
+                    self.log.debug(f"Unload async plugin: {pl_name}")
+                    await pl_data['unload']['func']()
+                else:
+                    self.log.debug(f"Unload sync plugin: {pl_name}")
+                    th = Thread(target=pl_data['unload']['func'], name=f"Thread {pl_name}")
+                    th.start()
+                    th.join()
+            except Exception as e:
+                self.log.exception(e)
