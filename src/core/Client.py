@@ -70,7 +70,7 @@ class Client:
         if len(data) == 10:
             data += b"."
         header = len(data).to_bytes(4, "little", signed=True)
-        self.log.debug(f'len: {len(data)}; send: {header + data}')
+        self.log.debug(f'len: {len(data)}; send: {header + data!r}')
         try:
             writer.write(header + data)
             await writer.drain()
@@ -116,6 +116,7 @@ class Client:
             self.alive = False
             return b""
 
+    # TODO: Speed  limiter
     async def _split_load(self, start, end, d_sock, filename):
         real_size = end - start
         writer = self.down_rw[1] if d_sock else self.writer
