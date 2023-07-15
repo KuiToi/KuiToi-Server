@@ -221,7 +221,10 @@ class Client:
                     await self.tcp_send(b"Sn" + bytes(self.nick, "utf-8"), to_all=True)
                 case "C":
                     # Chat
-                    ev.call_event("chat_receive", f"{data}")
+                    # TODO: Handle chat event
+                    ev_data = ev.call_event("chat_receive", f"{data}")
+                    d2 = await ev.call_async_event("chat_receive", f"{data}")
+                    ev_data.extend(d2)
                     await self.tcp_send(data, to_all=True)
 
     async def remove_me(self):
