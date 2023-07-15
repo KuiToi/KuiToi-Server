@@ -104,7 +104,7 @@ class Core:
                 if not client.ready:
                     client.is_disconnected()
                     continue
-                await client._tcp_send(bytes(ca, "utf-8"))
+                await client._send(bytes(ca, "utf-8"))
 
     @staticmethod
     def start_web():
