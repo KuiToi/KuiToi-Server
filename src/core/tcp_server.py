@@ -152,7 +152,9 @@ class TCPServer:
             # TODO: i18n
             self.log.error("Cannot bind port")
             raise e
-        except BaseException as e:
+        except KeyboardInterrupt:
+            pass
+        except Exception as e:
             self.log.error(f"Error: {e}")
             raise e
         finally:

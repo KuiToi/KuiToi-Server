@@ -14,17 +14,13 @@ parser.add_argument('-v', '--version', action="store_true", help='Print version 
 parser.add_argument('--config', help='Patch to config file.', nargs='?', default=None, type=str)
 parser.add_argument('--language', help='Setting localisation.', nargs='?', default=None, type=str)
 
-run = True
-
 
 def main():
     from core import Core
-    core = Core()
     try:
-        core.start()
+        Core().start()
     except KeyboardInterrupt:
-        core.run = False
-    core.stop()
+        pass
 
 
 if __name__ == '__main__':
