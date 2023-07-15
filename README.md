@@ -41,9 +41,11 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Call events
     - [x] Create custom events
     - [x] Return from events
+    - [x] Async support
   - [x] Plugins support
     - [ ] KuiToi class
     - [x] Load Python plugins
+    - [x] Async support
     - [ ] Load Lua plugins (Original BeamMP compatibility)
   - [x] MultiLanguage (i18n support)
     - [x] Core
