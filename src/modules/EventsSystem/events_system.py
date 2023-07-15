@@ -1,4 +1,7 @@
+import asyncio
 import builtins
+import inspect
+import time
 
 from core import get_logger
 
@@ -8,13 +11,17 @@ class EventsSystem:
 
     def __init__(self):
         # TODO: default events
+        self.log = get_logger("EventsSystem")
+        self.loop = asyncio.get_event_loop()
         self.__events = {
-            "on_started": [],
+            "server_started": [],
+            "_plugins_start": [],
             "auth_sent_key": [],
             "auth_ok": [],
             "chat_receive": [],
+            "_plugins_unload": [],
+            "server_stopped": [],
         }
-        self.log = get_logger("EventsSystem")
 
     def builtins_hook(self):
         self.log.debug("used builtins_hook")
@@ -39,7 +46,12 @@ class EventsSystem:
         if event_name in self.__events.keys():
             for func in self.__events[event_name]:
                 try:
-                    funcs_data.append(func({"event_name": event_name, "args": args, "kwargs": kwargs}))
+                    event_data = {"event_name": event_name, "args": args, "kwargs": kwargs}
+                    if inspect.iscoroutinefunction(func):
+                        d = self.loop.run_until_complete(func(event_data))
+                    else:
+                        d = func(event_data)
+                    funcs_data.append(d)
                 except Exception as e:
                     # TODO: i18n
                     self.log.error(f'Error while calling "{event_name}"; In function: "{func.__name__}"')
