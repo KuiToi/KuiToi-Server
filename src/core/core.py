@@ -16,6 +16,7 @@ from core import utils
 from core.Client import Client
 from core.tcp_server import TCPServer
 from core.udp_server import UDPServer
+from modules import PluginsLoader
 from modules.WebAPISystem import app as webapp
 
 
@@ -199,13 +200,19 @@ class Core:
                 self.log.error(f"Error in heartbeat: {e}")
 
     async def main(self):
-        self.run = True
         self.tcp = self.tcp(self, self.server_ip, self.server_port)
         self.udp = self.udp(self, self.server_ip, self.server_port)
         console.add_command(
             "list",
             lambda x: f"Players list: {self.get_clients_list(True)}"
         )
+
+        self.log.debug("Initializing PluginsLoader...")
+        if not os.path.exists("plugins"):
+            os.mkdir("plugins")
+        pl = PluginsLoader("plugins")
+        await pl.load()
+
         try:
             # WebApi Start
             if config.WebAPI["enabled"]:
@@ -233,6 +240,7 @@ class Core:
             if len_mods > 0:
                 # TODO: i18n
                 self.log.info(f"Loaded {len_mods} mods: {round(self.mods_list[0] / MB, 2)}mb")
+            self.log.info(i18n.init_ok)
 
             await self.heartbeat(True)
             for i in range(int(config.Game["players"] * 2.3)):  # * 2.3 For down sock and buffer.
@@ -244,8 +252,11 @@ class Core:
                 tasks.append(asyncio.create_task(task()))
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
+            ev.call_event("_plugins_start")
+
+            self.run = True
             self.log.info(i18n.start)
-            ev.call_event("on_started")
+            ev.call_event("server_started")
             await t  # Wait end.
         except Exception as e:
             self.log.error(f"Exception: {e}")
@@ -261,6 +272,8 @@ class Core:
         asyncio.run(self.main())
 
     def stop(self):
+        ev.call_event("server_stopped")
+        ev.call_event("_plugins_unload")
         self.run = False
         self.log.info(i18n.stop)
         if config.WebAPI["enabled"]:
