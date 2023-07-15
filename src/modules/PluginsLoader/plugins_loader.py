@@ -72,8 +72,11 @@ class PluginsLoader:
         self.plugins_tasks = []
         self.plugins_dir = plugins_dir
         self.log = get_logger("PluginsLoader")
+        self.loaded_str = "Plugins: "
         ev.register_event("_plugins_start", self.start)
         ev.register_event("_plugins_unload", self.unload)
+        console.add_command("plugins", lambda x: self.loaded_str[:-2])
+        console.add_command("pl", lambda x: self.loaded_str[:-2])
 
     async def load(self):
         self.log.debug("Loading plugins...")
@@ -147,9 +150,11 @@ class PluginsLoader:
                         th = Thread(target=plugin.load, name=f"{pl_name}.load()")
                         th.start()
                         th.join()
+                    self.loaded_str += f"{pl_name}:ok, "
                     self.log.debug(f"Plugin loaded: {file}. Settings: {self.plugins[pl_name]}")
                 except Exception as e:
                     # TODO: i18n
+                    self.loaded_str += f"{file}:no, "
                     self.log.error(f"Error while loading plugin: {file}; Error: {e}")
                     self.log.exception(e)
 
