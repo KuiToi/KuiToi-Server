@@ -11,11 +11,11 @@ config = {"config_version": 0.1, "sql": {"enabled": False, "host": "127.0.0.1", 
 cfg_file = "config.json"
 
 
-def my_event_handler(event_data):
+async def my_event_handler(event_data):
     log.info(f"{event_data}")
 
 
-def load():
+async def load():
     # Инициализация плагина
     with open(cfg_file, 'w') as f:
         json.dump(config, f)
@@ -25,13 +25,13 @@ def load():
     log.info("Плагин загружен успешно.")
 
 
-def start():
+async def start():
     # Запуск процессов плагина
-    ev.call_event("my_event")
-    ev.call_event("my_event", "Some data", data="some data too")
+    await ev.call_async_event("my_event")
+    await ev.call_async_event("my_event", "Some data", data="some data too")
     log.info("Плагин запустился успешно.")
 
 
-def unload():
+async def unload():
     # Код завершающий все процессы
     log.info("Плагин выгружен успешно.")

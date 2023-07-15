@@ -1,7 +1,7 @@
 # Documentation for KuiToi Server
 
-#### At the moment, the English documentation is out of date and its usage is not recommended.
-
+### The documentation is not perfect yet, but it will be one day
+    
 1. Setup and Start server - [here](setup)
 2. Plugins and Events system - [here](plugins)
 3. MultiLanguage - [here](./multilanguage)
