@@ -12,24 +12,81 @@
 ## Пример
 
 ```python
-import KuiToi
+try:
+    import KuiToi
+except ImportError:
+    pass
 
-beam = KuiToi("TestPlugin")
-logger = beam.log
+kt = KuiToi("Example")
+log = kt.log
 
-def load():  # Plugins load from here
-    print(beam.name)
+def my_event_handler(event_data):
+    log.info(f"{event_data}")
 
-def on_started():
-    logger.info("Server starting...")
+def load():
+    # Инициализация плагина
+    ev.register_event("my_event", my_event_handler)
+    log.info("Плагин загружен успешно.")
 
-beam.register_event("on_started", on_started)
+    
+def start():
+    # Запуск процессов плагина
+    ev.call_event("my_event")
+    ev.call_event("my_event", "Some data", data="some data too")
+    log.info("Плагин запустился успешно.")
+
+
+def unload():
+    # Код завершающий все процессы
+    log.info("Плагин выгружен успешно.")
 ```
 
-Так же более обширный пример можно найти в [example.py](./example.py)
+* Рекомендуется использовать `open()` после `load()`, иначе стоит использовать `kt.load()` - Создаёт файл в папке `plugin/<plugin_name>/<filename>`
+* Создание своего ивента : `kt.register_event("my_event", my_event_function)` - 
+* Вызов ивента: `kt.call_event("my_event")`
+* Вызов ивента с данными: `kt.call_event("my_event", data, data2=data2)`
+* Базовые ивенты: _Позже напишу_
 
-* Базовые ивенты: ['on_started', 'on_auth, 'on_stop']
-* Создание своего ивента : `beam.register_event("my_event", my_event_function)`
-* Вызов ивента: `beam.call_event("my_event")`
-* Вызов ивента с данными: `beam.call_event("my_event", data, data2)`
-* Вызовы с указанием переменой _**не поддерживаются**_: `beam.call_event("my_event", data=data)`
+## Async функции
+
+Поддержка async есть
+
+```python
+try:
+    import KuiToi
+except ImportError:
+    pass
+
+kt = KuiToi("Example")
+log = kt.log
+
+
+async def my_event_handler(event_data):
+    log.info(f"{event_data}")
+
+    
+async def load():
+    # Инициализация плагина
+    ev.register_event("my_event", my_event_handler)
+    log.info("Плагин загружен успешно.")
+
+
+async def start():
+    # Запуск процессов плагина
+    await ev.call_async_event("my_event")
+    await ev.call_async_event("my_event", "Some data", data="some data too")
+    log.info("Плагин запустился успешно.")
+
+
+async def unload():
+    # Код завершающий все процессы
+    log.info("Плагин выгружен успешно.")
+
+```
+
+Так же более обширный пример можно найти в [async_example.py](./async_example.py)
+
+* Создание своего ивента: `kt.register_event("my_event", my_event_function)` (в register_event стоит проверка на функцию)
+* Вызов async ивента: `kt.call_async_event("my_event")`
+* Вызов async ивента: `kt.call_async_event("my_event", data, data2=data2)`
+* Базовые async ивенты: _Позже напишу_

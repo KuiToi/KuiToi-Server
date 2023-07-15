@@ -38,12 +38,39 @@ Game:
   players: 8
 Server:
   debug: false
-  description: This server uses KuiToi!
+  description: Welcome to KuiToi Server!
+  language: en
   name: KuiToi-Server
   server_ip: 0.0.0.0
-  server_port: 30814
+  server_port: 30813
+WebAPI:
+  enabled: false
+  secret_key: <random_key>
+  server_ip: 127.0.0.1
+  server_port: 8433
+
 ```
+### Auth
+
 * Если поставить `private: false` и не установить `key`, то сервер запросит BeamMP ключ, без него не запустится.
 * Введя BeamMP ключ сервер появится в списке лаунчера.
 * Взять ключ можно тут: [https://beammp.com/k/keys](https://beammp.com/k/keys)
+
+### Game
+
+* `map` указывается только название карты, т.е. открываем мод с картой в `map.zip/levels` - вот тут будет название карты, его мы и вставляем
+* `max_cars` - Максимальное количество машин на игрока
+* `players` - Максимально количество игроков
+
+### Server
+
+* `debug` - Нужно ли выводить debug сообщения (только для опытных пользователей, немного теряется в производительности)
+* `description` - Описания сервера для лаунчера BeamMP
+* `language` - С каким языком запустится сервер (Доступные на данный момент: en, ru)
+* `name` - Названия сервер для лаунчера BeamMP
+* `server_ip` - Какой IP адрес занять серверу (только для опытных пользователей, по умолчанию 0.0.0.0)
+* `server_port` - На каком порту будет работать сервер
+
+### WebAPI
+##### _Доки не готовы_
 
