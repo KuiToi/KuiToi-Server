@@ -87,7 +87,7 @@ class Console:
             print()
             raw = True
 
-        message = str()
+        message = "\n"
         max_len = self.__get_max_len(self.__func.keys())
         if max_len < 7:
             max_len = 7
