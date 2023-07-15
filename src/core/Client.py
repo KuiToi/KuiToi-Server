@@ -22,6 +22,7 @@ class Client:
         self._roles = None
         self._guest = True
         self._ready = False
+        self._cars = []
 
     @property
     def log(self):
@@ -55,8 +56,12 @@ class Client:
     def ready(self):
         return self._ready
 
+    @property
+    def cars(self):
+        return self.cars
+
     def _update_logger(self):
-        self._log = utils.get_logger(f"{self.nick}:{self.cid})")
+        self._log = utils.get_logger(f"{self.nick}:{self.cid}")
         self.log.debug(f"Update logger")
 
     def is_disconnected(self):
@@ -81,7 +86,7 @@ class Client:
         await self._tcp_send(b"K" + bytes(reason, "utf-8"))
         self.__alive = False
 
-    async def _tcp_send(self, data, to_all=False, writer=None):
+    async def _tcp_send(self, data, to_all=False, to_self=True, to_udp=False, writer=None):
 
         # TNetwork.cpp; Line: 383
         # BeamMP TCP protocol sends a header of 4 bytes, followed by the data.
@@ -93,14 +98,21 @@ class Client:
             writer = self.__writer
 
         if to_all:
+            code = data[:1]
             for client in self.__Core.clients:
-                if not client:
+                if not client or (client == self and not to_self):
                     continue
-                await client._tcp_send(data)
+                if not to_udp or code in [b'W', b'Y', b'V', b'E']:
+                    if code in [b'O', b'T'] or len(data) > 1000:
+                        # TODO: Compress data
+                        await client._tcp_send(data)
+                    else:
+                        await client._tcp_send(data)
+                else:
+                    # TODO: UDP send
+                    pass
             return
 
-        if len(data) == 10:
-            data += b"."
         header = len(data).to_bytes(4, "little", signed=True)
         self.log.debug(f'len: {len(data)}; send: {header + data!r}')
         try:
@@ -238,13 +250,14 @@ class Client:
         # TODO: GlobalParser
         while self.__alive:
             data = await self._recv()
-            if data == b"":
-                if not self.__alive:
-                    break
-                else:
-                    await asyncio.sleep(.1)
-                    self.is_disconnected()
-                    continue
+            if not data:
+                self.__alive = False
+                break
+
+            if 89 >= data[0] >= 86:
+                # TODO: Network.SendToAll
+                pass
+
             code = data.decode()[0]
             self.log.debug(f"Received code: {code}, data: {data}")
             match code:
@@ -260,16 +273,36 @@ class Client:
                     await self._tcp_send(b"JWelcome" + bnick + b"!", to_all=True)  # Hello message
 
                     # TODO: Sync cars
+                    # for client in self.__Core.clients:
+                    #     for car in client.cars:
+                    #         await self._tcp_send(car)
 
                 case "C":
                     # Chat
-                    self.log.info(f"Received message: {data!r}")
+                    msg = data[2:].decode()
+                    if not msg:
+                        self.log.debug("Tried to send an empty event, ignoring")
+                        continue
+                    self.log.info(f"Received message: {msg}")
                     # TODO: Handle chat event
-                    ev_data = ev.call_event("chat_receive", f"{data}")
-                    d2 = await ev.call_async_event("chat_receive", f"{data}")
+                    ev_data = ev.call_event("chat_receive", msg)
+                    d2 = await ev.call_async_event("chat_receive", msg)
                     ev_data.extend(d2)
                     self.log.info(f"TODO: Handle chat event; {ev_data}")
                     await self._tcp_send(data, to_all=True)
+
+                case "O":
+                    # TODO: ParseVehicle
+                    pass
+
+                case "E":
+                    # TODO: HandleEvent
+                    pass
+
+                case "N":
+                    # TODO: N
+                    pass
+
                 case _:
                     pass
 
