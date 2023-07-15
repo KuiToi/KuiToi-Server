@@ -250,8 +250,17 @@ class Client:
             match code:
                 case "H":
                     # Client connected
-                    self.ready = True
-                    await self.tcp_send(b"Sn" + bytes(self.nick, "utf-8"), to_all=True)
+                    self._ready = True
+
+                    ev.call_event("player_join", self)
+                    await ev.call_async_event("player_join", self)
+
+                    bnick = bytes(self.nick, "utf-8")
+                    await self._tcp_send(b"Sn" + bnick, to_all=True)  # I don't know for what it
+                    await self._tcp_send(b"JWelcome" + bnick + b"!", to_all=True)  # Hello message
+
+                    # TODO: Sync cars
+
                 case "C":
                     # Chat
                     self.log.info(f"Received message: {data!r}")

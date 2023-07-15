@@ -18,6 +18,7 @@ class EventsSystem:
             "server_started": [],
             "auth_sent_key": [],  # Only sync
             "auth_ok": [],  # Only sync
+            "player_join": [],
             "chat_receive": [],
             "server_stopped": [],
         }
@@ -25,6 +26,7 @@ class EventsSystem:
             "server_started": [],
             "_plugins_start": [],
             "_plugins_unload": [],
+            "player_join": [],
             "chat_receive": [],
             "server_stopped": []
         }
