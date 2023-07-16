@@ -1,3 +1,9 @@
+# Developed by KuiToi Dev
+# File core.tcp_server.py
+# Written by: SantaSpeen
+# Core version: 0.2.3
+# Licence: FPA
+# (c) kuitoi.su 2023
 import asyncio
 import math
 import zlib

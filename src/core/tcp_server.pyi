@@ -1,7 +1,7 @@
 # Developed by KuiToi Dev
 # File core.tcp_server.pyi
 # Written by: SantaSpeen
-# Core version: 0.2.2
+# Core version: 0.2.3
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
@@ -9,7 +9,7 @@ from asyncio import StreamWriter, StreamReader
 from typing import Tuple
 
 from core import utils, Core
-from core.core import Client
+from core.Client import Client
 
 
 class TCPServer:
