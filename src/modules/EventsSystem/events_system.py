@@ -22,20 +22,18 @@ class EventsSystem:
         self.loop = asyncio.get_event_loop()
         self.as_tasks = []
         self.__events = {
-            "server_started": [],
-            "auth_sent_key": [],  # Only sync
-            "auth_ok": [],  # Only sync
-            "player_join": [],
-            "chat_receive": [],
-            "server_stopped": [],
+            "onServerStarted": [],
+            "onPlayerSentKey": [],  # Only sync
+            "onPlayerAuthenticated": [],  # Only sync
+            "onPlayerJoin": [],
+            "onChatReceive": [],
+            "onServerStopped": [],
         }
         self.__async_events = {
-            "server_started": [],
-            "_plugins_start": [],
-            "_plugins_unload": [],
-            "player_join": [],
-            "chat_receive": [],
-            "server_stopped": []
+            "onServerStarted": [],
+            "onPlayerJoin": [],
+            "onChatReceive": [],
+            "onServerStopped": []
         }
 
     def builtins_hook(self):

@@ -41,7 +41,7 @@ class TCPServer:
             await client.kick("Invalid Key (too long)!")
             return False, client
         client._key = data.decode("utf-8")
-        ev.call_event("auth_sent_key", player=client)
+        ev.call_event("onPlayerSentKey", player=client)
         try:
             async with aiohttp.ClientSession() as session:
                 url = 'https://auth.beammp.com/pkToUser'
@@ -71,7 +71,7 @@ class TCPServer:
                 await client.kick('Stale Client (replaced by new client)')
                 return False, client
 
-        ev.call_event("auth_ok", player=client)
+        ev.call_event("onPlayerAuthenticated", player=client)
 
         if len(self.Core.clients_by_id) > config.Game["players"]:
             # TODO: i18n

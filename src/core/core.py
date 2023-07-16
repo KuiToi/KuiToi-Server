@@ -260,8 +260,8 @@ class Core:
 
             self.run = True
             self.log.info(i18n.start)
-            ev.call_event("server_started")
-            await ev.call_async_event("server_started")
+            ev.call_event("onServerStarted")
+            await ev.call_async_event("onServerStarted")
             await t  # Wait end.
         except KeyboardInterrupt:
             pass
@@ -278,8 +278,8 @@ class Core:
         asyncio.run(self.main())
 
     async def stop(self):
-        ev.call_event("server_stopped")
-        await ev.call_async_event("server_stopped")
+        ev.call_event("onServerStopped")
+        await ev.call_async_event("onServerStopped")
         await ev.call_async_event("_plugins_unload")
         self.run = False
         self.log.info(i18n.stop)
