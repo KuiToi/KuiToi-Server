@@ -5,6 +5,7 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import json
 import math
 import zlib
 
@@ -145,8 +146,8 @@ class Client:
 
             if int_header > 100 * MB:
                 await self.kick("Header size limit exceeded")
-                self.log.warn(f"Client {self.nick}:{self.cid} sent header of >100MB - "
-                              f"assuming malicious intent and disconnecting the client.")
+                self.log.warning(f"Client {self.nick}:{self.cid} sent header of >100MB - "
+                                 f"assuming malicious intent and disconnecting the client.")
                 return b""
 
             data = await self.__reader.read(100 * MB)
@@ -324,18 +325,25 @@ class Client:
                         continue
                     sub_code = data[1]
                     data = data[3:]
+                    vid = -1
+                    pid = -1
                     match sub_code:
                         case "s":  # Spawn car
                             if data[0] == "0":
                                 car_id = len(self._cars)
                                 self.log.debug(f"Created a car with ID {car_id}")
-                                # car_json = json.loads(data[5:])
-                                car_json = data[5:]
+                                car_data = data[2:]
+                                car_json = {}
+                                try:
+                                    car_json = json.loads(data[5:])
+                                except Exception as e:
+                                    self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
                                 # TODO: Call event onVehicleSpawn
                                 spawn = True
-                                pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_json}"
-                                if spawn and car_id > config.Game['max_cars']:
-                                    self._cars.append(car_json)
+                                pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
+                                if spawn and (config.Game['max_cars'] > car_id or car_json.get("jbm") == "unicycle"):
+                                    self.log.debug(f"Car spawn accepted.")
+                                    self._cars.append(car_data)
                                     await self._send(pkt, to_all=True)
                                 else:
                                     await self._send(pkt)
