@@ -11,10 +11,6 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Private access (Without key, Direct connect)
     - [x] Public access  (With key, listing in Launcher)
     - [X] Player authentication
-  - [ ] KuiToi System
-    - [ ] Servers counter
-    - [ ] Players counter
-    - [ ] Etc.
   - [ ] TCP Server part:
     - [x] Handle code
     - [x] Understanding BeamMP header
@@ -22,21 +18,30 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Connecting to the world
     - [x] Chat
     - [x] Players online counter
-    - [ ] Car state synchronizations _(Codes: We, Vi)_
+    - [ ] Car synchronizations:
+      - [x] Spawn cars
+      - [ ] Edit cars
+      - [ ] Delete cars
+      - [ ] Reset cars
     - [ ] "ABG:" (compressed data)
       - [x] Decompress data
-      - [ ] Vehicle data _(Code: Os)_
+      - [ ] Compress data
   - [ ] UDP Server part:
     - [ ] Players synchronizations _(Code: Zp)_
     - [ ] Ping _(Code: p)_
 - [x] Additional:
+  - [ ] KuiToi System
+    - [ ] Servers counter
+    - [ ] Players counter
+    - [ ] Etc.
   - [x] Logger
     - [x] Just logging
     - [x] Log in file
     - [x] Log history (.1.log, .2.log, ...)
   - [x] Console:
     - [x] Tabulation
-    - [x] _~~(By design)~~_ Static text (bug)
+    - [x] History
+    - [x] Autocomplete
   - [x] Events System
     - [x] Call events
     - [x] Create custom events
