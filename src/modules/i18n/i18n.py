@@ -3,7 +3,7 @@
 # Developed by KuiToi Dev
 # File modules.i18n.i18n.py
 # Written by: SantaSpeen
-# Version 1.0
+# Version 1.3
 # Licence: FPA
 # (c) kuitoi.su 2023
 import builtins

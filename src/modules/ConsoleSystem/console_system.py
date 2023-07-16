@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 # Developed by KuiToi Dev
-# File core.config_provider.py
+# File modules.ConsoleSystem.console_system.py
 # Written by: SantaSpeen
-# Version 1.1
+# Version 1.2
 # Licence: FPA
 # (c) kuitoi.su 2023
 import builtins
