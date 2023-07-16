@@ -60,7 +60,7 @@ class Client:
 
     @property
     def cars(self):
-        return self.cars
+        return self._cars
 
     def _update_logger(self):
         self._log = utils.get_logger(f"{self.nick}:{self.cid}")
@@ -258,11 +258,13 @@ class Client:
                 self.__alive = False
                 break
 
-            # V to Y
+            # Codes: V W X Y
             if 89 >= data[0] >= 86:
                 await self._send(data, to_all=True, to_self=False)
 
-            code = chr(data[0])
+            data = data.decode('utf-8')
+
+            code = data[0]
             self.log.debug(f"Received code: {code}, data: {data}")
             match code:
                 case "H":
@@ -275,14 +277,14 @@ class Client:
                     await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
                     self._ready = True
 
-                    # TODO: Sync cars
-                    # for client in self.__Core.clients:
-                    #     for car in client.cars:
-                    #         await self._tcp_send(car)
+                    for client in self.__Core.clients:
+                        if not client:
+                            continue
+                        for car in client.cars:
+                            await self._send(car)
 
-                case "C":
-                    # Chat
-                    msg = data.decode()[4 + len(self.nick):]
+                case "C":  # Chat handler
+                    msg = data[4 + len(self.nick):]
                     if not msg:
                         self.log.debug("Tried to send an empty event, ignoring")
                         continue
@@ -317,19 +319,46 @@ class Client:
                     if need_send:
                         await self._send(data, to_all=True)
 
-                case "O":
-                    # TODO: ParseVehicle
-                    pass
+                case "O":  # Vehicle info handler
+                    if len(data) < 6:
+                        continue
+                    sub_code = data[1]
+                    data = data[3:]
+                    match sub_code:
+                        case "s":  # Spawn car
+                            if data[0] == "0":
+                                car_id = len(self._cars)
+                                self.log.debug(f"Created a car with ID {car_id}")
+                                # car_json = json.loads(data[5:])
+                                car_json = data[5:]
+                                # TODO: Call event onVehicleSpawn
+                                spawn = True
+                                pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_json}"
+                                if spawn and car_id > config.Game['max_cars']:
+                                    self._cars.append(car_json)
+                                    await self._send(pkt, to_all=True)
+                                else:
+                                    await self._send(pkt)
+                                    des = f"Od:{self.cid}-{car_id}"
+                                    await self._send(des)
+                        case "c":  # Edit car
+                            # TODO: edit car
+                            pass
+                        case "d":  # Delete car
+                            # TODO: delete car
+                            pass
+                        case "r":  # Reset car
+                            # TODO: reset car
+                            pass
+                        case "t" | "m":
+                            pass
 
-                case "E":
+                case "E":  # Client events handler
                     # TODO: HandleEvent
                     pass
 
                 case "N":
                     # TODO: N
-                    pass
-
-                case _:
                     pass
 
     async def _remove_me(self):
