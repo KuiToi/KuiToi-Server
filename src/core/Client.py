@@ -271,8 +271,8 @@ class Client:
                 case "H":
                     # Client connected
 
-                    ev.call_event("player_join", player=self)
-                    await ev.call_async_event("player_join", player=self)
+                    ev.call_event("onPlayerJoin", player=self)
+                    await ev.call_async_event("onPlayerJoin", player=self)
 
                     await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
                     await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
@@ -290,10 +290,9 @@ class Client:
                         self.log.debug("Tried to send an empty event, ignoring")
                         continue
                     self.log.info(f"Received message: {msg}")
-                    # TODO: Handle chat event
                     to_ev = {"message": msg, "player": self}
-                    ev_data_list = ev.call_event("chat_receive", **to_ev)
-                    d2 = await ev.call_async_event("chat_receive", **to_ev)
+                    ev_data_list = ev.call_event("onChatReceive", **to_ev)
+                    d2 = await ev.call_async_event("onChatReceive", **to_ev)
                     ev_data_list.extend(d2)
                     need_send = True
                     for ev_data in ev_data_list:
@@ -339,6 +338,7 @@ class Client:
                                 except Exception as e:
                                     self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
                                 # TODO: Call event onVehicleSpawn
+
                                 spawn = True
                                 pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
                                 if spawn and (config.Game['max_cars'] > car_id or car_json.get("jbm") == "unicycle"):
