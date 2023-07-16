@@ -85,7 +85,7 @@ class Core:
         for client in self.clients:
             if not client:
                 continue
-            out += f"{client._nick}"
+            out += f"{client.nick}"
             if need_cid:
                 out += f":{client.cid}"
             out += ","

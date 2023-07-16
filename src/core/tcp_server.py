@@ -52,8 +52,8 @@ class TCPServer:
                 # TODO: i18n
                 await client.kick('Invalid key! Please restart your game.')
                 return False, client
-            client._nick = res["username"]
-            client._roles = res["roles"]
+            client.nick = res["username"]
+            client.roles = res["roles"]
             client._guest = res["guest"]
             # noinspection PyProtectedMember
             client._update_logger()
