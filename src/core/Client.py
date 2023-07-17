@@ -276,10 +276,10 @@ class Client:
         return
 
     def _get_cid_vid(self, data: str):
-        s = data[data.find(":", 1) + 1:]
+        s = data[:data.find(":", 1)]
         id_sep = s.find('-')
         if id_sep == -1:
-            self.log.debug(f"Invalid packet: Could not parse pid/vid from packet, as there is no '-' separator: '{s}'")
+            self.log.debug(f"Invalid packet: Could not parse pid/vid from packet, as there is no '-' separator: '{data}'")
             return -1, -1
         cid = s[:id_sep]
         vid = s[id_sep + 1:]
@@ -292,7 +292,7 @@ class Client:
                 self.log.debug(f"Invalid packet: Could not parse cid/vid from packet, as one or both are not valid "
                                f"numbers: '{s}'")
                 return -1, -1
-        self.log.debug(f"Invalid packet: Could not parse pid/vid from packet: '{s}'")
+        self.log.debug(f"Invalid packet: Could not parse pid/vid from packet: '{data}'")
         return -1, -1
 
     async def _handle_vehicle_codes(self, data):
@@ -309,19 +309,19 @@ class Client:
                         if c is None:
                             break
                         car_id += 1
-                    self.log.debug(f"Created a car with ID {car_id}")
+                    self.log.debug(f"Created a car: car_id={car_id}")
                     car_data = data[2:]
                     car_json = {}
                     try:
-                        car_json = json.loads(data[5:])
+                        car_json = json.loads(data[data.find("{"):])
                     except Exception as e:
                         self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
-                    # TODO: Call event onCarSpawn
-                    allow_spawn = True
+                    allow = True
                     over_spawn = False
+                    # TODO: Call event onCarSpawn
                     pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
                     unicycle = car_json.get("jbm") == "unicycle"
-                    if (allow_spawn and (config.Game['max_cars'] > car_id or unicycle)) or over_spawn:
+                    if (allow and (config.Game['max_cars'] > car_id or unicycle)) or over_spawn:
                         self.log.debug(f"Car spawn accepted.")
                         self._cars[car_id] = {
                             "packet": pkt,
@@ -330,7 +330,7 @@ class Client:
                             "unicycle": unicycle,
                             "over_spawn": over_spawn or unicycle
                         }
-                        await self._send(pkt, to_all=True)
+                        await self._send(pkt, to_all=True, to_self=True)
                     else:
                         await self._send(pkt)
                         des = f"Od:{self.cid}-{car_id}"
@@ -342,27 +342,52 @@ class Client:
                     # TODO: Call event onCarDelete
                     await self._send(data, to_all=True, to_self=True)
                     try:
-                        self._cars[car_id] = None
+                        car = self.cars[car_id]
+                        if car['unicycle']:
+                            self._cars.pop(car_id)
+                        else:
+                            self._cars[car_id] = None
                         await self._send(f"Od:{self.cid}-{car_id}")
-                        self.log.debug(f"Deleted car with car_id: {car_id}")
+                        self.log.debug(f"Deleted car: car_id={car_id}")
                     except IndexError:
                         self.log.debug(f"Unknown car: car_id={car_id}")
             case "c":  # Edit car
                 self.log.debug("Trying to edit car")
-                # TODO: edit car
+                allow = True
+                # TODO: Call event onCarEdited
                 cid, car_id = self._get_cid_vid(data)
                 if car_id != -1 and cid == self.cid:
-                    car = self.cars[car_id]
-                    if car['unicycle']:
-                        pass
+                    try:
+                        car = self.cars[car_id]
+                        if car['unicycle']:
+                            self._cars.pop(car_id)
+                            await self._send(f"Od:{self.cid}-{car_id}", to_all=True, to_self=True)
+                        elif allow:
+                            await self._send(data, to_all=True, to_self=False)
+                            if car['json_ok']:
+                                old_car_json = car['json']
+                                try:
+                                    new_car_json = json.loads(data[data.find("{"):])
+                                    old_car_json.update(new_car_json)
+                                    car['json'] = new_car_json
+                                    self.log.debug(f"Updated car: car_id={car_id}")
+                                except Exception as e:
+                                    self.log.debug(f"Invalid new_car_json: Error: {e}; Data: {data}")
+
+                    except IndexError:
+                        self.log.debug(f"Unknown car: car_id={car_id}")
             case "r":  # Reset car
                 self.log.debug("Trying to reset car")
-                # TODO: reset car
                 cid, car_id = self._get_cid_vid(data)
                 if car_id != -1 and cid == self.cid:
-                    pass
-            case "t" | "m":
-                pass
+                    # TODO: Call event onCarReset
+                    await self._send(data, to_all=True, to_self=False)
+                    self.log.debug(f"Car reset: car_id={car_id}")
+            case "t":
+                self.log.debug(f"Received 'Ot' packet: {data}")
+                await self._send(data, to_all=True, to_self=False)
+            case "m":
+                await self._send(data, to_all=True, to_self=True)
 
     async def _handle_codes(self, data):
         if not data:
