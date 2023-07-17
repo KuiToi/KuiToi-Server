@@ -25,7 +25,7 @@ class TCPServer:
         client = self.Core.create_client(reader, writer)
         # TODO: i18n
         self.log.info(f"Identifying new ClientConnection...")
-        data = await client._recv()
+        data = await client._recv(True)
         self.log.debug(f"Version: {data}")
         if data.decode("utf-8") != f"VC{self.Core.client_major_version}":
             # TODO: i18n
@@ -34,7 +34,7 @@ class TCPServer:
         else:
             await client._send(b"S")  # Accepted client version
 
-        data = await client._recv()
+        data = await client._recv(True)
         self.log.debug(f"Key: {data}")
         if len(data) > 50:
             # TODO: i18n
@@ -133,7 +133,7 @@ class TCPServer:
                 break
             except Exception as e:
                 # TODO: i18n
-                self.log.error("Error while connecting..")
+                self.log.error("Error while handling connection...")
                 self.log.exception(e)
                 traceback.print_exc()
                 break

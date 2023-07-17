@@ -17,9 +17,11 @@ class Client:
     def __init__(self, reader, writer, core):
         self.__reader = reader
         self.__writer = writer
-        self._down_rw = (None, None)
         self.__Core = core
         self.__alive = True
+        self.__packets_queue = []
+        self.__tasks = []
+        self._down_rw = (None, None)
         self._loop = asyncio.get_event_loop()
         self._log = utils.get_logger("client(None:0)")
         self._addr = writer.get_extra_info("sockname")
@@ -128,46 +130,66 @@ class Client:
             writer.write(header + data)
             await writer.drain()
         except ConnectionError:
-            self.log.debug('tcp_send: Disconnected')
+            self.log.debug('_send: Disconnected')
             self.__alive = False
+            await self._remove_me()
 
-    async def _recv(self):
-        try:
-            header = await self.__reader.read(4)
+    async def __handle_packet(self, data, int_header):
+        self.log.debug(f"int_header: {int_header}; data: {data};")
+        if len(data) != int_header:
+            self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
 
-            int_header = 0
-            for i in range(len(header)):
-                int_header += header[i]
+            recv2 = data[int_header:]
+            header2 = recv2[:4]
+            data2 = recv2[4:]
+            int_header2 = int.from_bytes(header2, byteorder='little', signed=True)
+            self.log.debug(f"header2: {header2}; int_header2: {int_header2}; data2: {data2}")
+            t = asyncio.create_task(self.__handle_packet(data2, int_header2))
+            self.__tasks.append(t)
+            data = data[:4 + int_header]
 
-            if int_header <= 0:
-                await asyncio.sleep(0.1)
-                self.is_disconnected()
-                if self.__alive:
-                    self.log.debug(f"Header: {header}")
-                    await self.kick("Invalid packet - header negative")
-                return b""
+        abg = b"ABG:"
+        if len(data) > len(abg) and data.startswith(abg):
+            data = zlib.decompress(data[len(abg):])
+            self.log.debug(f"ABG Packet: {len(data)}")
 
-            if int_header > 100 * MB:
-                await self.kick("Header size limit exceeded")
-                self.log.warning(f"Client {self.nick}:{self.cid} sent header of >100MB - "
-                                 f"assuming malicious intent and disconnecting the client.")
-                return b""
+        self.__packets_queue.append(data)
+        self.log.debug(f"Packets in queue: {len(self.__packets_queue)}")
 
-            data = await self.__reader.read(100 * MB)
-            self.log.debug(f"header: `{header}`; int_header: `{int_header}`; data: `{data}`;")
+    async def _recv(self, one=False):
+        while self.__alive:
+            try:
+                header = await self.__reader.read(4)
 
-            if len(data) != int_header:
-                self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
+                int_header = int.from_bytes(header, byteorder='little', signed=True)
 
-            abg = b"ABG:"
-            if len(data) > len(abg) and data.startswith(abg):
-                data = zlib.decompress(data[len(abg):])
-                self.log.debug(f"ABG Packet: {len(data)}")
-                return data
-            return data
-        except ConnectionError:
-            self.__alive = False
-            return b""
+                if int_header <= 0:
+                    await asyncio.sleep(0.1)
+                    self.is_disconnected()
+                    if self.__alive:
+                        self.log.debug(f"Header: {header}")
+                        await self.kick("Invalid packet - header negative")
+                    self.__packets_queue.append(None)
+                    continue
+
+                if int_header > 100 * MB:
+                    await self.kick("Header size limit exceeded")
+                    self.log.warning(f"Client {self.nick}:{self.cid} sent header of >100MB - "
+                                     f"assuming malicious intent and disconnecting the client.")
+                    self.__packets_queue.append(None)
+                    continue
+
+                data = await self.__reader.read(100 * MB)
+                if one:
+                    self.log.debug(f"int_header: `{int_header}`; data: `{data}`;")
+                    return data
+                else:
+                    t = asyncio.create_task(self.__handle_packet(data, int_header))
+                    self.__tasks.append(t)
+
+            except ConnectionError:
+                self.__alive = False
+                self.__packets_queue.append(None)
 
     async def _split_load(self, start, end, d_sock, filename):
         # TODO: Speed  limiter
@@ -191,8 +213,7 @@ class Client:
 
     async def _sync_resources(self):
         while self.__alive:
-            data = await self._recv()
-            self.log.debug(f"data: {data!r}")
+            data = await self._recv(True)
             if data.startswith(b"f"):
                 file = data[1:].decode("utf-8")
                 # TODO: i18n
@@ -249,14 +270,14 @@ class Client:
                 else:
                     await self._send(bytes(mod_list, "utf-8"))
             elif data == b"Done":
-                await self._send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
                 for c in range(config.Game['max_cars']):
                     self._cars.append(None)
+                await self._send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
                 break
         return
 
     def _get_cid_vid(self, data: str):
-        s = data[data.find(":", 1)+1:]
+        s = data[data.find(":", 1) + 1:]
         id_sep = s.find('-')
         if id_sep == -1:
             self.log.debug(f"Invalid packet: Could not parse pid/vid from packet, as there is no '-' separator: '{s}'")
@@ -352,8 +373,10 @@ class Client:
         # Codes: V W X Y
         if 89 >= data[0] >= 86:
             await self._send(data, to_all=True, to_self=False)
-
-        data = data.decode()
+        try:
+            data = data.decode()
+        except UnicodeDecodeError:
+            self.log.debug(f"UnicodeDecodeError: {data}")
 
         code = data[0]
         match code:
@@ -370,6 +393,8 @@ class Client:
                     if not client:
                         continue
                     for car in client.cars:
+                        if not car:
+                            continue
                         await self._send(car['packet'])
 
             case "C":  # Chat handler
@@ -420,9 +445,19 @@ class Client:
     async def _looper(self):
         await self._send(f"P{self.cid}")  # Send clientID
         await self._sync_resources()
+        tasks = self.__tasks
+        recv = asyncio.create_task(self._recv())
+        tasks.append(recv)
         while self.__alive:
-            data = await self._recv()
-            self._loop.create_task(self._handle_codes(data))
+            if len(self.__packets_queue) > 0:
+                for index, packet in enumerate(self.__packets_queue):
+                    del self.__packets_queue[index]
+                    self.log.debug(f"Packet: {packet}")
+                    task = self._loop.create_task(self._handle_codes(packet))
+                    tasks.append(task)
+            else:
+                await asyncio.sleep(0.1)
+        await asyncio.gather(*tasks)
 
     async def _remove_me(self):
         await asyncio.sleep(0.3)
