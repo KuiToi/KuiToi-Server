@@ -488,8 +488,8 @@ class Client:
         self.__alive = False
         if (self.cid > 0 or self.nick is not None) and \
                 self.__Core.clients_by_nick.get(self.nick):
-            # if self.ready:
-            #     await self.tcp_send(b"", to_all=True)  # I'm disconnected.
+            if self.ready:
+                await self._send(f"J{self.nick} disconnected!", to_all=True)  # I'm disconnected.
             self.log.debug(f"Removing client {self.nick}:{self.cid}")
             # TODO: i18n
             self.log.info("Disconnected")
