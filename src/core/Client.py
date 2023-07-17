@@ -110,8 +110,11 @@ class Client:
                     continue
                 if not to_udp or code in ['V', 'W', 'Y', 'E']:
                     if code in ['O', 'T'] or len(data) > 1000:
-                        # TODO: Compress data
-                        await client._send(data)
+                        if len(data) > 400:
+                            # TODO: Compress data
+                            await client._send(data)
+                        else:
+                            await client._send(data)
                     else:
                         await client._send(data)
                 else:
@@ -159,7 +162,7 @@ class Client:
             abg = b"ABG:"
             if len(data) > len(abg) and data.startswith(abg):
                 data = zlib.decompress(data[len(abg):])
-                self.log.debug(f"ABG: {data}")
+                self.log.debug(f"ABG Packet: {len(data)}")
                 return data
             return data
         except ConnectionError:
@@ -247,127 +250,179 @@ class Client:
                     await self._send(bytes(mod_list, "utf-8"))
             elif data == b"Done":
                 await self._send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
+                for c in range(config.Game['max_cars']):
+                    self._cars.append(None)
                 break
         return
 
+    def _get_cid_vid(self, data: str):
+        s = data[data.find(":", 1)+1:]
+        id_sep = s.find('-')
+        if id_sep == -1:
+            self.log.debug(f"Invalid packet: Could not parse pid/vid from packet, as there is no '-' separator: '{s}'")
+            return -1, -1
+        cid = s[:id_sep]
+        vid = s[id_sep + 1:]
+        if cid.isdigit() and vid.isdigit():
+            try:
+                cid = int(cid)
+                vid = int(vid)
+                return cid, vid
+            except ValueError:
+                self.log.debug(f"Invalid packet: Could not parse cid/vid from packet, as one or both are not valid "
+                               f"numbers: '{s}'")
+                return -1, -1
+        self.log.debug(f"Invalid packet: Could not parse pid/vid from packet: '{s}'")
+        return -1, -1
+
+    async def _handle_vehicle_codes(self, data):
+        if len(data) < 6:
+            return
+        sub_code = data[1]
+        data = data[3:]
+        match sub_code:
+            case "s":  # Spawn car
+                self.log.debug("Trying to spawn car")
+                if data[0] == "0":
+                    car_id = 0
+                    for c in self.cars:
+                        if c is None:
+                            break
+                        car_id += 1
+                    self.log.debug(f"Created a car with ID {car_id}")
+                    car_data = data[2:]
+                    car_json = {}
+                    try:
+                        car_json = json.loads(data[5:])
+                    except Exception as e:
+                        self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
+                    # TODO: Call event onCarSpawn
+                    allow_spawn = True
+                    over_spawn = False
+                    pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
+                    unicycle = car_json.get("jbm") == "unicycle"
+                    if (allow_spawn and (config.Game['max_cars'] > car_id or unicycle)) or over_spawn:
+                        self.log.debug(f"Car spawn accepted.")
+                        self._cars[car_id] = {
+                            "packet": pkt,
+                            "json": car_json,
+                            "json_ok": bool(car_json),
+                            "unicycle": unicycle,
+                            "over_spawn": over_spawn or unicycle
+                        }
+                        await self._send(pkt, to_all=True)
+                    else:
+                        await self._send(pkt)
+                        des = f"Od:{self.cid}-{car_id}"
+                        await self._send(des)
+            case "d":  # Delete car
+                self.log.debug("Trying to delete car")
+                cid, car_id = self._get_cid_vid(data)
+                if car_id != -1 and cid == self.cid:
+                    # TODO: Call event onCarDelete
+                    await self._send(data, to_all=True, to_self=True)
+                    try:
+                        self._cars[car_id] = None
+                        await self._send(f"Od:{self.cid}-{car_id}")
+                        self.log.debug(f"Deleted car with car_id: {car_id}")
+                    except IndexError:
+                        self.log.debug(f"Unknown car: car_id={car_id}")
+            case "c":  # Edit car
+                self.log.debug("Trying to edit car")
+                # TODO: edit car
+                cid, car_id = self._get_cid_vid(data)
+                if car_id != -1 and cid == self.cid:
+                    car = self.cars[car_id]
+                    if car['unicycle']:
+                        pass
+            case "r":  # Reset car
+                self.log.debug("Trying to reset car")
+                # TODO: reset car
+                cid, car_id = self._get_cid_vid(data)
+                if car_id != -1 and cid == self.cid:
+                    pass
+            case "t" | "m":
+                pass
+
+    async def _handle_codes(self, data):
+        if not data:
+            self.__alive = False
+            return
+
+        # Codes: V W X Y
+        if 89 >= data[0] >= 86:
+            await self._send(data, to_all=True, to_self=False)
+
+        data = data.decode()
+
+        code = data[0]
+        match code:
+            case "H":
+                # Client connected
+                ev.call_event("onPlayerJoin", player=self)
+                await ev.call_async_event("onPlayerJoin", player=self)
+
+                await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
+                await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
+                self._ready = True
+
+                for client in self.__Core.clients:
+                    if not client:
+                        continue
+                    for car in client.cars:
+                        await self._send(car['packet'])
+
+            case "C":  # Chat handler
+                msg = data[4 + len(self.nick):]
+                if not msg:
+                    self.log.debug("Tried to send an empty event, ignoring")
+                    return
+                self.log.info(f"{self.nick}: {msg}")
+                to_ev = {"message": msg, "player": self}
+                ev_data_list = ev.call_event("onChatReceive", **to_ev)
+                d2 = await ev.call_async_event("onChatReceive", **to_ev)
+                ev_data_list.extend(d2)
+                need_send = True
+                for ev_data in ev_data_list:
+                    try:
+                        message = ev_data["message"]
+                        to_all = ev_data.get("to_all")
+                        if to_all is None:
+                            if need_send:
+                                need_send = False
+                            to_all = True
+                        if to_all:
+                            if need_send:
+                                need_send = False
+                        to_self = ev_data.get("to_self")
+                        if to_self is None:
+                            to_self = True
+                        to_client = ev_data.get("to_client")
+                        writer = None
+                        if to_client:
+                            writer = to_client._writer
+                        await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
+                    except KeyError | AttributeError:
+                        self.log.error(f"Returns invalid data: {ev_data}")
+                if need_send:
+                    await self._send(data, to_all=True)
+
+            case "O":  # Cars handler
+                await self._handle_vehicle_codes(data)
+
+            case "E":  # Client events handler
+                # TODO: HandleEvent
+                pass
+
+            case "N":
+                await self._send(data, to_all=True, to_self=False)
+
     async def _looper(self):
-        await self._send(b"P" + bytes(f"{self.cid}", "utf-8"))  # Send clientID
+        await self._send(f"P{self.cid}")  # Send clientID
         await self._sync_resources()
         while self.__alive:
             data = await self._recv()
-            if not data:
-                self.__alive = False
-                break
-
-            # Codes: V W X Y
-            if 89 >= data[0] >= 86:
-                await self._send(data, to_all=True, to_self=False)
-
-            data = data.decode('utf-8')
-
-            code = data[0]
-            self.log.debug(f"Received code: {code}, data: {data}")
-            match code:
-                case "H":
-                    # Client connected
-
-                    ev.call_event("onPlayerJoin", player=self)
-                    await ev.call_async_event("onPlayerJoin", player=self)
-
-                    await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
-                    await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
-                    self._ready = True
-
-                    for client in self.__Core.clients:
-                        if not client:
-                            continue
-                        for car in client.cars:
-                            await self._send(car)
-
-                case "C":  # Chat handler
-                    msg = data[4 + len(self.nick):]
-                    if not msg:
-                        self.log.debug("Tried to send an empty event, ignoring")
-                        continue
-                    self.log.info(f"Received message: {msg}")
-                    to_ev = {"message": msg, "player": self}
-                    ev_data_list = ev.call_event("onChatReceive", **to_ev)
-                    d2 = await ev.call_async_event("onChatReceive", **to_ev)
-                    ev_data_list.extend(d2)
-                    need_send = True
-                    for ev_data in ev_data_list:
-                        try:
-                            message = ev_data["message"]
-                            to_all = ev_data.get("to_all")
-                            if to_all is None:
-                                if need_send:
-                                    need_send = False
-                                to_all = True
-                            if to_all:
-                                if need_send:
-                                    need_send = False
-                            to_self = ev_data.get("to_self")
-                            if to_self is None:
-                                to_self = True
-                            to_client = ev_data.get("to_client")
-                            writer = None
-                            if to_client:
-                                writer = to_client._writer
-                            await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
-                        except KeyError | AttributeError:
-                            self.log.error(f"Returns invalid data: {ev_data}")
-                    if need_send:
-                        await self._send(data, to_all=True)
-
-                case "O":  # Vehicle info handler
-                    if len(data) < 6:
-                        continue
-                    sub_code = data[1]
-                    data = data[3:]
-                    vid = -1
-                    pid = -1
-                    match sub_code:
-                        case "s":  # Spawn car
-                            if data[0] == "0":
-                                car_id = len(self._cars)
-                                self.log.debug(f"Created a car with ID {car_id}")
-                                car_data = data[2:]
-                                car_json = {}
-                                try:
-                                    car_json = json.loads(data[5:])
-                                except Exception as e:
-                                    self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
-                                # TODO: Call event onVehicleSpawn
-
-                                spawn = True
-                                pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
-                                if spawn and (config.Game['max_cars'] > car_id or car_json.get("jbm") == "unicycle"):
-                                    self.log.debug(f"Car spawn accepted.")
-                                    self._cars.append(car_data)
-                                    await self._send(pkt, to_all=True)
-                                else:
-                                    await self._send(pkt)
-                                    des = f"Od:{self.cid}-{car_id}"
-                                    await self._send(des)
-                        case "c":  # Edit car
-                            # TODO: edit car
-                            pass
-                        case "d":  # Delete car
-                            # TODO: delete car
-                            pass
-                        case "r":  # Reset car
-                            # TODO: reset car
-                            pass
-                        case "t" | "m":
-                            pass
-
-                case "E":  # Client events handler
-                    # TODO: HandleEvent
-                    pass
-
-                case "N":
-                    # TODO: N
-                    pass
+            self._loop.create_task(self._handle_codes(data))
 
     async def _remove_me(self):
         await asyncio.sleep(0.3)
