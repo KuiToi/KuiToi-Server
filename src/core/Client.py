@@ -143,7 +143,6 @@ class Client:
             header2 = recv2[:4]
             data2 = recv2[4:]
             int_header2 = int.from_bytes(header2, byteorder='little', signed=True)
-            self.log.debug(f"header2: {header2}; int_header2: {int_header2}; data2: {data2}")
             t = asyncio.create_task(self.__handle_packet(data2, int_header2))
             self.__tasks.append(t)
             data = data[:4 + int_header]
@@ -451,8 +450,8 @@ class Client:
         while self.__alive:
             if len(self.__packets_queue) > 0:
                 for index, packet in enumerate(self.__packets_queue):
-                    del self.__packets_queue[index]
                     self.log.debug(f"Packet: {packet}")
+                    del self.__packets_queue[index]
                     task = self._loop.create_task(self._handle_codes(packet))
                     tasks.append(task)
             else:
