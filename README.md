@@ -11,7 +11,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Private access (Without key, Direct connect)
     - [x] Public access  (With key, listing in Launcher)
     - [X] Player authentication
-  - [ ] TCP Server part:
+  - [x] TCP Server part:
     - [x] Handle code
     - [x] Understanding BeamMP header
     - [x] Upload mods
@@ -19,13 +19,13 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Chat
     - [x] Players online counter
     - [x] Packets handled (Recursive finding second packet)
-    - [ ] Car synchronizations:
+    - [x] Car synchronizations:
       - [x] State packets
       - [x] Spawn cars
       - [x] Delete cars
-      - [ ] Edit cars
-      - [ ] Reset cars
-    - [ ] "ABG:" (compressed data)
+      - [x] Edit cars
+      - [x] Reset cars
+    - [x] "ABG:" (compressed data)
       - [x] Decompress data
       - [ ] Compress data
   - [ ] UDP Server part:
