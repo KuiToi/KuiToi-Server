@@ -18,7 +18,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Connecting to the world
     - [x] Chat
     - [x] Players online counter
-    - [ ] Packets handled (One or more)
+    - [x] Packets handled (Recursive finding second packet)
     - [ ] Car synchronizations:
       - [x] State packets
       - [x] Spawn cars
