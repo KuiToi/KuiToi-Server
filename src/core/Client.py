@@ -113,17 +113,16 @@ class Client:
                     continue
                 if not to_udp or code in ['V', 'W', 'Y', 'E']:
                     if code in ['O', 'T'] or len(data) > 1000:
-                        if len(data) > 400:
-                            # TODO: Compress data
-                            await client._send(data)
-                        else:
-                            await client._send(data)
+                        await client._send(data)
                     else:
                         await client._send(data)
                 else:
                     # TODO: UDP send
                     self.log.debug(f"UDP Part not ready: {code}")
             return
+
+        if len(data) > 400:
+            data = b"ABG:" + zlib.compress(data, level=zlib.Z_BEST_COMPRESSION)
 
         header = len(data).to_bytes(4, "little", signed=True)
         self.log.debug(f'len: {len(data)}; send: {header + data!r}')
