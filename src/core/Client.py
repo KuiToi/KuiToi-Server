@@ -488,6 +488,10 @@ class Client:
         self.__alive = False
         if (self.cid > 0 or self.nick is not None) and \
                 self.__Core.clients_by_nick.get(self.nick):
+            for i, car in enumerate(self.cars):
+                if not car:
+                    continue
+                await self._send(f"Od:{self.cid}-{i}")
             if self.ready:
                 await self._send(f"J{self.nick} disconnected!", to_all=True)  # I'm disconnected.
             self.log.debug(f"Removing client {self.nick}:{self.cid}")
