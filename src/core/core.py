@@ -189,12 +189,11 @@ class Core:
                 else:
                     self.direct = True
                     if test:
-                        self.log.error("Cannot auth...")
-                    if not config.Auth['private']:
-                        raise KeyboardInterrupt
-                    if test:
                         # TODO: i18n
+                        self.log.error("Cannot authenticate server.")
                         self.log.info(f"Server still runnig, but only in Direct connect mode.")
+                    # if not config.Auth['private']:
+                    #     raise KeyboardInterrupt
 
                 if test:
                     return ok
