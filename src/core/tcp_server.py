@@ -143,7 +143,7 @@ class TCPServer:
         self.run = True
         try:
             server = await asyncio.start_server(self.handle_client, self.host, self.port,
-                                                backlog=int(config.Game["players"] * 1.3))
+                                                backlog=int(config.Game["players"] * 2.3))
             self.log.debug(f"TCP server started on {server.sockets[0].getsockname()!r}")
             while True:
                 async with server:
