@@ -453,12 +453,7 @@ class Client:
                         message = ev_data["message"]
                         to_all = ev_data.get("to_all")
                         if to_all is None:
-                            if need_send:
-                                need_send = False
                             to_all = True
-                        if to_all:
-                            if need_send:
-                                need_send = False
                         to_self = ev_data.get("to_self")
                         if to_self is None:
                             to_self = True
@@ -467,6 +462,7 @@ class Client:
                         if to_client:
                             writer = to_client._writer
                         await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
+                        need_send = False
                     except KeyError | AttributeError:
                         self.log.error(f"Returns invalid data: {ev_data}")
                 if need_send:
