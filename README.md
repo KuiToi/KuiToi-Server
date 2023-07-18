@@ -28,7 +28,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
       - [x] Reset cars
     - [x] "ABG:" (compressed data)
       - [x] Decompress data
-      - [ ] Compress data
+      - [x] Compress data
   - [ ] UDP Server part:
     - [x] Ping
     - [ ] Position synchronizations _(Code: Zp)_
