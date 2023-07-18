@@ -21,7 +21,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Packets handled (Recursive finding second packet)
     - [x] Car synchronizations:
       - [x] State packets
-       - [ ] Debug (gear?)
+        - [ ] Debug (gear?)
       - [x] Spawn cars
       - [x] Delete cars
       - [x] Edit cars
