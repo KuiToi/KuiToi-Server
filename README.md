@@ -11,7 +11,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Private access (Without key, Direct connect)
     - [x] Public access  (With key, listing in Launcher)
     - [X] Player authentication
-  - [x] TCP Server part:
+  - [ ] TCP Server part:
     - [x] Handle code
     - [x] Understanding BeamMP header
     - [x] Upload mods
@@ -21,6 +21,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Packets handled (Recursive finding second packet)
     - [x] Car synchronizations:
       - [x] State packets
+       - [ ] Debug (gear?)
       - [x] Spawn cars
       - [x] Delete cars
       - [x] Edit cars
@@ -29,8 +30,8 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
       - [x] Decompress data
       - [ ] Compress data
   - [ ] UDP Server part:
-    - [ ] Players synchronizations _(Code: Zp)_
-    - [ ] Ping _(Code: p)_
+    - [x] Ping
+    - [ ] Position synchronizations _(Code: Zp)_
 - [x] Additional:
   - [ ] KuiToi System
     - [ ] Servers counter
@@ -51,6 +52,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Async support
   - [x] Plugins support
     - [ ] KuiToi class
+    - [ ] Client class
     - [x] Load Python plugins
     - [x] Async support
     - [ ] Load Lua plugins (Original BeamMP compatibility)
@@ -58,7 +60,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Core
     - [x] Console
     - [x] WebAPI
-  - [x] HTTP API Server (fastapi)
+  - [ ] HTTP API Server (fastapi)
     - [x] Stop and Start with core
     - [x] Configure FastAPI logger
     - [ ] Sync with event system
