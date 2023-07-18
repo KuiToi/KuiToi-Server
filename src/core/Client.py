@@ -182,13 +182,22 @@ class Client:
                     self.__packets_queue.append(None)
                     continue
 
-                data = await self.__reader.read(100 * MB)
+                data = await self.__reader.read(int_header)
+
+                self.log.debug(f"int_header: {int_header}; data: `{data}`;")
+                abg = b"ABG:"
+                if len(data) > len(abg) and data.startswith(abg):
+                    data = zlib.decompress(data[len(abg):])
+                    self.log.debug(f"ABG Packet: {len(data)}")
+
                 if one:
-                    self.log.debug(f"int_header: `{int_header}`; data: `{data}`;")
+                    # self.log.debug(f"int_header: `{int_header}`; data: `{data}`;")
                     return data
-                else:
-                    t = asyncio.create_task(self.__handle_packet(data, int_header))
-                    self.__tasks.append(t)
+                # FIXME
+                # else:
+                #     t = asyncio.create_task(self.__handle_packet(data, int_header))
+                #     self.__tasks.append(t)
+                self.__packets_queue.append(data)
 
             except ConnectionError:
                 self.__alive = False
@@ -280,7 +289,8 @@ class Client:
         return
 
     def _get_cid_vid(self, data: str):
-        s = data[:data.find(":", 1)]
+        sep = data.find(":", 1) + 1
+        s = data[sep:sep + 3]
         id_sep = s.find('-')
         if id_sep == -1:
             self.log.debug(f"Invalid packet: Could not parse pid/vid from packet, as there is no '-' separator: '{data}'")
@@ -299,11 +309,11 @@ class Client:
         self.log.debug(f"Invalid packet: Could not parse pid/vid from packet: '{data}'")
         return -1, -1
 
-    async def _handle_vehicle_codes(self, data):
-        if len(data) < 6:
+    async def _handle_vehicle_codes(self, dta):
+        if len(dta) < 6:
             return
-        sub_code = data[1]
-        data = data[3:]
+        sub_code = dta[1]
+        data = dta[3:]
         match sub_code:
             case "s":  # Spawn car
                 self.log.debug("Trying to spawn car")
@@ -341,10 +351,10 @@ class Client:
                         await self._send(des)
             case "d":  # Delete car
                 self.log.debug("Trying to delete car")
-                cid, car_id = self._get_cid_vid(data)
+                cid, car_id = self._get_cid_vid(dta)
                 if car_id != -1 and cid == self.cid:
                     # TODO: Call event onCarDelete
-                    await self._send(data, to_all=True, to_self=True)
+                    await self._send(dta, to_all=True, to_self=True)
                     try:
                         car = self.cars[car_id]
                         if car['unicycle']:
@@ -359,7 +369,7 @@ class Client:
                 self.log.debug("Trying to edit car")
                 allow = True
                 # TODO: Call event onCarEdited
-                cid, car_id = self._get_cid_vid(data)
+                cid, car_id = self._get_cid_vid(dta)
                 if car_id != -1 and cid == self.cid:
                     try:
                         car = self.cars[car_id]
@@ -367,7 +377,7 @@ class Client:
                             self._cars.pop(car_id)
                             await self._send(f"Od:{self.cid}-{car_id}", to_all=True, to_self=True)
                         elif allow:
-                            await self._send(data, to_all=True, to_self=False)
+                            await self._send(dta, to_all=True, to_self=False)
                             if car['json_ok']:
                                 old_car_json = car['json']
                                 try:
@@ -382,16 +392,16 @@ class Client:
                         self.log.debug(f"Unknown car: car_id={car_id}")
             case "r":  # Reset car
                 self.log.debug("Trying to reset car")
-                cid, car_id = self._get_cid_vid(data)
+                cid, car_id = self._get_cid_vid(dta)
                 if car_id != -1 and cid == self.cid:
                     # TODO: Call event onCarReset
-                    await self._send(data, to_all=True, to_self=False)
+                    await self._send(dta, to_all=True, to_self=False)
                     self.log.debug(f"Car reset: car_id={car_id}")
             case "t":
-                self.log.debug(f"Received 'Ot' packet: {data}")
-                await self._send(data, to_all=True, to_self=False)
+                self.log.debug(f"Received 'Ot' packet: {dta}")
+                await self._send(dta, to_all=True, to_self=False)
             case "m":
-                await self._send(data, to_all=True, to_self=True)
+                await self._send(dta, to_all=True, to_self=True)
 
     async def _handle_codes(self, data):
         if not data:
@@ -495,10 +505,11 @@ class Client:
             for i, car in enumerate(self.cars):
                 if not car:
                     continue
-                await self._send(f"Od:{self.cid}-{i}")
+                self.log.debug(f"Removing car: car_id={i}")
+                await self._send(f"Od:{self.cid}-{i}", to_all=True, to_self=False)
             if self.ready:
-                await self._send(f"J{self.nick} disconnected!", to_all=True)  # I'm disconnected.
-            self.log.debug(f"Removing client {self.nick}:{self.cid}")
+                await self._send(f"J{self.nick} disconnected!", to_all=True, to_self=False)  # I'm disconnected.
+            self.log.debug(f"Removing client")
             # TODO: i18n
             self.log.info("Disconnected")
             self.__Core.clients[self.cid] = None
