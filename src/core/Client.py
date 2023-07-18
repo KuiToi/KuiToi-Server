@@ -166,6 +166,10 @@ class Client:
                     await asyncio.sleep(0.1)
                     self.is_disconnected()
                     if self.__alive:
+                        if header == b"":
+                            self.__packets_queue.append(None)
+                            self.__alive = False
+                            continue
                         self.log.debug(f"Header: {header}")
                         await self.kick("Invalid packet - header negative")
                     self.__packets_queue.append(None)
