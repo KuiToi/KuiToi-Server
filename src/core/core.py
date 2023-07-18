@@ -95,16 +95,20 @@ class Core:
 
     async def check_alive(self):
         maxp = config.Game['players']
-        while self.run:
-            await asyncio.sleep(1)
-            ca = f"Ss{len(self.clients_by_id)}/{maxp}:{self.get_clients_list()}"
-            for client in self.clients:
-                if not client:
-                    continue
-                if not client.ready:
-                    client.is_disconnected()
-                    continue
-                await client._send(bytes(ca, "utf-8"))
+        try:
+            while self.run:
+                await asyncio.sleep(1)
+                ca = f"Ss{len(self.clients_by_id)}/{maxp}:{self.get_clients_list()}"
+                for client in self.clients:
+                    if not client:
+                        continue
+                    if not client.ready:
+                        client.is_disconnected()
+                        continue
+                    await client._send(bytes(ca, "utf-8"))
+        except Exception as e:
+            self.log.error("Error in check_alive.")
+            self.log.exception(e)
 
     @staticmethod
     def start_web():
