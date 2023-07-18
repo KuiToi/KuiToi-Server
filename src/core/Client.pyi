@@ -5,7 +5,7 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
-from asyncio import StreamReader, StreamWriter
+from asyncio import StreamReader, StreamWriter, DatagramTransport
 from logging import Logger
 from typing import Tuple, List, Dict
 
@@ -19,7 +19,8 @@ class Client:
         self.__reader = reader
         self.__writer = writer
         self.__packets_queue = []
-        self._down_rw: Tuple[StreamReader, StreamWriter] | Tuple[None, None] = (None, None)
+        self._udp_sock: Tuple[DatagramTransport, tuple] | Tuple[None, None] = (None, None)
+        self._down_sock: Tuple[StreamReader, StreamWriter] | Tuple[None, None] = (None, None)
         self._log = utils.get_logger("client(id: )")
         self._addr = writer.get_extra_info("sockname")
         self._loop = asyncio.get_event_loop()

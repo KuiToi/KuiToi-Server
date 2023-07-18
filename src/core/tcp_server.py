@@ -89,7 +89,7 @@ class TCPServer:
             cid = (await reader.read(1))[0]
             client = self.Core.get_client(cid=cid)
             if client:
-                client._down_rw = (reader, writer)
+                client._down_sock = (reader, writer)
                 self.log.debug(f"Client: {client.nick}:{cid} - HandleDownload!")
             else:
                 writer.close()

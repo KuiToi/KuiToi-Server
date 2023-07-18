@@ -21,9 +21,10 @@ class Client:
         self.__alive = True
         self.__packets_queue = []
         self.__tasks = []
-        self._down_rw = (None, None)
+        self._down_sock = (None, None)
+        self._udp_sock = (None, None)
         self._loop = asyncio.get_event_loop()
-        self._log = utils.get_logger("client(None:0)")
+        self._log = utils.get_logger("player(None:0)")
         self._addr = writer.get_extra_info("sockname")
         self._cid = -1
         self._key = None
@@ -177,9 +178,10 @@ class Client:
 
                 if int_header > 100 * MB:
                     await self.kick("Header size limit exceeded")
-                    self.log.warning(f"Client {self.nick}:{self.cid} sent header of >100MB - "
-                                     f"assuming malicious intent and disconnecting the client.")
+                    self.log.warning("Client sent header of >100MB - "
+                                     "assuming malicious intent and disconnecting the client.")
                     self.__packets_queue.append(None)
+                    self.log.debug(f"Last recv: {await self.__reader.read(100 * MB)}")
                     continue
 
                 data = await self.__reader.read(int_header)
@@ -206,7 +208,7 @@ class Client:
     async def _split_load(self, start, end, d_sock, filename):
         # TODO: Speed  limiter
         real_size = end - start
-        writer = self._down_rw[1] if d_sock else self.__writer
+        writer = self._down_sock[1] if d_sock else self.__writer
         who = 'dwn' if d_sock else 'srv'
         if config.Server["debug"]:
             self.log.debug(f"[{who}] Real size: {real_size / MB}mb; {real_size == end}, {real_size * 2 == end}")
@@ -245,7 +247,7 @@ class Client:
                     return
                 await self._send(b"AG")
                 t = 0
-                while not self._down_rw[0]:
+                while not self._down_sock[0]:
                     await asyncio.sleep(0.1)
                     t += 1
                     if t > 50:
@@ -523,7 +525,7 @@ class Client:
         except Exception as e:
             self.log.debug(f"Error while closing writer: {e}")
         try:
-            _, down_w = self._down_rw
+            _, down_w = self._down_sock
             if down_w and not down_w.is_closing():
                 down_w.close()
         except Exception as e:

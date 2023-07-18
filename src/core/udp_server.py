@@ -26,30 +26,55 @@ class UDPServer(asyncio.DatagramTransport):
         self.transport = transport
 
     def datagram_received(self, data, addr):
-        message = data.decode()
-        print('Received %r from %s' % (message, addr))
-        print('Send %r to %s' % (message, addr))
-        self.transport.sendto(data, addr)
+        cid = data[0] - 1
+        code = data[2:3].decode()
 
-    async def start(self):
+        client = self.Core.get_client(cid=cid)
+        if client and client._udp_sock != (self.transport, addr):
+            client._udp_sock = (self.transport, addr)
+            self.log.debug(f"Set UDP Sock for CID: {cid}")
+        else:
+            self.log.debug(f"Client not found.")
+
+        match code:
+            case "p":
+                self.log.debug(f"[{cid}] Send ping")
+                # TODO: Call event onSentPing
+                self.transport.sendto(b"p", addr)  # Send ping
+            case "Z":
+                # TODO: Positions synchronization
+                # TODO: Call event onChangePosition
+                pass
+            case _:
+                self.log.debug(f"[{cid}] Unknown code: {code}")
+
+    def connection_lost(self, exc):
+        if exc is not None and exc != KeyboardInterrupt:
+            self.log.debug(f'Connection raised: {exc}')
+        self.log.debug(f'Disconnected.')
+        self.transport.close()
+
+    async def _start(self):
         self.log.debug("Starting UDP server.")
         self.run = True
         try:
             self.transport, _ = await self.loop.create_datagram_endpoint(
-                lambda: self,
-                local_addr=(self.host, self.port),
-                reuse_port=True
+                lambda: UDPServer(self.Core),
+                local_addr=(self.host, self.port)
             )
+            self.log.debug(f"UDP server started on {self.transport.get_extra_info('sockname')}")
+            return
         except OSError as e:
-            self.log.error("Cannot bind port or other error")
-            raise e
-        except BaseException as e:
-            self.log.error(f"Error: {e}")
-            raise e
-        finally:
             self.run = False
             self.Core.run = False
+            self.log.error("Cannot bind port or other error")
+            self.log.exception(e)
+        except Exception as e:
+            self.run = False
+            self.Core.run = False
+            self.log.error(f"Error: {e}")
+            self.log.exception(e)
 
-    def stop(self):
+    def _stop(self):
         self.log.debug("Stopping UDP server")
         self.transport.close()

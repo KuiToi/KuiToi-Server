@@ -250,7 +250,7 @@ class Core:
                 self.clients.append(None)
             tasks = []
             # self.udp.start,
-            f_tasks = [self.tcp.start, console.start, self.stop_me, self.heartbeat, self.check_alive]
+            f_tasks = [self.tcp.start, self.udp._start, console.start, self.stop_me, self.heartbeat, self.check_alive]
             for task in f_tasks:
                 tasks.append(asyncio.create_task(task()))
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
@@ -270,7 +270,7 @@ class Core:
         finally:
             self.run = False
             self.tcp.stop()
-            # self.udp.stop()
+            self.udp._stop()
             await self.stop()
 
     def start(self):
