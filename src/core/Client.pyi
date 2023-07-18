@@ -19,12 +19,12 @@ class Client:
         self.__reader = reader
         self.__writer = writer
         self.__packets_queue = []
-        self._udp_sock: Tuple[DatagramTransport, tuple] | Tuple[None, None] = (None, None)
-        self._down_sock: Tuple[StreamReader, StreamWriter] | Tuple[None, None] = (None, None)
+        self._udp_sock: Tuple[DatagramTransport | None, Tuple[str, int] | None] = (None, None)
+        self._down_sock: Tuple[StreamReader | None, StreamWriter | None] = (None, None)
         self._log = utils.get_logger("client(id: )")
-        self._addr = writer.get_extra_info("sockname")
+        self._addr: Tuple[str, int] = writer.get_extra_info("sockname")
         self._loop = asyncio.get_event_loop()
-        self.__Core = core
+        self.__Core: Core = core
         self._cid: int = -1
         self._key: str = None
         self.nick: str = None
