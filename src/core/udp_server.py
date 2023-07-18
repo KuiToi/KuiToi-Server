@@ -30,9 +30,10 @@ class UDPServer(asyncio.DatagramTransport):
         code = data[2:3].decode()
 
         client = self.Core.get_client(cid=cid)
-        if client and client._udp_sock != (self.transport, addr):
-            client._udp_sock = (self.transport, addr)
-            self.log.debug(f"Set UDP Sock for CID: {cid}")
+        if client:
+            if client._udp_sock != (self.transport, addr):
+                client._udp_sock = (self.transport, addr)
+                self.log.debug(f"Set UDP Sock for CID: {cid}")
         else:
             self.log.debug(f"Client not found.")
 
@@ -42,7 +43,8 @@ class UDPServer(asyncio.DatagramTransport):
                 # TODO: Call event onSentPing
                 self.transport.sendto(b"p", addr)  # Send ping
             case "Z":
-                # TODO: Positions synchronization
+                if client:
+                    client._send(data)
                 # TODO: Call event onChangePosition
                 pass
             case _:
