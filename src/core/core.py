@@ -141,7 +141,7 @@ class Core:
         modstotal = len(self.mods_list) - 1
         while self.run:
             try:
-                data = {"uuid": config.Auth["key"], "players": len(self.clients), "maxplayers": config.Game["players"],
+                data = {"uuid": config.Auth["key"], "players": len(self.clients_by_id), "maxplayers": config.Game["players"],
                         "port": config.Server["server_port"], "map": f"/levels/{config.Game['map']}/info.json",
                         "private": config.Auth['private'], "version": self.BeamMP_version,
                         "clientversion": self.client_major_version,
