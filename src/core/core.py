@@ -41,6 +41,8 @@ class Core:
         self.web_pool = webapp.data_pool
         self.web_stop = None
 
+        self.lock_upload = False
+
         self.client_major_version = "2.0"
         self.BeamMP_version = "3.2.0"
 

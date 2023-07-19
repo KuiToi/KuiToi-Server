@@ -32,6 +32,7 @@ class Core:
         self.udp = UDPServer
         self.web_thread: Thread = None
         self.web_stop: Callable = lambda: None
+        self.lock_upload = False
         self.client_major_version = "2.0"
         self.BeamMP_version = "3.2.0"
     def get_client(self, cid=None, nick=None) -> Client | None: ...

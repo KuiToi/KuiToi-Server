@@ -290,7 +290,11 @@ class Client:
                     if t > 50:
                         await self.kick("Missing download socket")
                         return
-                speed = 10
+                if config.Options['use_queue']:
+                    while self.__Core.lock_upload:
+                        await asyncio.sleep(.2)
+                    self.__Core.lock_upload = True
+                speed = config.Options["speed_limit"]
                 if speed:
                     speed = speed / 2
                 half_size = math.floor(size / 2)
@@ -301,6 +305,8 @@ class Client:
                 ]
                 sl0, sl1 = await asyncio.gather(*uploads)
                 tr = time.monotonic() - t
+                if self.__Core.lock_upload:
+                    self.__Core.lock_upload = False
                 # TODO: i18n
                 msg = f"Mod sent: Size {round(size / MB, 3)}mb Speed {int(size / tr / MB)}Mb/s ({int(tr)}s)"
                 if speed:
