@@ -46,13 +46,13 @@ if args.config:
 config_provider = ConfigProvider(config_path)
 config = config_provider.open_config()
 builtins.config = config
+config.enc = config.Options['encoding']
 if config.Options['debug'] is True:
     utils.set_debug_status()
     log.info("Debug enabled!")
     log = get_logger("core.init")
     log.debug("Debug mode enabled!")
     log.debug(f"Server config: {config}")
-config.enc = config.Options['encoding']
 # i18n init
 log.debug("Initializing i18n...")
 ml = MultiLanguage()
