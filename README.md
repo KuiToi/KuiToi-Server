@@ -6,7 +6,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 
 ## TODOs
 
-- [ ] Server core
+- [x] Server core
   - [x] BeamMP System
     - [x] Private access (Without key, Direct connect)
     - [x] Public access  (With key, listing in Launcher)
@@ -21,7 +21,6 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Packets handled (Recursive finding second packet)
     - [x] Car synchronizations:
       - [x] State packets
-        - [ ] Debug (gear?)
       - [x] Spawn cars
       - [x] Delete cars
       - [x] Edit cars
@@ -29,9 +28,9 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] "ABG:" (compressed data)
       - [x] Decompress data
       - [x] Compress data
-  - [ ] UDP Server part:
+  - [x] UDP Server part:
     - [x] Ping
-    - [ ] Position synchronizations _(Code: Zp)_
+    - [x] Position synchronizations
 - [x] Additional:
   - [ ] KuiToi System
     - [ ] Servers counter
@@ -52,7 +51,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Async support
   - [x] Plugins support
     - [ ] KuiToi class
-    - [ ] Client class
+    - [ ] Client (Player) class
     - [x] Load Python plugins
     - [x] Async support
     - [ ] Load Lua plugins (Original BeamMP compatibility)
