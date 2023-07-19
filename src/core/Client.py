@@ -75,13 +75,11 @@ class Client:
     def is_disconnected(self):
         if not self.__alive:
             return True
-        res = self.__writer.is_closing()
-        if res:
-            self.log.debug(f"Disconnected.")
+        if self.__writer.is_closing():
+            self.log.debug(f"is_d: Disconnected.")
             self.__alive = False
             return True
         else:
-            self.log.debug(f"Alive.")
             self.__alive = True
             return False
 
@@ -148,7 +146,7 @@ class Client:
             return
 
         header = len(data).to_bytes(4, "little", signed=True)
-        self.log.debug(f'[TCP] {header + data!r}')
+        # self.log.debug(f'[TCP] {header + data!r}')
         try:
             writer.write(header + data)
             await writer.drain()
@@ -159,27 +157,6 @@ class Client:
             self.__alive = False
             await self._remove_me()
             return False
-
-    # async def __handle_packet(self, data, int_header):
-    #     self.log.debug(f"int_header: {int_header}; data: {data};")
-    #     if len(data) != int_header:
-    #         self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
-    #
-    #         recv2 = data[int_header:]
-    #         header2 = recv2[:4]
-    #         data2 = recv2[4:]
-    #         int_header2 = int.from_bytes(header2, byteorder='little', signed=True)
-    #         t = asyncio.create_task(self.__handle_packet(data2, int_header2))
-    #         self.__tasks.append(t)
-    #         data = data[:4 + int_header]
-    #
-    #     abg = b"ABG:"
-    #     if len(data) > len(abg) and data.startswith(abg):
-    #         data = zlib.decompress(data[len(abg):])
-    #         self.log.debug(f"ABG Packet: {len(data)}")
-    #
-    #     self.__packets_queue.append(data)
-    #     self.log.debug(f"Packets in queue: {len(self.__packets_queue)}")
 
     async def _recv(self, one=False):
         while self.__alive:
@@ -211,19 +188,14 @@ class Client:
 
                 data = await self.__reader.read(int_header)
 
-                self.log.debug(f"int_header: {int_header}; data: `{data}`;")
+                # self.log.debug(f"int_header: {int_header}; data: `{data}`;")
                 abg = b"ABG:"
                 if len(data) > len(abg) and data.startswith(abg):
                     data = zlib.decompress(data[len(abg):])
                     self.log.debug(f"ABG Packet: {len(data)}")
 
                 if one:
-                    # self.log.debug(f"int_header: `{int_header}`; data: `{data}`;")
                     return data
-                # FIXME
-                # else:
-                #     t = asyncio.create_task(self.__handle_packet(data, int_header))
-                #     self.__tasks.append(t)
                 self.__packets_queue.append(data)
 
             except ConnectionError:
@@ -482,10 +454,12 @@ class Client:
         # Codes: V W X Y
         if 89 >= data[0] >= 86:
             await self._send(data, to_all=True, to_self=False)
+            return
+
         try:
             data = data.decode()
         except UnicodeDecodeError:
-            self.log.debug(f"UnicodeDecodeError: {data}")
+            self.log.error(f"UnicodeDecodeError: {data}")
             return
 
         code = data[0]
@@ -564,7 +538,7 @@ class Client:
         while self.__alive:
             if len(self.__packets_queue) > 0:
                 for index, packet in enumerate(self.__packets_queue):
-                    self.log.debug(f"Packet: {packet}")
+                    # self.log.debug(f"Packet: {packet}")
                     del self.__packets_queue[index]
                     task = self._loop.create_task(self._handle_codes(packet))
                     tasks.append(task)
