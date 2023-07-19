@@ -468,11 +468,12 @@ class Client:
                 self.log.debug("Trying to reset car")
                 await self._reset_car(raw_data)
 
-            case "t":
-                self.log.debug(f"Received 'Ot' packet: {raw_data}")
+            case "t":  # Broken details
+                self.log.debug(f"Something broken: {raw_data}")
                 await self._send(raw_data, to_all=True, to_self=False)
-            case "m":
-                self.log.debug(f"Received 'Om' packet: {raw_data}")
+
+            case "m":  # Move focus cat
+                self.log.debug(f"Move focus to: {raw_data}")
                 await self._send(raw_data, to_all=True, to_self=True)
 
     async def _connected_handler(self):
