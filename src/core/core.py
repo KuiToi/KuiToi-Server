@@ -44,7 +44,7 @@ class Core:
         self.lock_upload = False
 
         self.client_major_version = "2.0"
-        self.BeamMP_version = "3.2.0"
+        self.BeamMP_version = "3.1.1"  # 20.07.2023
 
         ev.register_event("get_player", self.get_client)
 
