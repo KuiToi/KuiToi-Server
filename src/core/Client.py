@@ -386,7 +386,12 @@ class Client:
                         self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
                     # allow = True
                     over_spawn = False
-                    # TODO: Call event onCarSpawn
+                    ev_data = ev.call_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
+                    d2 = await ev.call_async_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
+                    ev_data.extend(d2)
+                    for d in ev_data:
+                        # TODO: handle event onCarSpawn
+                        pass
                     pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
                     unicycle = car_json.get("jbm") == "unicycle"
                     # FIXME: unicycle
@@ -423,29 +428,39 @@ class Client:
                         self.log.debug(f"Unknown car: car_id={car_id}")
             case "c":  # Edit car
                 self.log.debug("Trying to edit car")
-                allow = True
-                # TODO: Call event onCarEdited
                 cid, car_id = self._get_cid_vid(dta)
-                if car_id != -1 and cid == self.cid:
-                    try:
-                        car = self.cars[car_id]
-                        if car['unicycle']:
-                            self._cars.pop(car_id)
-                            await self._send(f"Od:{self.cid}-{car_id}", to_all=True, to_self=True)
-                        elif allow:
-                            await self._send(dta, to_all=True, to_self=False)
-                            if car['json_ok']:
-                                old_car_json = car['json']
-                                try:
-                                    new_car_json = json.loads(data[data.find("{"):])
-                                    old_car_json.update(new_car_json)
-                                    car['json'] = new_car_json
-                                    self.log.debug(f"Updated car: car_id={car_id}")
-                                except Exception as e:
-                                    self.log.debug(f"Invalid new_car_json: Error: {e}; Data: {data}")
+                try:
+                    client = self.__Core.get_client(cid=cid)
+                    if client:
+                        car = client.cars[car_id]
+                        new_car_json = {}
+                        try:
+                            new_car_json = json.loads(data[data.find("{"):])
+                        except Exception as e:
+                            self.log.debug(f"Invalid new_car_json: Error: {e}; Data: {data}")
 
-                    except IndexError:
-                        self.log.debug(f"Unknown car: car_id={car_id}")
+                        allow = False
+                        ev_data = ev.call_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
+                        d2 = await ev.call_async_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
+                        ev_data.extend(d2)
+                        for d in ev_data:
+                            # TODO: handle event onCarEdited
+                            pass
+
+                        if car_id != -1 and cid == self.cid or allow:
+                            if car['unicycle']:
+                                self._cars.pop(car_id)
+                                await self._send(f"Od:{cid}-{car_id}", to_all=True, to_self=True)
+                            else:
+                                await self._send(dta, to_all=True, to_self=False)
+                                if car['json_ok']:
+                                    old_car_json = car['json']
+                                    old_car_json.update(new_car_json)
+                                    car['json'] = old_car_json
+                                    self.log.debug(f"Updated car: car_id={car_id}")
+                except IndexError:
+                    self.log.debug(f"Unknown car: car_id={car_id}")
+
             case "r":  # Reset car
                 self.log.debug("Trying to reset car")
                 cid, car_id = self._get_cid_vid(dta)

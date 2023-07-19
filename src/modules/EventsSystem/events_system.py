@@ -27,12 +27,16 @@ class EventsSystem:
             "onPlayerAuthenticated": [],  # Only sync
             "onPlayerJoin": [],
             "onChatReceive": [],
+            "onCarSpawn": [],
+            "onCarEdited": [],
             "onServerStopped": [],
         }
         self.__async_events = {
             "onServerStarted": [],
             "onPlayerJoin": [],
             "onChatReceive": [],
+            "onCarSpawn": [],
+            "onCarEdited": [],
             "onServerStopped": []
         }
 
