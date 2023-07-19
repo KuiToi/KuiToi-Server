@@ -33,7 +33,8 @@ class Client:
         self.roles = None
         self._guest = True
         self._ready = False
-        self._cars = []
+        self._cars = [None, None, None, None, None, None, None, None, None, None]  # Max 10 cars
+        self._unicycle = None
         self._connect_time: float = 0
 
     @property
@@ -173,7 +174,7 @@ class Client:
                             self.__packets_queue.append(None)
                             self.__alive = False
                             continue
-                        self.log.debug(f"Header: {header}")
+                        self.log.error(f"Header: {header}")
                         await self.kick("Invalid packet - header negative")
                     self.__packets_queue.append(None)
                     continue
@@ -182,8 +183,8 @@ class Client:
                     await self.kick("Header size limit exceeded")
                     self.log.warning("Client sent header of >100MB - "
                                      "assuming malicious intent and disconnecting the client.")
-                    self.__packets_queue.append(None)
                     self.log.error(f"Last recv: {await self.__reader.read(100 * MB)}")
+                    self.__packets_queue.append(None)
                     continue
 
                 data = await self.__reader.read(int_header)
@@ -307,8 +308,6 @@ class Client:
                 else:
                     await self._send(mod_list)
             elif data == b"Done":
-                for c in range(int(config.Game['max_cars'] * 2.3)):
-                    self._cars.append(None)
                 await self._send(f"M/levels/{config.Game['map']}/info.json")
                 break
         return
@@ -335,116 +334,200 @@ class Client:
         self.log.debug(f"Invalid packet: Could not parse pid/vid from packet: '{data}'")
         return -1, -1
 
-    async def _handle_car_codes(self, dta):
-        if len(dta) < 6:
+    async def _spawn_car(self, data):
+        car_data = data[2:]
+        car_id = 0
+        for car in self.cars:
+            if not car:
+                break
+            car_id += 1
+        self.log.debug(f"Created a car: car_id={car_id}")
+        car_json = {}
+        try:
+            car_json = json.loads(car_data[car_data.find("{"):])
+        except Exception as e:
+            self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
+        allow = True
+        over_spawn = False
+        ev_data_list = ev.call_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
+        d2 = await ev.call_async_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
+        ev_data_list.extend(d2)
+        for ev_data in ev_data_list:
+            # TODO: handle event onCarSpawn
+            pass
+        pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
+        unicycle = car_json.get("jbm") == "unicycle"
+        # FIXME: unicycle
+        # if (allow and (config.Game['max_cars'] > car_id or unicycle)) or over_spawn:
+        if (allow and config.Game['max_cars'] > car_id and not unicycle) or over_spawn:
+            self.log.debug(f"Car spawn accepted.")
+            self._cars[car_id] = {
+                "packet": pkt,
+                "json": car_json,
+                "json_ok": bool(car_json),
+                "unicycle": unicycle,
+                "over_spawn": over_spawn or unicycle
+            }
+            await self._send(pkt, to_all=True, to_self=True)
+        else:
+            await self._send(pkt)
+            des = f"Od:{self.cid}-{car_id}"
+            await self._send(des)
+
+    async def _delete_car(self, raw_data):
+        cid, car_id = self._get_cid_vid(raw_data)
+
+        if car_id != -1 and self.cars[car_id]:
+
+            admin_allow = False  # Delete from admin, for example...
+            ev_data_list = ev.call_event("onCarDelete", car=self.cars[car_id], car_id=car_id, player=self)
+            d2 = await ev.call_async_event("onCarDelete", car=self.cars[car_id], car_id=car_id, player=self)
+            ev_data_list.extend(d2)
+            for ev_data in ev_data_list:
+                # TODO: handle event onCarDelete
+                pass
+
+            if cid == self.cid or admin_allow:
+                await self._send(raw_data, to_all=True, to_self=True)
+                car = self.cars[car_id]
+                if car['unicycle']:
+                    self._cars.pop(car_id)
+                else:
+                    self._cars[car_id] = None
+                await self._send(f"Od:{self.cid}-{car_id}")
+                self.log.debug(f"Deleted car: car_id={car_id}")
+
+        else:
+            self.log.debug(f"Invalid car: car_id={car_id}")
+
+    async def _edit_car(self, raw_data, data):
+        cid, car_id = self._get_cid_vid(raw_data)
+        if car_id != -1 and self.cars[car_id]:
+            client = self.__Core.get_client(cid=cid)
+            if client:
+                car = client.cars[car_id]
+                new_car_json = {}
+                try:
+                    new_car_json = json.loads(data[data.find("{"):])
+                except Exception as e:
+                    self.log.debug(f"Invalid new_car_json: Error: {e}; Data: {data}")
+
+                allow = False
+                admin_allow = False
+                ev_data_list = ev.call_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
+                d2 = await ev.call_async_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
+                ev_data_list.extend(d2)
+                for ev_data in ev_data_list:
+                    # TODO: handle event onCarEdited
+                    pass
+
+                if cid == self.cid or allow or admin_allow:
+                    if car['unicycle']:
+                        self._cars.pop(car_id)
+                        await self._send(f"Od:{cid}-{car_id}", to_all=True, to_self=True)
+                    else:
+                        await self._send(raw_data, to_all=True, to_self=False)
+                        if car['json_ok']:
+                            old_car_json = car['json']
+                            old_car_json.update(new_car_json)
+                            car['json'] = old_car_json
+                        self.log.debug(f"Updated car: car_id={car_id}")
+        else:
+            self.log.debug(f"Invalid car: car_id={car_id}")
+
+    async def _reset_car(self, raw_data):
+        cid, car_id = self._get_cid_vid(raw_data)
+        if car_id != -1 and cid == self.cid and self.cars[car_id]:
+            await self._send(raw_data, to_all=True, to_self=False)
+            ev.call_event("onCarReset", car=self.cars[car_id], car_id=car_id, player=self)
+            await ev.call_async_event("onCarReset", car=self.cars[car_id], car_id=car_id, player=self)
+            self.log.debug(f"Car reset: car_id={car_id}")
+        else:
+            self.log.debug(f"Invalid car: car_id={car_id}")
+
+    async def _handle_car_codes(self, raw_data):
+        if len(raw_data) < 6:
             return
-        sub_code = dta[1]
-        data = dta[3:]
+        sub_code = raw_data[1]
+        data = raw_data[3:]
         match sub_code:
             case "s":  # Spawn car
                 self.log.debug("Trying to spawn car")
                 if data[0] == "0":
-                    car_id = 0
-                    for c in self.cars:
-                        if c is None:
-                            break
-                        car_id += 1
-                    self.log.debug(f"Created a car: car_id={car_id}")
-                    car_data = data[2:]
-                    car_json = {}
-                    try:
-                        car_json = json.loads(data[data.find("{"):])
-                    except Exception as e:
-                        self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
-                    # allow = True
-                    over_spawn = False
-                    ev_data = ev.call_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
-                    d2 = await ev.call_async_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
-                    ev_data.extend(d2)
-                    for d in ev_data:
-                        # TODO: handle event onCarSpawn
-                        pass
-                    pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
-                    unicycle = car_json.get("jbm") == "unicycle"
-                    # FIXME: unicycle
-                    # if (allow and (config.Game['max_cars'] > car_id or unicycle)) or over_spawn:
-                    if config.Game['max_cars'] > car_id and not unicycle:
-                        self.log.debug(f"Car spawn accepted.")
-                        self._cars[car_id] = {
-                            "packet": pkt,
-                            "json": car_json,
-                            "json_ok": bool(car_json),
-                            "unicycle": unicycle,
-                            "over_spawn": over_spawn or unicycle
-                        }
-                        await self._send(pkt, to_all=True, to_self=True)
-                    else:
-                        await self._send(pkt)
-                        des = f"Od:{self.cid}-{car_id}"
-                        await self._send(des)
+                    await self._spawn_car(data)
+
             case "d":  # Delete car
                 self.log.debug("Trying to delete car")
-                cid, car_id = self._get_cid_vid(dta)
-                if car_id != -1 and cid == self.cid:
-                    # TODO: Call event onCarDelete
-                    await self._send(dta, to_all=True, to_self=True)
-                    try:
-                        car = self.cars[car_id]
-                        if car['unicycle']:
-                            self._cars.pop(car_id)
-                        else:
-                            self._cars[car_id] = None
-                        await self._send(f"Od:{self.cid}-{car_id}")
-                        self.log.debug(f"Deleted car: car_id={car_id}")
-                    except IndexError:
-                        self.log.debug(f"Unknown car: car_id={car_id}")
+                await self._delete_car(data)
+
             case "c":  # Edit car
                 self.log.debug("Trying to edit car")
-                cid, car_id = self._get_cid_vid(dta)
-                try:
-                    client = self.__Core.get_client(cid=cid)
-                    if client:
-                        car = client.cars[car_id]
-                        new_car_json = {}
-                        try:
-                            new_car_json = json.loads(data[data.find("{"):])
-                        except Exception as e:
-                            self.log.debug(f"Invalid new_car_json: Error: {e}; Data: {data}")
-
-                        allow = False
-                        ev_data = ev.call_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
-                        d2 = await ev.call_async_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
-                        ev_data.extend(d2)
-                        for d in ev_data:
-                            # TODO: handle event onCarEdited
-                            pass
-
-                        if car_id != -1 and cid == self.cid or allow:
-                            if car['unicycle']:
-                                self._cars.pop(car_id)
-                                await self._send(f"Od:{cid}-{car_id}", to_all=True, to_self=True)
-                            else:
-                                await self._send(dta, to_all=True, to_self=False)
-                                if car['json_ok']:
-                                    old_car_json = car['json']
-                                    old_car_json.update(new_car_json)
-                                    car['json'] = old_car_json
-                                    self.log.debug(f"Updated car: car_id={car_id}")
-                except IndexError:
-                    self.log.debug(f"Unknown car: car_id={car_id}")
+                await self._edit_car(raw_data, data)
 
             case "r":  # Reset car
                 self.log.debug("Trying to reset car")
-                cid, car_id = self._get_cid_vid(dta)
-                if car_id != -1 and cid == self.cid:
-                    # TODO: Call event onCarReset
-                    await self._send(dta, to_all=True, to_self=False)
-                    self.log.debug(f"Car reset: car_id={car_id}")
+                await self._reset_car(raw_data)
+
             case "t":
-                self.log.debug(f"Received 'Ot' packet: {dta}")
-                await self._send(dta, to_all=True, to_self=False)
+                self.log.debug(f"Received 'Ot' packet: {raw_data}")
+                await self._send(raw_data, to_all=True, to_self=False)
             case "m":
-                await self._send(dta, to_all=True, to_self=True)
+                self.log.debug(f"Received 'Om' packet: {raw_data}")
+                await self._send(raw_data, to_all=True, to_self=True)
+
+    async def _connected_handler(self):
+        self.log.info(f"Syncing time: {round(time.monotonic() - self._connect_time, 2)}s")
+        # Client connected
+        ev.call_event("onPlayerJoin", player=self)
+        await ev.call_async_event("onPlayerJoin", player=self)
+
+        await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
+        await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
+        self._ready = True
+
+        for client in self.__Core.clients:
+            if not client:
+                continue
+            for car in client.cars:
+                if not car:
+                    continue
+                await self._send(car['packet'])
+
+    async def _chat_handler(self, data):
+        sup = data.find(":", 2)
+        if sup == -1:
+            await self._send("C:Server: Invalid message.")
+        msg = data[sup + 2:]
+        if not msg:
+            self.log.debug("Tried to send an empty event, ignoring")
+            return
+        to_ev = {"message": msg, "player": self}
+        ev_data_list = ev.call_event("onChatReceive", **to_ev)
+        d2 = await ev.call_async_event("onChatReceive", **to_ev)
+        ev_data_list.extend(d2)
+        need_send = True
+        for ev_data in ev_data_list:
+            try:
+                message = ev_data["message"]
+                to_all = ev_data.get("to_all")
+                if to_all is None:
+                    to_all = True
+                to_self = ev_data.get("to_self")
+                if to_self is None:
+                    to_self = True
+                to_client = ev_data.get("to_client")
+                writer = None
+                if to_client:
+                    # noinspection PyProtectedMember
+                    writer = to_client._writer
+                self.log.info(f"{message}" if to_all else f"{self.nick}: {msg}")
+                await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
+                need_send = False
+            except KeyError | AttributeError:
+                self.log.error(f"Returns invalid data: {ev_data}")
+        if need_send:
+            self.log.info(f"{self.nick}: {msg}")
+            await self._send(data, to_all=True)
 
     async def _handle_codes(self, data):
         if not data:
@@ -462,61 +545,13 @@ class Client:
             self.log.error(f"UnicodeDecodeError: {data}")
             return
 
-        code = data[0]
         # Codes: p, Z in udp_server.py
-        match code:
-            case "H":
-                self.log.info(f"Syncing time: {round(time.monotonic() - self._connect_time, 2)}s")
-                # Client connected
-                ev.call_event("onPlayerJoin", player=self)
-                await ev.call_async_event("onPlayerJoin", player=self)
-
-                await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
-                await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
-                self._ready = True
-
-                for client in self.__Core.clients:
-                    if not client:
-                        continue
-                    for car in client.cars:
-                        if not car:
-                            continue
-                        await self._send(car['packet'])
+        match data[0]:  # At data[0] code
+            case "H":  # Map load, client ready
+                await self._connected_handler()
 
             case "C":  # Chat handler
-                sup = data.find(":", 2)
-                if sup == -1:
-                    await self._send("C:Server: Invalid message.")
-                msg = data[sup + 2:]
-                if not msg:
-                    self.log.debug("Tried to send an empty event, ignoring")
-                    return
-                self.log.info(f"{self.nick}: {msg}")
-                to_ev = {"message": msg, "player": self}
-                ev_data_list = ev.call_event("onChatReceive", **to_ev)
-                d2 = await ev.call_async_event("onChatReceive", **to_ev)
-                ev_data_list.extend(d2)
-                need_send = True
-                for ev_data in ev_data_list:
-                    try:
-                        message = ev_data["message"]
-                        to_all = ev_data.get("to_all")
-                        if to_all is None:
-                            to_all = True
-                        to_self = ev_data.get("to_self")
-                        if to_self is None:
-                            to_self = True
-                        to_client = ev_data.get("to_client")
-                        writer = None
-                        if to_client:
-                            # noinspection PyProtectedMember
-                            writer = to_client._writer
-                        await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
-                        need_send = False
-                    except KeyError | AttributeError:
-                        self.log.error(f"Returns invalid data: {ev_data}")
-                if need_send:
-                    await self._send(data, to_all=True)
+                await self._chat_handler(data)
 
             case "O":  # Cars handler
                 await self._handle_car_codes(data)

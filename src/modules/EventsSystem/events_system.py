@@ -28,7 +28,9 @@ class EventsSystem:
             "onPlayerJoin": [],
             "onChatReceive": [],
             "onCarSpawn": [],
+            "onCarDelete": [],
             "onCarEdited": [],
+            "onCarReset": [],
             "onServerStopped": [],
         }
         self.__async_events = {
@@ -36,7 +38,9 @@ class EventsSystem:
             "onPlayerJoin": [],
             "onChatReceive": [],
             "onCarSpawn": [],
+            "onCarDelete": [],
             "onCarEdited": [],
+            "onCarReset": [],
             "onServerStopped": []
         }
 
