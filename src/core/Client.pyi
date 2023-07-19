@@ -15,6 +15,7 @@ from core import Core, utils
 class Client:
 
     def __init__(self, reader: StreamReader, writer: StreamWriter, core: Core) -> "Client":
+        self._connect_time: float = None
         self.__tasks = []
         self.__reader = reader
         self.__writer = writer

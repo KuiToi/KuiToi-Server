@@ -34,6 +34,7 @@ class Client:
         self._guest = True
         self._ready = False
         self._cars = []
+        self._connect_time: float = 0
 
     @property
     def _writer(self):
@@ -233,8 +234,7 @@ class Client:
         real_size = end - start
         writer = self._down_sock[1] if d_sock else self.__writer
         who = 'dwn' if d_sock else 'srv'
-        if config.Server["debug"]:
-            self.log.debug(f"[{who}] Real size: {real_size / MB}mb; {real_size == end}, {real_size * 2 == end}")
+        self.log.debug(f"[{who}] Real size: {real_size / MB}mb; {real_size == end}, {real_size * 2 == end}")
 
         with open(filename, 'rb') as f:
             f.seek(start)
@@ -262,7 +262,6 @@ class Client:
         return total_sent
 
     async def _sync_resources(self):
-        tsr = time.monotonic()
         while self.__alive:
             data = await self._recv(True)
             if data.startswith(b"f"):
@@ -308,7 +307,7 @@ class Client:
                 if self.__Core.lock_upload:
                     self.__Core.lock_upload = False
                 # TODO: i18n
-                msg = f"Mod sent: Size {round(size / MB, 3)}mb Speed {int(size / tr / MB)}Mb/s ({int(tr)}s)"
+                msg = f"Mod sent: Size {round(size / MB, 3)}mb Speed {math.ceil(size / tr / MB)}Mb/s ({int(tr)}s)"
                 if speed:
                     msg += f" of limit {int(speed * 2)}Mb/s"
                 self.log.info(msg)
@@ -339,7 +338,6 @@ class Client:
                 for c in range(int(config.Game['max_cars'] * 2.3)):
                     self._cars.append(None)
                 await self._send(f"M/levels/{config.Game['map']}/info.json")
-                self.log.info(f"Syncing time: {time.monotonic() - tsr}")
                 break
         return
 
@@ -479,6 +477,7 @@ class Client:
         # Codes: p, Z in udp_server.py
         match code:
             case "H":
+                self.log.info(f"Syncing time: {round(time.monotonic() - self._connect_time, 2)}s")
                 # Client connected
                 ev.call_event("onPlayerJoin", player=self)
                 await ev.call_async_event("onPlayerJoin", player=self)
@@ -541,6 +540,7 @@ class Client:
                 await self._send(data, to_all=True, to_self=False)
 
     async def _looper(self):
+        self._connect_time = time.monotonic()
         await self._send(f"P{self.cid}")  # Send clientID
         await self._sync_resources()
         tasks = self.__tasks
@@ -571,7 +571,7 @@ class Client:
                 await self._send(f"J{self.nick} disconnected!", to_all=True, to_self=False)  # I'm disconnected.
             self.log.debug(f"Removing client")
             # TODO: i18n
-            self.log.info("Disconnected")
+            self.log.info(f"Disconnected, online time: {round((time.monotonic() - self._connect_time) / 60, 2)}min.")
             self.__Core.clients[self.cid] = None
             self.__Core.clients_by_id.pop(self.cid)
             self.__Core.clients_by_nick.pop(self.nick)
