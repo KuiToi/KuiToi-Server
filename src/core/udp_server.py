@@ -33,13 +33,13 @@ class UDPServer(asyncio.DatagramTransport):
             if client:
                 match code:
                     case "p":  # Ping packet
-                        # TODO: Call event onSentPing
+                        ev.call_event("onSentPing")
                         self.transport.sendto(b"p", addr)
                     case "Z":  # Position packet
                         if client._udp_sock != (self.transport, addr):
                             client._udp_sock = (self.transport, addr)
                             self.log.debug(f"Set UDP Sock for CID: {cid}")
-                        # TODO: Call event onChangePosition
+                        ev.call_event("onChangePosition")
                         if client:
                             await client._send(data[2:], to_all=True, to_self=False, to_udp=True)
                     case _:

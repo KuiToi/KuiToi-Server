@@ -31,6 +31,8 @@ class EventsSystem:
             "onCarDelete": [],
             "onCarEdited": [],
             "onCarReset": [],
+            "onSentPing": [],  # Only sync
+            "onChangePosition": [],  # Only sync
             "onServerStopped": [],
         }
         self.__async_events = {
@@ -86,7 +88,8 @@ class EventsSystem:
         return funcs_data
 
     def call_event(self, event_name, *args, **kwargs):
-        self.log.debug(f"Calling sync event: '{event_name}'")
+        if event_name not in ["onChangePosition", "onSentPing"]:  # UDP events
+            self.log.debug(f"Calling sync event: '{event_name}'")
         funcs_data = []
 
         if event_name in self.__events.keys():
