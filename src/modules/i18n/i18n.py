@@ -68,7 +68,9 @@ class i18n:
 
 class MultiLanguage:
 
-    def __init__(self, language: str = None, files_dir="modules/i18n/files/", encoding="utf-8"):
+    def __init__(self, language: str = None, files_dir="modules/i18n/files/", encoding=None):
+        if encoding is None:
+            encoding = config.enc
         if language is None:
             language = "en"
         self.__data = {}

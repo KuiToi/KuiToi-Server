@@ -99,7 +99,7 @@ class PluginsLoader:
                     plugin.print = print
                     file_path = os.path.join(self.plugins_dir, file)
                     plugin.__file__ = file_path
-                    with open(f'{file_path}', 'r', encoding="utf-8") as f:
+                    with open(f'{file_path}', 'r', encoding=config.enc) as f:
                         code = f.read()
                         exec(code, plugin.__dict__)
 

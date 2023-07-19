@@ -105,7 +105,7 @@ class Core:
                     if not client.ready:
                         client.is_disconnected()
                         continue
-                    await client._send(bytes(ca, "utf-8"))
+                    await client._send(ca)
         except Exception as e:
             self.log.error("Error in check_alive.")
             self.log.exception(e)

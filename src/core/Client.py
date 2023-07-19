@@ -90,7 +90,7 @@ class Client:
             return
         # TODO: i18n
         self.log.info(f"Kicked with reason: \"{reason}\"")
-        await self._send(b"K" + bytes(reason, "utf-8"))
+        await self._send(f"K{reason}")
         self.__alive = False
 
     async def send_message(self, message, to_all=True):
@@ -108,7 +108,7 @@ class Client:
         #  size     data
 
         if type(data) == str:
-            data = bytes(data, "utf-8")
+            data = bytes(data, config.enc)
 
         if to_all:
             code = chr(data[0])
@@ -266,7 +266,7 @@ class Client:
         while self.__alive:
             data = await self._recv(True)
             if data.startswith(b"f"):
-                file = data[1:].decode("utf-8")
+                file = data[1:].decode(config.enc)
                 # TODO: i18n
                 self.log.info(f"Requested mode: {file!r}")
                 size = -1
@@ -328,11 +328,11 @@ class Client:
                 if len(mod_list) == 0:
                     await self._send(b"-")
                 else:
-                    await self._send(bytes(mod_list, "utf-8"))
+                    await self._send(mod_list)
             elif data == b"Done":
                 for c in range(int(config.Game['max_cars'] * 2.3)):
                     self._cars.append(None)
-                await self._send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
+                await self._send(f"M/levels/{config.Game['map']}/info.json")
                 self.log.info(f"Syncing time: {time.monotonic() - tsr}")
                 break
         return

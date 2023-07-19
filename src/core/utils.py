@@ -33,11 +33,15 @@ if os.path.exists(log_file):
             if os.path.exists(file):
                 tar.add(file, os.path.basename(file))
                 os.remove(file)
-fh = logging.FileHandler(log_file, encoding='utf-8')
+fh = logging.FileHandler(log_file, encoding="utf-8")
 fh.setFormatter(logging.Formatter(log_format))
 
 
 def get_logger(name):
+    try:
+        fh.encoding = config.enc
+    except NameError:
+        fh.encoding = "utf-8"
     log = logging.getLogger(name=name)
     log.addHandler(fh)
     log.level = log_level
