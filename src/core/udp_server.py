@@ -5,7 +5,6 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
-import traceback
 
 from core import utils
 

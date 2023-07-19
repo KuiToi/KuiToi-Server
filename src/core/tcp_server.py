@@ -12,6 +12,7 @@ import aiohttp
 from core import utils
 
 
+# noinspection PyProtectedMember
 class TCPServer:
     def __init__(self, core, host, port):
         self.log = utils.get_logger("TCPServer")

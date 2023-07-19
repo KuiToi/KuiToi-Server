@@ -380,7 +380,7 @@ class Client:
                         car_json = json.loads(data[data.find("{"):])
                     except Exception as e:
                         self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
-                    allow = True
+                    # allow = True
                     over_spawn = False
                     # TODO: Call event onCarSpawn
                     pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
@@ -515,6 +515,7 @@ class Client:
                         to_client = ev_data.get("to_client")
                         writer = None
                         if to_client:
+                            # noinspection PyProtectedMember
                             writer = to_client._writer
                         await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
                         need_send = False

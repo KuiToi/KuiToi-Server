@@ -20,8 +20,8 @@ logging.basicConfig(level=log_level, format=log_format)
 if not os.path.exists(log_dir):
     os.mkdir(log_dir)
 if os.path.exists(log_file):
-    mtime = os.path.getmtime(log_file)
-    gz_path = log_dir + datetime.datetime.fromtimestamp(mtime).strftime('%d.%m.%Y') + "-%s.tar.gz"
+    ftime = os.path.getmtime(log_file)
+    gz_path = log_dir + datetime.datetime.fromtimestamp(ftime).strftime('%d.%m.%Y') + "-%s.tar.gz"
     index = 1
     while True:
         if not os.path.exists(gz_path % index):

@@ -20,6 +20,7 @@ from modules import PluginsLoader
 from modules.WebAPISystem import app as webapp
 
 
+# noinspection PyProtectedMember
 class Core:
 
     def __init__(self):
@@ -145,10 +146,10 @@ class Core:
         modstotal = len(self.mods_list) - 1
         while self.run:
             try:
-                data = {"uuid": config.Auth["key"], "players": len(self.clients_by_id), "maxplayers": config.Game["players"],
-                        "port": config.Server["server_port"], "map": f"/levels/{config.Game['map']}/info.json",
-                        "private": config.Auth['private'], "version": self.BeamMP_version,
-                        "clientversion": self.client_major_version,
+                data = {"uuid": config.Auth["key"], "players": len(self.clients_by_id),
+                        "maxplayers": config.Game["players"], "port": config.Server["server_port"],
+                        "map": f"/levels/{config.Game['map']}/info.json", "private": config.Auth['private'],
+                        "version": self.BeamMP_version, "clientversion": self.client_major_version,
                         "name": config.Server["name"], "modlist": modlist, "modstotalsize": modstotalsize,
                         "modstotal": modstotal, "playerslist": "", "desc": config.Server['description'], "pass": False}
                 self.log.debug(f"Auth: data {data}")
