@@ -9,6 +9,7 @@ import asyncio
 from core import utils
 
 
+# noinspection PyProtectedMember
 class UDPServer(asyncio.DatagramTransport):
     transport = None
 
@@ -20,11 +21,8 @@ class UDPServer(asyncio.DatagramTransport):
         self.host = host
         self.port = port
         self.run = False
-        # self.transport = transport
 
-    def connection_made(self, transport):
-        self.log.debug("set connection transport")
-        # self.transport = self.transport()
+    def connection_made(self, transport): ...
 
     async def handle_datagram(self, data, addr):
         try:
@@ -33,15 +31,14 @@ class UDPServer(asyncio.DatagramTransport):
 
             client = self.Core.get_client(cid=cid)
             if client:
-                if client._udp_sock != (self.transport, addr):
-                    client._udp_sock = (self.transport, addr)
-                    self.log.debug(f"Set UDP Sock for CID: {cid}")
                 match code:
-                    case "p":
-                        self.log.debug(f"[{cid}] Send ping")
+                    case "p":  # Ping packet
                         # TODO: Call event onSentPing
-                        self.transport.sendto(b"p", addr)  # Send ping
-                    case "Z":
+                        self.transport.sendto(b"p", addr)
+                    case "Z":  # Position packet
+                        if client._udp_sock != (self.transport, addr):
+                            client._udp_sock = (self.transport, addr)
+                            self.log.debug(f"Set UDP Sock for CID: {cid}")
                         # TODO: Call event onChangePosition
                         if client:
                             await client._send(data[2:], to_all=True, to_self=False, to_udp=True)
@@ -86,7 +83,6 @@ class UDPServer(asyncio.DatagramTransport):
                 self.run = True
                 while not self.transport.is_closing():
                     await asyncio.sleep(0.2)
-                self.log.info("UDP сервер сдох 1")
         except OSError as e:
             self.log.error("Cannot bind port or other error")
             self.log.exception(e)
