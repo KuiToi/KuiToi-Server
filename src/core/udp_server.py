@@ -94,7 +94,6 @@ class UDPServer(asyncio.DatagramTransport):
             self.log.error(f"Error: {e}")
             self.log.exception(e)
         finally:
-            self.log.info("UDP сервер сдох 2")
             self.run = False
             self.Core.run = False
 
