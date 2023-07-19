@@ -103,57 +103,75 @@ class Client:
         if type(data) == str:
             data = bytes(data, "utf-8")
 
-        if writer is None:
-            writer = self.__writer
-
         if to_all:
             code = chr(data[0])
             for client in self.__Core.clients:
                 if not client or (client is self and not to_self):
                     continue
                 if not to_udp or code in ['V', 'W', 'Y', 'E']:
-                    if code in ['O', 'T'] or len(data) > 1000:
-                        await client._send(data)
-                    else:
-                        await client._send(data)
+                    await client._send(data)
                 else:
-                    # TODO: UDP send
-                    self.log.debug(f"UDP Part not ready: {code}")
+                    await client._send(data, to_udp=to_udp)
             return
+
+        if not self.__alive:
+            return False
+
+        if writer is None:
+            writer = self.__writer
 
         if len(data) > 400:
             data = b"ABG:" + zlib.compress(data, level=zlib.Z_BEST_COMPRESSION)
 
+        if to_udp:
+            udp_sock = self._udp_sock[0]
+            udp_addr = self._udp_sock[1]
+            # self.log.debug(f'[UDP] len: {len(data)}; send: {data!r}')
+            if udp_sock and udp_addr:
+                try:
+                    if not udp_sock.is_closing():
+                        # self.log.debug(f'[UDP] {data!r}')
+                        udp_sock.sendto(data, udp_addr)
+                except OSError:
+                    self.log.debug("[UDP] Error sending")
+                except Exception as e:
+                    self.log.debug(f"[UDP] Error sending: {e}")
+                    self.log.exception(e)
+            return
+
         header = len(data).to_bytes(4, "little", signed=True)
-        self.log.debug(f'len: {len(data)}; send: {header + data!r}')
+        self.log.debug(f'[TCP] {header + data!r}')
         try:
             writer.write(header + data)
             await writer.drain()
+            return True
+
         except ConnectionError:
-            self.log.debug('_send: Disconnected')
+            self.log.debug('[TCP] Disconnected')
             self.__alive = False
             await self._remove_me()
+            return False
 
-    async def __handle_packet(self, data, int_header):
-        self.log.debug(f"int_header: {int_header}; data: {data};")
-        if len(data) != int_header:
-            self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
-
-            recv2 = data[int_header:]
-            header2 = recv2[:4]
-            data2 = recv2[4:]
-            int_header2 = int.from_bytes(header2, byteorder='little', signed=True)
-            t = asyncio.create_task(self.__handle_packet(data2, int_header2))
-            self.__tasks.append(t)
-            data = data[:4 + int_header]
-
-        abg = b"ABG:"
-        if len(data) > len(abg) and data.startswith(abg):
-            data = zlib.decompress(data[len(abg):])
-            self.log.debug(f"ABG Packet: {len(data)}")
-
-        self.__packets_queue.append(data)
-        self.log.debug(f"Packets in queue: {len(self.__packets_queue)}")
+    # async def __handle_packet(self, data, int_header):
+    #     self.log.debug(f"int_header: {int_header}; data: {data};")
+    #     if len(data) != int_header:
+    #         self.log.debug(f"WARN Expected to read {int_header} bytes, instead got {len(data)}")
+    #
+    #         recv2 = data[int_header:]
+    #         header2 = recv2[:4]
+    #         data2 = recv2[4:]
+    #         int_header2 = int.from_bytes(header2, byteorder='little', signed=True)
+    #         t = asyncio.create_task(self.__handle_packet(data2, int_header2))
+    #         self.__tasks.append(t)
+    #         data = data[:4 + int_header]
+    #
+    #     abg = b"ABG:"
+    #     if len(data) > len(abg) and data.startswith(abg):
+    #         data = zlib.decompress(data[len(abg):])
+    #         self.log.debug(f"ABG Packet: {len(data)}")
+    #
+    #     self.__packets_queue.append(data)
+    #     self.log.debug(f"Packets in queue: {len(self.__packets_queue)}")
 
     async def _recv(self, one=False):
         while self.__alive:
@@ -283,7 +301,7 @@ class Client:
                 else:
                     await self._send(bytes(mod_list, "utf-8"))
             elif data == b"Done":
-                for c in range(config.Game['max_cars']):
+                for c in range(int(config.Game['max_cars'] * 2.3)):
                     self._cars.append(None)
                 await self._send(b"M/levels/" + bytes(config.Game['map'], 'utf-8') + b"/info.json")
                 break
@@ -310,7 +328,7 @@ class Client:
         self.log.debug(f"Invalid packet: Could not parse pid/vid from packet: '{data}'")
         return -1, -1
 
-    async def _handle_vehicle_codes(self, dta):
+    async def _handle_car_codes(self, dta):
         if len(dta) < 6:
             return
         sub_code = dta[1]
@@ -336,7 +354,9 @@ class Client:
                     # TODO: Call event onCarSpawn
                     pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
                     unicycle = car_json.get("jbm") == "unicycle"
-                    if (allow and (config.Game['max_cars'] > car_id or unicycle)) or over_spawn:
+                    # FIXME: unicycle
+                    # if (allow and (config.Game['max_cars'] > car_id or unicycle)) or over_spawn:
+                    if config.Game['max_cars'] > car_id and not unicycle:
                         self.log.debug(f"Car spawn accepted.")
                         self._cars[car_id] = {
                             "packet": pkt,
@@ -416,8 +436,10 @@ class Client:
             data = data.decode()
         except UnicodeDecodeError:
             self.log.debug(f"UnicodeDecodeError: {data}")
+            return
 
         code = data[0]
+        # Codes: p, Z in udp_server.py
         match code:
             case "H":
                 # Client connected
@@ -437,7 +459,10 @@ class Client:
                         await self._send(car['packet'])
 
             case "C":  # Chat handler
-                msg = data[4 + len(self.nick):]
+                sup = data.find(":", 2)
+                if sup == -1:
+                    await self._send("C:Server: Invalid message.")
+                msg = data[sup+2:]
                 if not msg:
                     self.log.debug("Tried to send an empty event, ignoring")
                     return
@@ -468,7 +493,7 @@ class Client:
                     await self._send(data, to_all=True)
 
             case "O":  # Cars handler
-                await self._handle_vehicle_codes(data)
+                await self._handle_car_codes(data)
 
             case "E":  # Client events handler
                 # TODO: HandleEvent
