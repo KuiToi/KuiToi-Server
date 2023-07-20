@@ -7,7 +7,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 ## TODOs
 
 - [x] Server core
-  - [x] BeamMP System
+  - [x] BeamMP System:
     - [x] Private access (Without key, Direct connect)
     - [x] Public access  (With key, listing in Launcher)
     - [X] Player authentication
@@ -52,11 +52,16 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Async support
     - [ ] Add all events
   - [x] Plugins support
-    - [ ] KuiToi class
-    - [ ] Client (Player) class
-    - [x] Load Python plugins
-    - [x] Async support
-    - [ ] Load Lua plugins (Original BeamMP compatibility)
+    - [ ] Python part:
+      - [x] Load Python plugins
+      - [x] Async support
+      - [ ] KuiToi class
+      - [ ] Client (Player) class
+    - [ ] Lua part: (Original BeamMP compatibility)
+      - [x] Load Lua plugins
+      - [ ] MP Class 
+      - [ ] Util class
+      - [ ] FS class
   - [x] MultiLanguage (i18n support)
     - [ ] Core
     - [x] Console
