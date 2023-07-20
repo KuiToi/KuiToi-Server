@@ -56,6 +56,7 @@ class TCPServer:
             client.nick = res["username"]
             client.roles = res["roles"]
             client._guest = res["guest"]
+            client._identifiers = {k: v for s in res["identifiers"] for k, v in [s.split(':')]}
             # noinspection PyProtectedMember
             client._update_logger()
         except Exception as e:

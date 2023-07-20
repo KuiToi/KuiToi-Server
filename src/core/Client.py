@@ -33,6 +33,7 @@ class Client:
         self.roles = None
         self._guest = True
         self._ready = False
+        self._identifiers = []
         self._cars = [None] * 21  # Max 20 cars per player + 1 snowman
         self._snowman = {"id": -1, "packet": ""}
         self._connect_time = 0
@@ -64,6 +65,10 @@ class Client:
     @property
     def ready(self):
         return self._ready
+
+    @property
+    def identifiers(self):
+        return self._identifiers
 
     @property
     def cars(self):
@@ -381,8 +386,13 @@ class Client:
             des = f"Od:{self.cid}-{car_id}"
             await self._send(des)
 
-    async def _delete_car(self, raw_data):
-        cid, car_id = self._get_cid_vid(raw_data)
+    async def _delete_car(self, raw_data=None, car_id=None):
+
+        if not car_id and raw_data:
+            cid, car_id = self._get_cid_vid(raw_data)
+        else:
+            cid = self.cid
+            raw_data = f"Od:{self.cid}-{car_id}"
 
         if car_id != -1 and self.cars[car_id]:
 
