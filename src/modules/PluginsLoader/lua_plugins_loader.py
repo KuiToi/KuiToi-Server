@@ -1,5 +1,7 @@
 import asyncio
 import os
+import platform
+from typing import Tuple, List, Any
 
 # noinspection PyUnresolvedReferences
 import lupa.lua53
@@ -8,17 +10,27 @@ from lupa.lua53 import LuaRuntime
 from core import get_logger
 
 
+# noinspection PyPep8Naming
 class MP:
 
     def __init__(self, name):
         self.name = name
         self.log = get_logger(f"LuaPlugin | {name}")
 
-    def log_info(self, *args):
+    def _print_log(self, *args):
         s = ""
         for i in args:
-            s += i
+            s += f" {i}"
         self.log.info(s)
+
+    def CreateTimer(self): ...
+
+    def GetOSName(self) -> str:
+        return platform.system()
+
+    def _GetServerVersion(self) -> tuple[int, int, int]:
+        major, minor, patch = ev.call_event("_get_BeamMP_version")[0]
+        return major, minor, patch
 
 
 class LuaPluginsLoader:
@@ -48,14 +60,19 @@ class LuaPluginsLoader:
         self.log.debug(f"py_folders {py_folders}, lua_dirs {self.lua_dirs}")
 
         for path, obj in self.lua_dirs:
+            # noinspection PyArgumentList
             lua = LuaRuntime(encoding=config.enc, source_encoding=config.enc)
             mp = MP(obj)
             lua.globals().MP = mp
-            lua.globals().print = mp.log_info
+            lua.globals().printRaw = lua.globals().print
+            lua.globals().print = mp._print_log
+            lua.globals().exit = lambda x: self.log.info(f"{obj}: You can't disable server..")
             code = f'package.path = package.path.."' \
                    f';{self.plugins_dir}/{obj}/?.lua' \
                    f';{self.plugins_dir}/{obj}/lua/?.lua' \
-                   f';modules/PluginsLoader/lua_libs/?.lua"'
+                   f';modules/PluginsLoader/lua_libs/?.lua"\n'
+            with open("modules/PluginsLoader/add_in.lua", "r") as f:
+                code += f.read()
             with open(os.path.join(path, "main.lua"), 'r', encoding=config.enc) as f:
                 code += f.read()
             lua.execute(code)
