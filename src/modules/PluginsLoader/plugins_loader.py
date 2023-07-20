@@ -73,7 +73,7 @@ class PluginsLoader:
         self.loaded_str = "Plugins: "
         ev.register_event("_plugins_start", self.start)
         ev.register_event("_plugins_unload", self.unload)
-        ev.register_event("_plugins_get", lambda x: self.plugins)
+        ev.register_event("_plugins_get", lambda x: list(self.plugins.keys()))
         console.add_command("plugins", lambda x: self.loaded_str[:-2])
         console.add_command("pl", lambda x: self.loaded_str[:-2])
 
@@ -81,14 +81,14 @@ class PluginsLoader:
         self.log.debug("Loading plugins...")
         files = os.listdir(self.plugins_dir)
         for file in files:
-            if os.path.isfile(file) and file.endswith(".py"):
+            file_path = os.path.join(self.plugins_dir, file)
+            if os.path.isfile(file_path) and file.endswith(".py"):
                 try:
                     self.log.debug(f"Loading plugin: {file[:-3]}")
                     plugin = types.ModuleType(file[:-3])
                     plugin.KuiToi = KuiToi
                     plugin.KuiToi._plugins_dir = self.plugins_dir
                     plugin.print = print
-                    file_path = os.path.join(self.plugins_dir, file)
                     plugin.__file__ = file_path
                     with open(f'{file_path}', 'r', encoding=config.enc) as f:
                         code = f.read()

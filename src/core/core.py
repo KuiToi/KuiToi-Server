@@ -16,7 +16,7 @@ from core import utils
 from core.Client import Client
 from core.tcp_server import TCPServer
 from core.udp_server import UDPServer
-from modules import PluginsLoader
+from modules import PluginsLoader, LuaPluginsLoader
 from modules.WebAPISystem import app as webapp
 
 
@@ -217,11 +217,14 @@ class Core:
             lambda x: f"Players list: {self.get_clients_list(True)}"
         )
 
-        self.log.debug("Initializing PluginsLoader...")
-        if not os.path.exists("plugins"):
-            os.mkdir("plugins")
-        pl = PluginsLoader("plugins")
+        pl_dir = "plugins"
+        self.log.debug("Initializing PluginsLoaders...")
+        if not os.path.exists(pl_dir):
+            os.mkdir(pl_dir)
+        pl = PluginsLoader(pl_dir)
         await pl.load()
+        lpl = LuaPluginsLoader(pl_dir)
+        await lpl.load()
 
         try:
             # WebApi Start
@@ -263,6 +266,7 @@ class Core:
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
             await ev.call_async_event("_plugins_start")
+            await ev.call_async_event("_lua_plugins_start")
 
             self.run = True
             self.log.info(i18n.start)
@@ -287,6 +291,7 @@ class Core:
         ev.call_event("onServerStopped")
         await ev.call_async_event("onServerStopped")
         await ev.call_async_event("_plugins_unload")
+        await ev.call_async_event("_lua_plugins_unload")
         self.run = False
         self.log.info(i18n.stop)
         if config.WebAPI["enabled"]:
