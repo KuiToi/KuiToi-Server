@@ -33,19 +33,9 @@ class KuiToi:
     def name(self):
         return self.__name
 
-    @name.setter
-    def name(self, value):
-        # You chell not pass
-        pass
-
     @property
     def dir(self):
         return self.__dir
-
-    @dir.setter
-    def dir(self, value):
-        # You chell not pass
-        pass
 
     @contextmanager
     def open(self, file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
@@ -83,6 +73,7 @@ class PluginsLoader:
         self.loaded_str = "Plugins: "
         ev.register_event("_plugins_start", self.start)
         ev.register_event("_plugins_unload", self.unload)
+        ev.register_event("_plugins_get", lambda x: self.plugins)
         console.add_command("plugins", lambda x: self.loaded_str[:-2])
         console.add_command("pl", lambda x: self.loaded_str[:-2])
 
@@ -90,7 +81,7 @@ class PluginsLoader:
         self.log.debug("Loading plugins...")
         files = os.listdir(self.plugins_dir)
         for file in files:
-            if file.endswith(".py"):
+            if os.path.isfile(file) and file.endswith(".py"):
                 try:
                     self.log.debug(f"Loading plugin: {file[:-3]}")
                     plugin = types.ModuleType(file[:-3])
