@@ -141,11 +141,11 @@ class MP:
 
     def Set(self, *args):
         self.log.debug("request Set")
-        self.log.warning("KuiToi cannot support this")
+        self.log.warning("KuiToi cannot support this: MP.Set()")
 
     def Settings(self, *args):
         self.log.debug("request Set")
-        self.log.warning("KuiToi cannot support this")
+        self.log.warning("KuiToi cannot support this: MP.Settings()")
 
 
 class LuaPluginsLoader:
