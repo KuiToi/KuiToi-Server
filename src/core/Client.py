@@ -33,9 +33,9 @@ class Client:
         self.roles = None
         self._guest = True
         self._ready = False
-        self._cars = [None, None, None, None, None, None, None, None, None, None]  # Max 10 cars
-        self._unicycle = None
-        self._connect_time: float = 0
+        self._cars = [None] * 21  # Max 20 cars per player + 1 snowman
+        self._snowman = {"id": -1, "packet": ""}
+        self._connect_time = 0
 
     @property
     def _writer(self):
@@ -193,7 +193,7 @@ class Client:
                 abg = b"ABG:"
                 if len(data) > len(abg) and data.startswith(abg):
                     data = zlib.decompress(data[len(abg):])
-                    self.log.debug(f"ABG Packet: {len(data)}")
+                    # self.log.debug(f"ABG Packet: {len(data)}")
 
                 if one:
                     return data
@@ -336,18 +336,18 @@ class Client:
 
     async def _spawn_car(self, data):
         car_data = data[2:]
-        car_id = 0
-        for car in self.cars:
-            if not car:
-                break
-            car_id += 1
-        self.log.debug(f"Created a car: car_id={car_id}")
+        car_id = next((i for i, car in enumerate(self.cars) if car is None), len(self.cars))
+        cars_count = len(self.cars) - self.cars.count(None)
+        if self._snowman['id'] != -1:
+            cars_count -= 1  # -1 for unicycle
+        self.log.debug(f"car_id={car_id}, cars_count={cars_count}")
         car_json = {}
         try:
             car_json = json.loads(car_data[car_data.find("{"):])
         except Exception as e:
             self.log.debug(f"Invalid car_json: Error: {e}; Data: {car_data}")
         allow = True
+        allow_snowman = True
         over_spawn = False
         ev_data_list = ev.call_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
         d2 = await ev.call_async_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
@@ -356,17 +356,24 @@ class Client:
             # TODO: handle event onCarSpawn
             pass
         pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
-        unicycle = car_json.get("jbm") == "unicycle"
-        # FIXME: unicycle
-        # if (allow and (config.Game['max_cars'] > car_id or unicycle)) or over_spawn:
-        if (allow and config.Game['max_cars'] > car_id and not unicycle) or over_spawn:
-            self.log.debug(f"Car spawn accepted.")
+        snowman = car_json.get("jbm") == "unicycle"
+        if allow and config.Game['max_cars'] > cars_count or (snowman and allow_snowman) or over_spawn:
+            if snowman:
+                unicycle_id = self._snowman['id']
+                if unicycle_id != -1:
+                    self.log.debug(f"Delete old unicycle: unicycle_id={unicycle_id}")
+                    self._cars[unicycle_id] = None
+                    await self._send(f"Od:{self.cid}-{unicycle_id}", to_all=True, to_self=True)
+                self._snowman = {"id": car_id, "packet": pkt}
+                self.log.debug(f"Unicycle spawn accepted: car_id={car_id}")
+            else:
+                self.log.debug(f"Car spawn accepted: car_id={car_id}")
             self._cars[car_id] = {
                 "packet": pkt,
                 "json": car_json,
                 "json_ok": bool(car_json),
-                "unicycle": unicycle,
-                "over_spawn": over_spawn or unicycle
+                "snowman": snowman,
+                "over_spawn": (snowman and allow_snowman) or over_spawn
             }
             await self._send(pkt, to_all=True, to_self=True)
         else:
@@ -390,11 +397,13 @@ class Client:
             if cid == self.cid or admin_allow:
                 await self._send(raw_data, to_all=True, to_self=True)
                 car = self.cars[car_id]
-                if car['unicycle']:
-                    self._cars.pop(car_id)
-                else:
-                    self._cars[car_id] = None
-                await self._send(f"Od:{self.cid}-{car_id}")
+                if car['snowman']:
+                    self.log.debug(f"Snowman found")
+                    unicycle_id = self._snowman['id']
+                    self._snowman['id'] = -1
+                    self._cars[unicycle_id] = None
+                self._cars[car_id] = None
+                await self._send(f"Od:{self.cid}-{car_id}", to_all=True, to_self=True)
                 self.log.debug(f"Deleted car: car_id={car_id}")
 
         else:
@@ -422,9 +431,12 @@ class Client:
                     pass
 
                 if cid == self.cid or allow or admin_allow:
-                    if car['unicycle']:
-                        self._cars.pop(car_id)
-                        await self._send(f"Od:{cid}-{car_id}", to_all=True, to_self=True)
+                    if car['snowman']:
+                        unicycle_id = self._snowman['id']
+                        self._snowman['id'] = -1
+                        self.log.debug(f"Delete snowman")
+                        await self._send(f"Od:{self.cid}-{unicycle_id}", to_all=True, to_self=True)
+                        self._cars[unicycle_id] = None
                     else:
                         await self._send(raw_data, to_all=True, to_self=False)
                         if car['json_ok']:
@@ -458,7 +470,7 @@ class Client:
 
             case "d":  # Delete car
                 self.log.debug("Trying to delete car")
-                await self._delete_car(data)
+                await self._delete_car(raw_data)
 
             case "c":  # Edit car
                 self.log.debug("Trying to edit car")
@@ -469,7 +481,7 @@ class Client:
                 await self._reset_car(raw_data)
 
             case "t":  # Broken details
-                self.log.debug(f"Something broken: {raw_data}")
+                self.log.debug(f"Something changed/broken: {raw_data}")
                 await self._send(raw_data, to_all=True, to_self=False)
 
             case "m":  # Move focus cat

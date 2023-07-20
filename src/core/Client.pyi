@@ -7,7 +7,7 @@
 import asyncio
 from asyncio import StreamReader, StreamWriter, DatagramTransport
 from logging import Logger
-from typing import Tuple, List, Dict, Optional
+from typing import Tuple, List, Dict, Optional, Union
 
 from core import Core, utils
 
@@ -15,7 +15,7 @@ from core import Core, utils
 class Client:
 
     def __init__(self, reader: StreamReader, writer: StreamWriter, core: Core) -> "Client":
-        self._connect_time: float = None
+        self._connect_time: float = 0.0
         self.__tasks = []
         self.__reader = reader
         self.__writer = writer
@@ -34,6 +34,8 @@ class Client:
         self.__alive = True
         self._ready = False
         self._cars: List[Optional[Dict[str, int]]] = []
+        self._snowman: Dict[str, Union[int, str]]  = {"id": -1, "packet": ""}
+
     @property
     def _writer(self) -> StreamWriter: ...
     @property
