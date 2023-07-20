@@ -1,7 +1,7 @@
 # Developed by KuiToi Dev
 # File core.tcp_server.py
 # Written by: SantaSpeen
-# Core version: 0.4.0
+# Core version: 0.4.1
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
@@ -570,7 +570,7 @@ class Client:
                 await self._handle_car_codes(data)
 
             case "E":  # Client events handler
-                # TODO: HandleEvent
+                # TODO: Handle events from client
                 pass
 
             case "N":
