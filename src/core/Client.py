@@ -94,7 +94,7 @@ class Client:
         self.__alive = False
 
     async def send_message(self, message, to_all=True):
-        pass
+        await self._send(f"C:{message}", to_all=to_all)
 
     async def send_event(self, event_name, event_data):
         pass

@@ -47,12 +47,12 @@ class Core:
         self.BeamMP_version = "3.1.1"  # 20.07.2023
 
         ev.register_event("_get_BeamMP_version", lambda x: tuple([int(i) for i in self.BeamMP_version.split(".")]))
-        ev.register_event("_get_player", self.get_client)
+        ev.register_event("_get_player", lambda x: self.get_client(**x['kwargs']))
 
-    def get_client(self, cid=None, nick=None, from_ev=None):
-        if from_ev is not None:
-            return self.get_client(*from_ev['args'], **from_ev['kwargs'])
+    def get_client(self, cid=None, nick=None):
         if cid is not None:
+            if cid == -1:
+                return [i for i in self.clients if i is not None]
             return self.clients_by_id.get(cid)
         if nick:
             return self.clients_by_nick.get(nick)

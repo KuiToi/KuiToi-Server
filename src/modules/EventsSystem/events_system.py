@@ -10,6 +10,8 @@ import asyncio
 import builtins
 import inspect
 
+import lupa
+
 from core import get_logger
 
 
@@ -46,12 +48,41 @@ class EventsSystem:
             "onServerStopped": []
         }
 
+        self.__lua_events = {
+            "onInit": [],  # onServerStarted
+            "onShutdown": [],  # onServerStopped
+            "onPlayerAuth": [],  # onPlayerAuthenticated
+            "onPlayerConnecting": [],  # TODO lua onPlayerConnecting
+            "onPlayerJoining": [],  # TODO lua onPlayerJoining
+            "onPlayerJoin": [],  # onPlayerJoin
+            "onPlayerDisconnect": [],  # TODO lua onPlayerDisconnect
+            "onChatMessage": [],  # onChatReceive
+            "onVehicleSpawn": [],  # "onCarSpawn
+            "onVehicleEdited": [],  # onCarEdited
+            "onVehicleDeleted": [],  # onCarDelete
+            "onVehicleReset": [],  # onCarReset
+            "onFileChanged": [],  # TODO lua onFileChanged
+        }
+
     def builtins_hook(self):
         self.log.debug("used builtins_hook")
         builtins.ev = self
 
-    def register_event(self, event_name, event_func, async_event=False):
-        self.log.debug(f"register_event({event_name}, {event_func}):")
+    def register_event(self, event_name, event_func, async_event=False, lua=None):
+        self.log.debug(f"register_event(event_name='{event_name}', event_func='{event_func}', "
+                       f"async_event={async_event}, lua_event={lua}):")
+        if lua:
+            if type(event_func) != str and type(lua) != lupa.lua53.LuaRuntime:
+                self.log.error(f"Cannot add event '{event_name}'. "
+                               f"Use `MP.RegisterEvent(\"{event_name}\", \"function\")` instead. Skipping it...")
+                return
+            if event_name not in self.__lua_events:
+                self.__lua_events.update({str(event_name): [{"func": event_func, "engine": lua}]})
+            else:
+                self.__lua_events[event_name].append(event_func)
+
+            return
+
         if not callable(event_func):
             # TODO: i18n
             self.log.error(f"Cannot add event '{event_name}'. "
@@ -106,3 +137,6 @@ class EventsSystem:
             self.log.warning(f"Event {event_name} does not exist, maybe ev.call_async_event()?. Just skipping it...")
 
         return funcs_data
+
+    def call_lua_event(self, *args):
+        pass
