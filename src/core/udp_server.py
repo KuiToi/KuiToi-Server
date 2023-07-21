@@ -5,6 +5,7 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import json
 
 from core import utils
 
@@ -22,12 +23,14 @@ class UDPServer(asyncio.DatagramTransport):
         self.port = port
         self.run = False
 
-    def connection_made(self, transport): ...
+    def connection_made(self, transport):
+        ...
 
     async def handle_datagram(self, data, addr):
         try:
             cid = data[0] - 1
             code = data[2:3].decode()
+            data = data[2:].decode()
 
             client = self.Core.get_client(cid=cid)
             if client:
@@ -39,9 +42,19 @@ class UDPServer(asyncio.DatagramTransport):
                         if client._udp_sock != (self.transport, addr):
                             client._udp_sock = (self.transport, addr)
                             self.log.debug(f"Set UDP Sock for CID: {cid}")
-                        ev.call_event("onChangePosition")
-                        if client:
-                            await client._send(data[2:], to_all=True, to_self=False, to_udp=True)
+                        ev.call_event("onChangePosition", data=data)
+                        sub = data.find("{", 1)
+                        last_pos_data = data[sub:]
+                        try:
+                            last_pos = json.loads(last_pos_data)
+                            client._last_position = last_pos
+                            _, car_id = client._get_cid_vid(data)
+                            client._cars[car_id]['pos'] = last_pos
+                        except Exception as e:
+                            self.log.debug(f"Cannot parse position packet: {e}")
+                            self.log.debug(f"data: {data}, sup: {sub}")
+                            self.log.debug(f"last_pos_data: {last_pos_data}")
+                        await client._send(data, to_all=True, to_self=False, to_udp=True)
                     case _:
                         self.log.debug(f"[{cid}] Unknown code: {code}")
             else:

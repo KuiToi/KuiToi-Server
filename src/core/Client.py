@@ -37,6 +37,12 @@ class Client:
         self._cars = [None] * 21  # Max 20 cars per player + 1 snowman
         self._snowman = {"id": -1, "packet": ""}
         self._connect_time = 0
+        self._last_position = {}
+
+        ev.register_event("onServerStopped", self.__gracefully_kick)
+
+    async def __gracefully_kick(self, _):
+        await self.kick("Server shutdown!")
 
     @property
     def _writer(self):
@@ -73,6 +79,10 @@ class Client:
     @property
     def cars(self):
         return self._cars
+
+    @property
+    def last_position(self):
+        return self._last_position
 
     def _update_logger(self):
         self._log = utils.get_logger(f"{self.nick}:{self.cid}")
@@ -378,7 +388,8 @@ class Client:
                 "json": car_json,
                 "json_ok": bool(car_json),
                 "snowman": snowman,
-                "over_spawn": (snowman and allow_snowman) or over_spawn
+                "over_spawn": (snowman and allow_snowman) or over_spawn,
+                "pos": {}
             }
             await self._send(pkt, to_all=True, to_self=True)
         else:
