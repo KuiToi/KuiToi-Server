@@ -247,15 +247,17 @@ class Util:
     def JsonDiffApply(self, base, diff):
         self.log.debug("requesting JsonDiffApply()")
 
-    def Random(self) -> int:
+    def Random(self) -> float:
         self.log.debug("requesting Random()")
-        return random.randint(0, 1)
+        return random.random()
 
-    def RandomIntRange(self, min_v, max_v):
+    def RandomIntRange(self, min_v, max_v) -> int:
         self.log.debug("requesting RandomIntRange()")
+        return random.randint(min_v, max_v)
 
-    def RandomRange(self, min_v, max_v):
+    def RandomRange(self, min_v, max_v) -> float:
         self.log.debug("requesting RandomRange()")
+        return random.uniform(min_v, max_v)
 
 
 # noinspection PyPep8Naming
