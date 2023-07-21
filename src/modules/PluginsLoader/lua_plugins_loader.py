@@ -42,6 +42,14 @@ class MP:
         self.log.debug("request MP.RegisterEvent()")
         ev.register_event(event_name, self._lua.globals()[function_name], lua=True)
 
+    def CreateEventTimer(self, event_name: str, interval_ms: int, strategy: int = None):
+        self.log.debug("request CreateEventTimer()")
+        # TODO: CreateEventTimer
+
+    def CancelEventTimer(self, event_name: str):
+        self.log.debug("request CancelEventTimer()")
+        # TODO: CreateEventTimer
+
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
         # TODO: TriggerLocalEvent
