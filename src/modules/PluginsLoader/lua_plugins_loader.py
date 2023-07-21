@@ -4,6 +4,7 @@ import platform
 import random
 import shutil
 
+import lupa
 from lupa.lua53 import LuaRuntime
 
 from core import get_logger
@@ -115,8 +116,6 @@ class MP:
     def TriggerClientEventJson(self, player_id, event_name, data):
         # TODO: TriggerClientEventJson
         self.log.debug("request TriggerClientEventJson()")
-        print(list(data.values()))
-        print(list(data.items()))
 
     def GetPlayerCount(self):
         self.log.debug("request GetPlayerCount()")
@@ -223,8 +222,42 @@ class Util:
         self.name = name
         self._lua = lua
 
+    def _recursive_list_encode(self, table):
+        new_list = list(table.values())
+        for i, v in enumerate(list(table.values())):
+            if not isinstance(v, (int, float, bool, str, dict, list)) and "LuaTable" not in str(type(v)):
+                new_list[i] = None
+                continue
+            if "LuaTable" in str(type(v)):
+                d = dict(v)
+                if all(isinstance(ii, int) for ii in d.keys()):
+                    new_list[i] = self._recursive_list_encode(d)
+                    continue
+                else:
+                    new_list[i] = self._recursive_dict_encode(d)
+        return [i for i in new_list if i is not None]
+
+    def _recursive_dict_encode(self, table):
+        for k, v in table.items():
+            if not isinstance(v, (int, float, bool, str, dict, list)) and \
+                    "LuaTable" not in str(type(v)) or \
+                    "object at 0x" in str(repr(v)):
+                table[k] = None
+                continue
+            if "LuaTable" in str(type(v)):
+                d = dict(v)
+                if all(isinstance(i, int) for i in d.keys()):
+                    table[k] = self._recursive_list_encode(d)
+                    continue
+                else:
+                    table[k] = self._recursive_dict_encode(d)
+        return {k: v for k, v in dict(table).items() if v is not None}
+
     def JsonEncode(self, table):
         self.log.debug("requesting JsonEncode()")
+        if all(isinstance(k, int) for k in table.keys()):
+            return f"{self._recursive_list_encode(table)}"
+        return f"{self._recursive_dict_encode(table)}"
 
     def JsonDecode(self, string):
         self.log.debug("requesting JsonDecode()")
