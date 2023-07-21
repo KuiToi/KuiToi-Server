@@ -61,7 +61,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
       - [ ] Load JavaScript plugins
       - [ ] KuiToi class
       - [ ] Client (Player) class
-    - [ ] Lua part: (Original BeamMP compatibility)
+    - [x] Lua part: (Original BeamMP compatibility)
       - [x] Load Lua plugins
       - [x] MP Class (Excluding CreateEventTimer, CreateEventTimer)
       - [x] Util class
