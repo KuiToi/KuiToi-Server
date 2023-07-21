@@ -514,6 +514,18 @@ class LuaPluginsLoader:
         console.add_command("lua_plugins", lambda x: self.loaded_str[:-2])
         console.add_command("lua_pl", lambda x: self.loaded_str[:-2])
 
+    def _start(self, obj, lua, file):
+        try:
+            f = lua.globals().loadfile(os.path.abspath(f"plugins/{obj}/{file}"))
+            f()
+            self.lua_plugins[obj]['ok'] = True
+            self.loaded_str += f"{obj}:ok, "
+            lua.globals().MP.TriggerLocalEvent("onInit")
+        except Exception as e:
+            self.loaded_str += f"{obj}:no, "
+            self.log.error(f"Cannot load lua plugin from `{obj}/main.lua`\n{e}")
+            # self.log.exception(e)
+
     def load(self):
         self.log.debug("Loading Lua plugins...")
         py_folders = ev.call_event("_plugins_get")[0]
@@ -535,22 +547,16 @@ class LuaPluginsLoader:
             lua.globals().print = mp._print
             lua.globals().Util = Util(obj, lua)
             lua.globals().FP = FP(obj, lua)
-            code = f'package.path = package.path.."' \
-                   f';{self.plugins_dir}/{obj}/?.lua' \
-                   f';{self.plugins_dir}/{obj}/lua/?.lua"\n'
-            with open("modules/PluginsLoader/add_in.lua", "r") as f:
-                code += f.read()
-            with open(os.path.join(path, "main.lua"), 'r', encoding=config.enc) as f:
-                code += f.read()
-            try:
-                th = Thread(target=lua.execute, args=(code,), name=f"lua_plugin_{obj}-Thread")
-                th.start()
-                self.loaded_str += f"{obj}:ok, "
-                self.lua_plugins.update({obj: {"mp": mp, "lua": lua, "thread": th}})
-            except Exception as e:
-                self.log.error(f"Cannot load lua plugin from `{obj}/main.lua`")
-                self.log.exception(e)
-                self.loaded_str += f"{obj}:no, "
+            pa = os.path.abspath(self.plugins_dir)
+            p0 = os.path.join(pa, obj, "?.lua")
+            p1 = os.path.join(pa, obj, "lua", "?.lua")
+            lua.globals().package.path += f';{p0};{p1}'
+            # with open("modules/PluginsLoader/add_in.lua", "r") as f:
+            #     code += f.read()
+            self.lua_plugins.update({obj: {"mp": mp, "lua": lua, "thread": None, "ok": False}})
+            th = Thread(target=self._start, args=(obj, lua, "main.lua"), name=f"lua_plugin_{obj}-Thread")
+            th.start()
+            self.lua_plugins[obj]['thread'] = th
 
     def unload(self, _):
         ...
