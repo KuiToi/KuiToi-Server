@@ -536,6 +536,7 @@ class Client:
             self.log.debug("Tried to send an empty event, ignoring")
             return
         to_ev = {"message": msg, "player": self}
+        ev.call_lua_event("onChatMessage", self.cid, self.nick, msg)
         ev_data_list = ev.call_event("onChatReceive", **to_ev)
         d2 = await ev.call_async_event("onChatReceive", **to_ev)
         ev_data_list.extend(d2)

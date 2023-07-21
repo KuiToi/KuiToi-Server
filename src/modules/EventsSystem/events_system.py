@@ -10,8 +10,6 @@ import asyncio
 import builtins
 import inspect
 
-import lupa
-
 from core import get_logger
 
 
@@ -72,15 +70,11 @@ class EventsSystem:
         self.log.debug(f"register_event(event_name='{event_name}', event_func='{event_func}', "
                        f"async_event={async_event}, lua_event={lua}):")
         if lua:
-            if type(event_func) != str and type(lua) != lupa.lua53.LuaRuntime:
-                self.log.error(f"Cannot add event '{event_name}'. "
-                               f"Use `MP.RegisterEvent(\"{event_name}\", \"function\")` instead. Skipping it...")
-                return
             if event_name not in self.__lua_events:
-                self.__lua_events.update({str(event_name): [{"func": event_func, "engine": lua}]})
+                self.__lua_events.update({str(event_name): [event_func]})
             else:
                 self.__lua_events[event_name].append(event_func)
-
+            self.log.debug("Register ok")
             return
 
         if not callable(event_func):
@@ -93,11 +87,13 @@ class EventsSystem:
                 self.__async_events.update({str(event_name): [event_func]})
             else:
                 self.__async_events[event_name].append(event_func)
+            self.log.debug("Register ok")
         else:
             if event_name not in self.__events:
                 self.__events.update({str(event_name): [event_func]})
             else:
                 self.__events[event_name].append(event_func)
+            self.log.debug("Register ok")
 
     async def call_async_event(self, event_name, *args, **kwargs):
         self.log.debug(f"Calling async event: '{event_name}'")
@@ -138,5 +134,23 @@ class EventsSystem:
 
         return funcs_data
 
-    def call_lua_event(self, *args):
-        pass
+    def call_lua_event(self, event_name, *args):
+        self.log.debug(f"Calling lua event: '{event_name}'")
+        funcs_data = []
+        if event_name in self.__lua_events.keys():
+            for func in self.__lua_events[event_name]:
+                try:
+                    funcs_data.append(func(*args))
+                except Exception as e:
+                    # TODO: i18n
+                    self.log.error(f'Error while calling "{event_name}"; In function: "{func.__name__}"')
+                    self.log.exception(e)
+        else:
+            # TODO: i18n
+            self.log.warning(f"Event {event_name} does not exist, maybe ev.call_lua_event() or MP.Trigger<>Event()?. "
+                             f"Just skipping it...")
+
+        return funcs_data
+
+
+

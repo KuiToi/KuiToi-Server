@@ -2,7 +2,6 @@ import asyncio
 import os
 import platform
 
-import lupa
 from lupa.lua53 import LuaRuntime
 
 from core import get_logger
@@ -39,7 +38,7 @@ class MP:
 
     def RegisterEvent(self, event_name: str, function_name: str) -> None:
         self.log.debug("request MP.RegisterEvent()")
-        ev.register_event(event_name, function_name, lua=self._lua)
+        ev.register_event(event_name, self._lua.globals()[function_name], lua=True)
 
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
@@ -74,9 +73,15 @@ class MP:
         self.log.debug("request GetPlayerCount()")
         return len(ev.call_event("_get_player", cid=-1)[0])
 
-    def GetPositionRaw(self, pid, vid):
-        # TODO: GetPositionRaw
+    def GetPositionRaw(self, player_id, car_id):
         self.log.debug("request GetPositionRaw()")
+        client = ev.call_event("_get_player", cid=player_id)[0]
+        if client:
+            car = client.cars[car_id]
+            if car:
+                return self._lua.table_from(car['pos'])
+            return self._lua.table(), "Vehicle not found"
+        return self._lua.table(), "Client expired"
 
     def IsPlayerConnected(self, player_id):
         self.log.debug("request IsPlayerConnected()")
