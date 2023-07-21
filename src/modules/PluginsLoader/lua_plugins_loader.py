@@ -4,8 +4,8 @@ import os
 import platform
 import random
 import shutil
+from threading import Thread
 
-import lupa
 from lupa.lua53 import LuaRuntime
 
 from core import get_logger
@@ -510,12 +510,11 @@ class LuaPluginsLoader:
         self.log = get_logger("LuaPluginsLoader")
         self.loaded_str = "Lua plugins: "
         ev.register_event("_lua_plugins_get", lambda x: self.lua_plugins)
-        ev.register_event("_lua_plugins_start", self.start)
         ev.register_event("_lua_plugins_unload", self.unload)
         console.add_command("lua_plugins", lambda x: self.loaded_str[:-2])
         console.add_command("lua_pl", lambda x: self.loaded_str[:-2])
 
-    async def load(self):
+    def load(self):
         self.log.debug("Loading Lua plugins...")
         py_folders = ev.call_event("_plugins_get")[0]
         for obj in os.listdir(self.plugins_dir):
@@ -544,16 +543,14 @@ class LuaPluginsLoader:
             with open(os.path.join(path, "main.lua"), 'r', encoding=config.enc) as f:
                 code += f.read()
             try:
-                lua.execute(code)
+                th = Thread(target=lua.execute, args=(code,), name=f"lua_plugin_{obj}-Thread")
+                th.start()
                 self.loaded_str += f"{obj}:ok, "
-                self.lua_plugins.update({obj: {"mp": mp, "lua": lua}})
+                self.lua_plugins.update({obj: {"mp": mp, "lua": lua, "thread": th}})
             except Exception as e:
                 self.log.error(f"Cannot load lua plugin from `{obj}/main.lua`")
                 self.log.exception(e)
                 self.loaded_str += f"{obj}:no, "
 
-    async def start(self, _):
-        ...
-
-    async def unload(self, _):
+    def unload(self, _):
         ...

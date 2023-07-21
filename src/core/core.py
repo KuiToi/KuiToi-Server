@@ -267,7 +267,7 @@ class Core:
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
             await ev.call_async_event("_plugins_start")
-            await ev.call_async_event("_lua_plugins_start")
+            # await ev.call_async_event("_lua_plugins_start")
 
             self.run = True
             self.log.info(i18n.start)
@@ -289,10 +289,11 @@ class Core:
         asyncio.run(self.main())
 
     async def stop(self):
+        ev.call_lua_event("onShutdown")
         ev.call_event("onServerStopped")
         await ev.call_async_event("onServerStopped")
         await ev.call_async_event("_plugins_unload")
-        await ev.call_async_event("_lua_plugins_unload")
+        ev.call_event("_lua_plugins_unload")
         self.run = False
         self.log.info(i18n.stop)
         if config.WebAPI["enabled"]:
