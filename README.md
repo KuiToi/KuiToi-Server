@@ -19,7 +19,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Chat
     - [x] Players online counter
     - [x] Packets handled (Recursive finding second packet)
-    - [ ] Client events
+    - [x] Client events
     - [x] Car synchronizations:
       - [x] State packets
       - [x] Spawn cars
@@ -63,7 +63,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
       - [ ] Client (Player) class
     - [x] Lua part: (Original BeamMP compatibility)
       - [x] Load Lua plugins
-      - [x] MP Class (Excluding CreateEventTimer, CreateEventTimer)
+      - [x] MP Class (Excluding CreateTimer, CreateEventTimer, CreateEventTimer)
       - [x] Util class
       - [x] FS class
   - [x] MultiLanguage (i18n support)
