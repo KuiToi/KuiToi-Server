@@ -63,7 +63,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
       - [ ] Client (Player) class
     - [ ] Lua part: (Original BeamMP compatibility)
       - [x] Load Lua plugins
-      - [x] MP Class (Excluding CreateEventTimer, CreateEventTimer, TriggerClientEvent, TriggerClientEventJson)
+      - [x] MP Class (Excluding CreateEventTimer, CreateEventTimer, TriggerClientEventJson)
       - [ ] Util class
       - [x] FS class
   - [x] MultiLanguage (i18n support)
