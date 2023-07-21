@@ -115,8 +115,9 @@ class MP:
             return False, "Can't found event_name or data"
 
     def TriggerClientEventJson(self, player_id, event_name, data):
-        # TODO: TriggerClientEventJson
         self.log.debug("request TriggerClientEventJson()")
+        data = self._lua.globals().Util.JsonEncode(data)
+        self.TriggerClientEvent(player_id, event_name, data)
 
     def GetPlayerCount(self):
         self.log.debug("request GetPlayerCount()")
@@ -262,24 +263,107 @@ class Util:
 
     def JsonDecode(self, string):
         self.log.debug("requesting JsonDecode()")
+        return self._lua.table_from(json.loads(string))
 
     def JsonPrettify(self, string):
         self.log.debug("requesting JsonPrettify()")
+        data = json.loads(string)
+        return json.dumps(data, indent=4, sort_keys=True)
 
     def JsonMinify(self, string):
         self.log.debug("requesting JsonMinify()")
+        data = json.loads(string)
+        return json.dumps(data, separators=(',', ':'))
 
-    def JsonFlatten(self, string):
-        self.log.debug("requesting JsonFlatten()")
+    def JsonFlatten(self, json_str):
+        self.log.debug("request JsonFlatten()")
+        json_obj = json.loads(json_str)
+        flat_obj = {}
 
-    def JsonUnflatten(self, string):
-        self.log.debug("requesting JsonUnflatten()")
+        def flatten(obj, path=''):
+            if isinstance(obj, dict):
+                for key in obj:
+                    flatten(obj[key], path + '/' + key)
+            elif isinstance(obj, list):
+                for i in range(len(obj)):
+                    flatten(obj[i], path + '/' + str(i))
+            else:
+                flat_obj[path] = obj
 
-    def JsonDiff(self, a, b):
+        flatten(json_obj)
+        flat_json = json.dumps(flat_obj)
+        return flat_json
+
+    def JsonUnflatten(self, flat_json):
+        self.log.debug("request JsonUnflatten")
+        flat_obj = json.loads(flat_json)
+
+        def unflatten(obj):
+            result = {}
+            for key in obj:
+                parts = key.split('/')
+                d = result
+                for part in parts[:-1]:
+                    if part not in d:
+                        # create a new node in the dictionary
+                        # if the path doesn't exist
+                        d[part] = {}
+                    d = d[part]
+                # assign the value to the last part of the path
+                d[parts[-1]] = obj[key]
+            return result
+
+        json_obj = unflatten(flat_obj)
+        return json.dumps(json_obj)
+
+    def JsonDiff(self, a: str, b: str) -> str:
         self.log.debug("requesting JsonDiff()")
+        a_obj = json.loads(a)
+        b_obj = json.loads(b)
+        diff = []
+        for k, v in b_obj.items():
+            if k not in a_obj:
+                diff.append({"op": "add", "path": "/" + k, "value": v})
+            elif a_obj[k] != v:
+                diff.append({"op": "replace", "path": "/" + k, "value": v})
+        for k in a_obj.keys() - b_obj.keys():
+            diff.append({"op": "remove", "path": "/" + k})
+        return json.dumps(diff)
 
-    def JsonDiffApply(self, base, diff):
+    @staticmethod
+    def _apply_patch(base_obj, patch_obj):
+        for patch in patch_obj:
+            op = patch['op']
+            path = patch['path']
+            value = patch.get('value', None)
+            tokens = path.strip('/').split('/')
+            obj = base_obj
+            for i, token in enumerate(tokens):
+                if isinstance(obj, list):
+                    token = int(token)
+                if i == len(tokens) - 1:
+                    if op == 'add':
+                        if isinstance(obj, list):
+                            obj.insert(int(token), value)
+                        else:
+                            obj[token] = value
+                    elif op == 'replace':
+                        obj[token] = value
+                    elif op == 'remove':
+                        if isinstance(obj, list):
+                            obj.pop(int(token))
+                        else:
+                            del obj[token]
+                else:
+                    obj = obj[token]
+        return base_obj
+
+    def JsonDiffApply(self, base: str, diff: str) -> str:
         self.log.debug("requesting JsonDiffApply()")
+        base_obj = json.loads(base)
+        diff_obj = json.loads(diff)
+        result = self._apply_patch(base_obj, diff_obj)
+        return json.dumps(result)
 
     def Random(self) -> float:
         self.log.debug("requesting Random()")
