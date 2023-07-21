@@ -6,7 +6,7 @@ import random
 import shutil
 from threading import Thread
 
-from lupa.lua53 import LuaRuntime
+from lupa.lua54 import LuaRuntime
 
 from core import get_logger
 
@@ -31,6 +31,10 @@ class MP:
         }
 
     def _print(self, *args):
+        args = list(args)
+        for i, arg in enumerate(args):
+            if "LuaTable" in str(type(arg)):
+                args[i] = self._lua.globals().Util.JsonEncode(arg)
         s = " ".join(map(str, args))
         self.log.info(s)
 
@@ -240,18 +244,19 @@ class Util:
         return [i for i in new_list if i is not None]
 
     def _recursive_dict_encode(self, table):
+        new_dict = dict(table)
         for k, v in table.items():
             if not isinstance(v, (int, float, bool, str, dict, list)) and "LuaTable" not in str(type(v)):
-                table[k] = None
+                new_dict[k] = None
                 continue
             if "LuaTable" in str(type(v)):
                 d = dict(v)
                 if all(isinstance(i, int) for i in d.keys()):
-                    table[k] = self._recursive_list_encode(d)
+                    new_dict[k] = self._recursive_list_encode(d)
                     continue
                 else:
-                    table[k] = self._recursive_dict_encode(d)
-        return {k: v for k, v in dict(table).items() if v is not None}
+                    new_dict[k] = self._recursive_dict_encode(d)
+        return {k: v for k, v in new_dict.items() if v is not None}
 
     def JsonEncode(self, table):
         self.log.debug("requesting JsonEncode()")
@@ -516,10 +521,10 @@ class LuaPluginsLoader:
 
     def _start(self, obj, lua, file):
         try:
-            f = lua.globals().loadfile(os.path.abspath(f"plugins/{obj}/{file}"))
-            f()
+            lua.globals().loadfile(f"plugins/{obj}/{file}")()
             self.lua_plugins[obj]['ok'] = True
             self.loaded_str += f"{obj}:ok, "
+            lua.globals().onInit()
             lua.globals().MP.TriggerLocalEvent("onInit")
         except Exception as e:
             self.loaded_str += f"{obj}:no, "
@@ -540,17 +545,18 @@ class LuaPluginsLoader:
         for path, obj in self.lua_dirs:
             # noinspection PyArgumentList
             lua = LuaRuntime(encoding=config.enc, source_encoding=config.enc, unpack_returned_tuples=True)
-            lua.globals().printRaw = lua.globals().print
-            lua.globals().exit = lambda x: self.log.info(f"{obj}: You can't disable server..")
+            lua_globals = lua.globals()
+            lua_globals.printRaw = lua.globals().print
+            lua_globals.exit = lambda x: self.log.info(f"{obj}: You can't disable server..")
             mp = MP(obj, lua)
-            lua.globals().MP = mp
-            lua.globals().print = mp._print
-            lua.globals().Util = Util(obj, lua)
-            lua.globals().FP = FP(obj, lua)
+            lua_globals.MP = mp
+            lua_globals.print = mp._print
+            lua_globals.Util = Util(obj, lua)
+            lua_globals.FP = FP(obj, lua)
             pa = os.path.abspath(self.plugins_dir)
             p0 = os.path.join(pa, obj, "?.lua")
             p1 = os.path.join(pa, obj, "lua", "?.lua")
-            lua.globals().package.path += f';{p0};{p1}'
+            lua_globals.package.path += f';{p0};{p1}'
             # with open("modules/PluginsLoader/add_in.lua", "r") as f:
             #     code += f.read()
             self.lua_plugins.update({obj: {"mp": mp, "lua": lua, "thread": None, "ok": False}})
