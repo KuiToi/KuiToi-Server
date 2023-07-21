@@ -111,8 +111,8 @@ class Client:
     async def send_message(self, message, to_all=True):
         await self._send(f"C:{message}", to_all=to_all)
 
-    async def send_event(self, event_name, event_data):
-        pass
+    async def send_event(self, event_name, event_data, to_all=True):
+        await self._send(f"E:{event_name}:{event_data}", to_all=to_all)
 
     async def _send(self, data, to_all=False, to_self=True, to_udp=False, writer=None):
 

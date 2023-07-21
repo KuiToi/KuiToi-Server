@@ -23,7 +23,7 @@ class MP:
         self.tasks = []
         self._lua = lua
         self._local_events = {
-            "onInit": [], "onShutdown": [],  "onPlayerAuth": [], "onPlayerConnecting": [], "onPlayerJoining": [],
+            "onInit": [], "onShutdown": [], "onPlayerAuth": [], "onPlayerConnecting": [], "onPlayerJoining": [],
             "onPlayerJoin": [], "onPlayerDisconnect": [], "onChatMessage": [], "onVehicleSpawn": [],
             "onVehicleEdited": [], "onVehicleDeleted": [], "onVehicleReset": [], "onFileChanged": []
         }
@@ -59,7 +59,7 @@ class MP:
 
     def CancelEventTimer(self, event_name: str):
         self.log.debug("request CancelEventTimer()")
-        # TODO: CreateEventTimer
+        # TODO: CancelEventTimer
 
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
@@ -82,7 +82,7 @@ class MP:
         self.log.debug("request TriggerGlobalEvent()")
         return self._lua.table(
             IsDone=lambda: True,
-            GetResults=lambda: self._lua.table_from({i: v for i, v in enumerate(ev.call_lua_event(event_name,*args))})
+            GetResults=lambda: self._lua.table_from({i: v for i, v in enumerate(ev.call_lua_event(event_name, *args))})
         )
 
     def SendChatMessage(self, player_id, message):
@@ -97,12 +97,26 @@ class MP:
             self.tasks.append(t)
 
     def TriggerClientEvent(self, player_id, event_name, data):
-        # TODO: TriggerClientEvent
         self.log.debug("request TriggerClientEvent()")
+        client = ev.call_event("_get_player", cid=player_id)[0]
+        to_all = False
+        if player_id < 0:
+            to_all = True
+            client = client[0]
+        if client and event_name and data:
+            t = self.loop.create_task(client.send_event(event_name, data, to_all=to_all))
+            self.tasks.append(t)
+            return True, None
+        elif not client:
+            return False, "Client expired"
+        else:
+            return False, "Can't found event_name or data"
 
     def TriggerClientEventJson(self, player_id, event_name, data):
         # TODO: TriggerClientEventJson
         self.log.debug("request TriggerClientEventJson()")
+        print(list(data.values()))
+        print(list(data.items()))
 
     def GetPlayerCount(self):
         self.log.debug("request GetPlayerCount()")
@@ -110,6 +124,8 @@ class MP:
 
     def GetPositionRaw(self, player_id, car_id):
         self.log.debug("request GetPositionRaw()")
+        if player_id < 0:
+            return self._lua.table(), "Bad client"
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
             car = client.cars[car_id]
@@ -120,17 +136,23 @@ class MP:
 
     def IsPlayerConnected(self, player_id):
         self.log.debug("request IsPlayerConnected()")
+        if player_id < 0:
+            return False
         return bool(ev.call_event("_get_player", cid=player_id)[0])
 
     def GetPlayerName(self, player_id):
         self.log.debug("request GetPlayerName()")
+        if player_id < 0:
+            return None
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
             return client.nick
         return
 
     def RemoveVehicle(self, player_id, vehicle_id):
-        self.log.debug("request GetPlayerName()")
+        self.log.debug("request RemoveVehicle()")
+        if player_id < 0:
+            return
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
             t = self.loop.create_task(client._delete_car(car_id=vehicle_id))
@@ -138,6 +160,8 @@ class MP:
 
     def GetPlayerVehicles(self, player_id):
         self.log.debug("request GetPlayerVehicles()")
+        if player_id < 0:
+            return self._lua.table()
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
             return self._lua.table_from(
@@ -151,6 +175,8 @@ class MP:
 
     def IsPlayerGuest(self, player_id) -> bool:
         self.log.debug("request IsPlayerGuest()")
+        if player_id < 0:
+            return True
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
             return client.guest
@@ -158,6 +184,8 @@ class MP:
 
     def DropPlayer(self, player_id, reason="Kicked"):
         self.log.debug("request DropPlayer()")
+        if player_id < 0:
+            return
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
             t = self.loop.create_task(client.kick(reason))
