@@ -6,7 +6,7 @@ import random
 import shutil
 from threading import Thread
 
-from lupa.lua54 import LuaRuntime
+from lupa.lua53 import LuaRuntime
 
 from core import get_logger
 
@@ -52,7 +52,10 @@ class MP:
     def RegisterEvent(self, event_name: str, function_name: str) -> None:
         self.log.debug("request MP.RegisterEvent()")
         event_func = self._lua.globals()[function_name]
-        ev.register_event(event_name, event_func, lua=True)
+        if not event_func:
+            self.log.error(f"Can't register '{event_name}': not found function: '{function_name}'")
+            return
+        ev.register_event(event_name, event_func, lua=function_name)
         if event_name not in self._local_events:
             self._local_events.update({str(event_name): [event_func]})
         else:
@@ -152,6 +155,15 @@ class MP:
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
             return client.nick
+        return
+
+    def GetPlayerIDByName(self, player_name):
+        self.log.debug("request GetPlayerIDByName()")
+        if not isinstance(player_name, str):
+            return None
+        client = ev.call_event("_get_player", nick=player_name)[0]
+        if client:
+            return client.cid
         return
 
     def RemoveVehicle(self, player_id, vehicle_id):
