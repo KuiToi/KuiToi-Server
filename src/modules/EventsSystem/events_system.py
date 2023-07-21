@@ -71,9 +71,9 @@ class EventsSystem:
                        f"async_event={async_event}, lua_event={lua}):")
         if lua:
             if event_name not in self.__lua_events:
-                self.__lua_events.update({str(event_name): [event_func]})
+                self.__lua_events.update({str(event_name): [{"func": event_func, "name": lua}]})
             else:
-                self.__lua_events[event_name].append(event_func)
+                self.__lua_events[event_name].append({"func": event_func, "name": lua})
             self.log.debug("Register ok")
             return
 
@@ -138,12 +138,14 @@ class EventsSystem:
         self.log.debug(f"Calling lua event: '{event_name}'")
         funcs_data = []
         if event_name in self.__lua_events.keys():
-            for func in self.__lua_events[event_name]:
+            for data in self.__lua_events[event_name]:
+                func = data['func']
                 try:
-                    funcs_data.append(func(*args))
+                    fd = func(*args)
+                    funcs_data.append(fd)
                 except Exception as e:
                     # TODO: i18n
-                    self.log.error(f'Error while calling "{event_name}"; In function: "{func.__name__}"')
+                    self.log.error(f'Error while calling lua event "{event_name}"; In function: "{data["name"]}"')
                     self.log.exception(e)
         else:
             # TODO: i18n
