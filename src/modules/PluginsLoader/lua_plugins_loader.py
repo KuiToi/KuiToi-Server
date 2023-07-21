@@ -22,6 +22,11 @@ class MP:
         self.name = name
         self.tasks = []
         self._lua = lua
+        self._local_events = {
+            "onInit": [], "onShutdown": [],  "onPlayerAuth": [], "onPlayerConnecting": [], "onPlayerJoining": [],
+            "onPlayerJoin": [], "onPlayerDisconnect": [], "onChatMessage": [], "onVehicleSpawn": [],
+            "onVehicleEdited": [], "onVehicleDeleted": [], "onVehicleReset": [], "onFileChanged": []
+        }
 
     def _print(self, *args):
         s = " ".join(map(str, args))
@@ -40,7 +45,13 @@ class MP:
 
     def RegisterEvent(self, event_name: str, function_name: str) -> None:
         self.log.debug("request MP.RegisterEvent()")
-        ev.register_event(event_name, self._lua.globals()[function_name], lua=True)
+        event_func = self._lua.globals()[function_name]
+        ev.register_event(event_name, event_func, lua=True)
+        if event_name not in self._local_events:
+            self._local_events.update({str(event_name): [event_func]})
+        else:
+            self._local_events[event_name].append(event_func)
+        self.log.debug("Register ok (local)")
 
     def CreateEventTimer(self, event_name: str, interval_ms: int, strategy: int = None):
         self.log.debug("request CreateEventTimer()")
@@ -52,13 +63,27 @@ class MP:
 
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
-        # TODO: TriggerLocalEvent
-        return self._lua.table()
+        self.log.debug(f"Calling lcoal lua event: '{event_name}'")
+        funcs_data = []
+        if event_name in self._local_events.keys():
+            for func in self._local_events[event_name]:
+                try:
+                    funcs_data.append(func(*args))
+                except Exception as e:
+                    self.log.error(f'Error while calling "{event_name}"; In function: "{func.__name__}"')
+                    self.log.exception(e)
+        else:
+            self.log.warning(f"Event {event_name} does not exist, maybe ev.call_lua_event() or MP.Trigger<>Event()?. "
+                             f"Just skipping it...")
+
+        return self._lua.table_from({i: v for i, v in enumerate(funcs_data)})
 
     def TriggerGlobalEvent(self, event_name, *args):
         self.log.debug("request TriggerGlobalEvent()")
-        # TODO: TriggerGlobalEvent
-        return self._lua.table(IsDone=lambda: True, GetResults=lambda: "somedata")
+        return self._lua.table(
+            IsDone=lambda: True,
+            GetResults=lambda: self._lua.table_from({i: v for i, v in enumerate(ev.call_lua_event(event_name,*args))})
+        )
 
     def SendChatMessage(self, player_id, message):
         self.log.debug("request SendChatMessage()")
