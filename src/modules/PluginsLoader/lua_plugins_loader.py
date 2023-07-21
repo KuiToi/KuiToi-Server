@@ -15,7 +15,6 @@ from core import get_logger
 class MP:
 
     # In ./in_lua.lua
-    # MP.CreateTimer
     # MP.Sleep
 
     def __init__(self, name: str, lua: LuaRuntime):
@@ -37,6 +36,10 @@ class MP:
                 args[i] = self._lua.globals().Util.JsonEncode(arg)
         s = " ".join(map(str, args))
         self.log.info(s)
+
+    def CreateTimer(self):
+        self.log.debug("request CreateTimer()")
+        # TODO: CreateTimer
 
     def GetOSName(self) -> str:
         self.log.debug("request MP.GetOSName()")
