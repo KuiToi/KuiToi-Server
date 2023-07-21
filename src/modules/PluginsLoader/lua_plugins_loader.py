@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import platform
 import random
@@ -239,9 +240,7 @@ class Util:
 
     def _recursive_dict_encode(self, table):
         for k, v in table.items():
-            if not isinstance(v, (int, float, bool, str, dict, list)) and \
-                    "LuaTable" not in str(type(v)) or \
-                    "object at 0x" in str(repr(v)):
+            if not isinstance(v, (int, float, bool, str, dict, list)) and "LuaTable" not in str(type(v)):
                 table[k] = None
                 continue
             if "LuaTable" in str(type(v)):
@@ -256,8 +255,10 @@ class Util:
     def JsonEncode(self, table):
         self.log.debug("requesting JsonEncode()")
         if all(isinstance(k, int) for k in table.keys()):
-            return f"{self._recursive_list_encode(table)}"
-        return f"{self._recursive_dict_encode(table)}"
+            data = self._recursive_list_encode(table)
+        else:
+            data = self._recursive_dict_encode(table)
+        return json.dumps(data)
 
     def JsonDecode(self, string):
         self.log.debug("requesting JsonDecode()")
