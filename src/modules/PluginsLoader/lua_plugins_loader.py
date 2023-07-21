@@ -1,6 +1,8 @@
 import asyncio
 import os
 import platform
+import random
+import shutil
 
 from lupa.lua53 import LuaRuntime
 
@@ -16,9 +18,9 @@ class MP:
 
     def __init__(self, name: str, lua: LuaRuntime):
         self.loop = asyncio.get_event_loop()
-        self.tasks = []
-        self.name = name
         self.log = get_logger(f"LuaPlugin | {name}")
+        self.name = name
+        self.tasks = []
         self._lua = lua
 
     def _print(self, *args):
@@ -153,6 +155,169 @@ class MP:
         self.log.warning("KuiToi cannot support this: MP.Settings()")
 
 
+# noinspection PyPep8Naming
+class Util:
+    def __init__(self, name, lua):
+        self.log = get_logger(f"LuaPlugin | Util | {name}")
+        self.name = name
+        self._lua = lua
+
+    def JsonEncode(self, table):
+        self.log.debug("requesting JsonEncode()")
+
+    def JsonDecode(self, string):
+        self.log.debug("requesting JsonDecode()")
+
+    def JsonPrettify(self, string):
+        self.log.debug("requesting JsonPrettify()")
+
+    def JsonMinify(self, string):
+        self.log.debug("requesting JsonMinify()")
+
+    def JsonFlatten(self, string):
+        self.log.debug("requesting JsonFlatten()")
+
+    def JsonUnflatten(self, string):
+        self.log.debug("requesting JsonUnflatten()")
+
+    def JsonDiff(self, a, b):
+        self.log.debug("requesting JsonDiff()")
+
+    def JsonDiffApply(self, base, diff):
+        self.log.debug("requesting JsonDiffApply()")
+
+    def Random(self) -> int:
+        self.log.debug("requesting Random()")
+        return random.randint(0, 1)
+
+    def RandomIntRange(self, min_v, max_v):
+        self.log.debug("requesting RandomIntRange()")
+
+    def RandomRange(self, min_v, max_v):
+        self.log.debug("requesting RandomRange()")
+
+
+# noinspection PyPep8Naming
+class FP:
+
+    def __init__(self, name: str, lua: LuaRuntime):
+        self.log = get_logger(f"LuaPlugin | FP | {name}")
+        self.name = name
+        self._lua = lua
+
+    def CreateDirectory(self, path):
+        self.log.debug("requesting CreateDirectory()")
+        try:
+            os.makedirs(path)
+            return True, None
+        except FileNotFoundError | NotADirectoryError as e:
+            return False, f"{e}"
+        except PermissionError as e:
+            return False, f"{e}"
+        except OSError as e:
+            return False, f"{e}"
+        except TypeError as e:
+            return False, f"{e}"
+        except ValueError as e:
+            return False, f"{e}"
+
+    def Remove(self, path):
+        self.log.debug("requesting Remove()")
+        try:
+            if os.path.isdir(path):
+                os.rmdir(path)
+            else:
+                os.remove(path)
+            return True, None
+        except (FileNotFoundError, NotADirectoryError) as e:
+            return False, f"{e}"
+        except PermissionError as e:
+            return False, f"{e}"
+        except OSError as e:
+            return False, f"{e}"
+        except TypeError as e:
+            return False, f"{e}"
+
+    def Rename(self, path_from, path_to):
+        self.log.debug("requesting Rename()")
+        try:
+            os.rename(path_from, path_to)
+            return True, None
+        except (FileNotFoundError, NotADirectoryError) as e:
+            return False, f"{e}"
+        except PermissionError as e:
+            return False, f"{e}"
+        except OSError as e:
+            return False, f"{e}"
+        except TypeError as e:
+            return False, f"{e}"
+
+    def Copy(self, path_from, path_to):
+        self.log.debug("requesting Copy()")
+        try:
+            if os.path.isfile(path_from):
+                shutil.copy2(path_from, path_to)
+            elif os.path.isdir(path_from):
+                shutil.copytree(path_from, path_to)
+            else:
+                raise ValueError("Invalid path: {}".format(path_from))
+            return True, None
+        except (FileNotFoundError, NotADirectoryError, shutil.Error) as e:
+            return False, f"{e}"
+        except PermissionError as e:
+            return False, f"{e}"
+        except OSError as e:
+            return False, f"{e}"
+        except TypeError as e:
+            return False, f"{e}"
+
+    def GetFilename(self, path):
+        self.log.debug("requesting GetFilename()")
+        return os.path.basename(path)
+
+    def GetExtension(self, path):
+        self.log.debug("requesting GetExtension()")
+        return os.path.splitext(path)[1]
+
+    def GetParentFolder(self, path):
+        self.log.debug("requesting GetParentFolder()")
+        return os.path.dirname(path)
+
+    def Exists(self, path):
+        self.log.debug("requesting Exists()")
+        return os.path.exists(path)
+
+    def IsDirectory(self, path):
+        self.log.debug("requesting IsDirectory()")
+        return os.path.isdir(path)
+
+    def IsFile(self, path):
+        self.log.debug("requesting IsFile()")
+        return os.path.isfile(path)
+
+    def ListDirectories(self, path):
+        self.log.debug("requesting ListDirectories()")
+        directories = []
+        for item in os.listdir(path):
+            item_path = os.path.join(path, item)
+            if os.path.isdir(item_path):
+                directories.append(item)
+        return self._lua.table_from({i: v for i, v in enumerate(directories)})
+
+    def ListFiles(self, path):
+        self.log.debug("requesting ListFiles()")
+        files = []
+        for item in os.listdir(path):
+            item_path = os.path.join(path, item)
+            if os.path.isfile(item_path):
+                files.append(item)
+        return self._lua.table_from({i: v for i, v in enumerate(files)})
+
+    def ConcatPaths(self, *args):
+        self.log.debug("requesting ConcatPaths()")
+        return os.path.join(*args)
+
+
 class LuaPluginsLoader:
 
     def __init__(self, plugins_dir):
@@ -188,6 +353,8 @@ class LuaPluginsLoader:
             mp = MP(obj, lua)
             lua.globals().MP = mp
             lua.globals().print = mp._print
+            lua.globals().Util = Util(obj, lua)
+            lua.globals().FP = FP(obj, lua)
             code = f'package.path = package.path.."' \
                    f';{self.plugins_dir}/{obj}/?.lua' \
                    f';{self.plugins_dir}/{obj}/lua/?.lua"\n'
