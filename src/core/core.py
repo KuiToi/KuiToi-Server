@@ -225,7 +225,7 @@ class Core:
         pl = PluginsLoader(pl_dir)
         await pl.load()
         lpl = LuaPluginsLoader(pl_dir)
-        await lpl.load()
+        lpl.load()
 
         try:
             # WebApi Start
