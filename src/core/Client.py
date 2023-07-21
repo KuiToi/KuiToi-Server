@@ -599,9 +599,11 @@ class Client:
                 await self._send(data, to_all=True, to_self=False)
 
     async def _looper(self):
+        ev.call_lua_event("onPlayerConnecting", self.cid)
         self._connect_time = time.monotonic()
         await self._send(f"P{self.cid}")  # Send clientID
         await self._sync_resources()
+        ev.call_lua_event("onPlayerJoining", self.cid)
         tasks = self.__tasks
         recv = asyncio.create_task(self._recv())
         tasks.append(recv)

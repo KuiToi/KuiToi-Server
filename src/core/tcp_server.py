@@ -74,6 +74,7 @@ class TCPServer:
                 return False, client
 
         ev.call_event("onPlayerAuthenticated", player=client)
+        ev.call_lua_event("onPlayerAuth", client.nick, client.roles, client.guest, client.identifiers)
 
         if len(self.Core.clients_by_id) > config.Game["players"]:
             # TODO: i18n
