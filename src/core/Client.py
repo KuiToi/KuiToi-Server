@@ -61,6 +61,10 @@ class Client:
         return self._cid
 
     @property
+    def pid(self):
+        return self._cid
+
+    @property
     def key(self):
         return self._key
 
