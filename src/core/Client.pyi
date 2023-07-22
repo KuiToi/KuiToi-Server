@@ -33,6 +33,7 @@ class Client:
         self._guest = True
         self.__alive = True
         self._ready = False
+        self._focus_car = -1
         self._identifiers = []
         self._cars: List[Optional[Dict[str, int]]] = []
         self._snowman: Dict[str, Union[int, str]]  = {"id": -1, "packet": ""}
@@ -57,6 +58,9 @@ class Client:
     def identifiers(self) -> list: ...
     @property
     def cars(self) -> dict: ...
+    @property
+    def focus_car(self):
+        return self._focus_car
     @property
     def last_position(self) -> dict: ...
     def is_disconnected(self) -> bool: ...

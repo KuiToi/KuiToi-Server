@@ -35,6 +35,7 @@ class Client:
         self._ready = False
         self._identifiers = []
         self._cars = [None] * 21  # Max 20 cars per player + 1 snowman
+        self._focus_car = -1
         self._snowman = {"id": -1, "packet": ""}
         self._connect_time = 0
         self._last_position = {}
@@ -83,6 +84,10 @@ class Client:
     @property
     def cars(self):
         return {i: v for i, v in enumerate(self._cars) if v is not None}
+
+    @property
+    def focus_car(self):
+        return self._focus_car
 
     @property
     def last_position(self):
@@ -540,8 +545,11 @@ class Client:
                 self.log.debug(f"Something changed/broken: {raw_data}")
                 await self._send(raw_data, to_all=True, to_self=False)
 
-            case "m":  # Move focus cat
+            case "m":  # Move focus car
                 self.log.debug(f"Move focus to: {raw_data}")
+                cid, car_id = self._get_cid_vid(raw_data)
+                if car_id != -1 and cid == self.cid and self._cars[car_id]:
+                    self._focus_car = car_id
                 await self._send(raw_data, to_all=True, to_self=True)
 
     async def _connected_handler(self):
