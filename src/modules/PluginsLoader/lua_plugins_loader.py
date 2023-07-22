@@ -15,7 +15,9 @@ from core import get_logger
 
 
 class EventTimer:
-    def __init__(self, event_name, interval_ms, strategy=None):
+    def __init__(self, event_name, interval_ms, mp, strategy=None):
+        self.log = get_logger(f"EventTimer | {mp.name}")
+        self.mp = mp
         self.event_name = event_name
         self.interval_ms = interval_ms
         self.strategy = strategy
@@ -37,8 +39,8 @@ class EventTimer:
             self.timer.cancel()
 
     def trigger_event(self):
-        # trigger the event with the given name
-        print(f"Event '{self.event_name}' triggered")
+        self.log.debug(f"Event '{self.event_name}' triggered")
+        self.mp.TriggerLocalEvent(self.event_name)
 
 
 # noinspection PyPep8Naming
@@ -103,7 +105,7 @@ class MP:
 
     def CreateEventTimer(self, event_name: str, interval_ms: int, strategy: int = None):
         self.log.debug("request CreateEventTimer()")
-        event_timer = EventTimer(event_name, interval_ms, strategy)
+        event_timer = EventTimer(event_name, interval_ms, self, strategy)
         self._event_timers[event_name] = event_timer
         event_timer.start()
 
@@ -674,5 +676,5 @@ class LuaPluginsLoader:
         for k, data in self.lua_plugins.items():
             if data['ok']:
                 self.log.debug(f"Unloading lua plugin: {k}")
-                # data['stop_th']()
-                # data['th'].join()
+                for k, v in data['lua'].globals().MP._event_timers.items():
+                    v.stop()
