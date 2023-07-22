@@ -73,8 +73,21 @@ class TCPServer:
                 await client.kick('Stale Client (replaced by new client)')
                 return False, client
 
+        allow = True
+        reason = "You are not allowed on the server!"
+
+        lua_data = ev.call_lua_event("onPlayerAuth", client.nick, client.roles, client.guest, client.identifiers)
+        for data in lua_data:
+            if 1 == data:
+                allow = True
+            elif isinstance(data, str):
+                allow = True
+                reason = data
+        if not allow:
+            await client.kick(reason)
+            return False, client
+
         ev.call_event("onPlayerAuthenticated", player=client)
-        ev.call_lua_event("onPlayerAuth", client.nick, client.roles, client.guest, client.identifiers)
 
         if len(self.Core.clients_by_id) > config.Game["players"]:
             # TODO: i18n

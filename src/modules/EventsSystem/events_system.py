@@ -33,6 +33,7 @@ class EventsSystem:
             "onCarReset": [],
             "onSentPing": [],  # Only sync
             "onChangePosition": [],  # Only sync
+            "onPlayerDisconnect": [],
             "onServerStopped": [],
         }
         self.__async_events = {
@@ -43,6 +44,7 @@ class EventsSystem:
             "onCarDelete": [],
             "onCarEdited": [],
             "onCarReset": [],
+            "onPlayerDisconnect": [],
             "onServerStopped": []
         }
 

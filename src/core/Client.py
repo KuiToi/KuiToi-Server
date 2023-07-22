@@ -364,6 +364,9 @@ class Client:
         allow = True
         allow_snowman = True
         over_spawn = False
+        lua_data = ev.call_lua_event("onVehicleSpawn", self.cid, car_id, car_data[car_data.find("{"):])
+        if 1 in lua_data:
+            allow = False
         ev_data_list = ev.call_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
         d2 = await ev.call_async_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
         ev_data_list.extend(d2)
@@ -407,6 +410,8 @@ class Client:
 
         if car_id != -1 and self.cars[car_id]:
 
+            ev.call_lua_event("onVehicleDeleted", self.cid, car_id)
+
             admin_allow = False  # Delete from admin, for example...
             ev_data_list = ev.call_event("onCarDelete", car=self.cars[car_id], car_id=car_id, player=self)
             d2 = await ev.call_async_event("onCarDelete", car=self.cars[car_id], car_id=car_id, player=self)
@@ -444,6 +449,9 @@ class Client:
 
                 allow = False
                 admin_allow = False
+                lua_data = ev.call_lua_event("onVehicleEdited", self.cid, car_id, data[data.find("{"):])
+                if 1 in lua_data:
+                    allow = False
                 ev_data_list = ev.call_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
                 d2 = await ev.call_async_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
                 ev_data_list.extend(d2)
@@ -472,8 +480,14 @@ class Client:
         cid, car_id = self._get_cid_vid(raw_data)
         if car_id != -1 and cid == self.cid and self.cars[car_id]:
             await self._send(raw_data, to_all=True, to_self=False)
-            ev.call_event("onCarReset", car=self.cars[car_id], car_id=car_id, player=self)
-            await ev.call_async_event("onCarReset", car=self.cars[car_id], car_id=car_id, player=self)
+            ev.call_lua_event("onVehicleReset", self.cid, car_id, raw_data[raw_data.find("{"):])
+            car_json = {}
+            try:
+                car_json = json.loads(raw_data[raw_data.find("{"):])
+            except Exception as e:
+                self.log.debug(f"Invalid new_car_json: Error: {e}; Data: {raw_data}")
+            ev.call_event("onCarReset", car=car_json, car_id=car_id, player=self)
+            await ev.call_async_event("onCarReset", car=car_json, car_id=car_id, player=self)
             self.log.debug(f"Car reset: car_id={car_id}")
         else:
             self.log.debug(f"Invalid car: car_id={car_id}")
@@ -536,7 +550,11 @@ class Client:
             self.log.debug("Tried to send an empty event, ignoring")
             return
         to_ev = {"message": msg, "player": self}
-        ev.call_lua_event("onChatMessage", self.cid, self.nick, msg)
+        lua_data = ev.call_lua_event("onChatMessage", self.cid, self.nick, msg)
+        if 1 in lua_data:
+            if config.Options['log_chat']:
+                self.log.info(f"{self.nick}: {msg}")
+            return
         ev_data_list = ev.call_event("onChatReceive", **to_ev)
         d2 = await ev.call_async_event("onChatReceive", **to_ev)
         ev_data_list.extend(d2)
@@ -633,6 +651,10 @@ class Client:
             if self.ready:
                 await self._send(f"J{self.nick} disconnected!", to_all=True, to_self=False)  # I'm disconnected.
             self.log.debug(f"Removing client")
+            ev.call_lua_event("onPlayerDisconnect", self.cid)
+            ev.call_event("onPlayerDisconnect", player=self)
+            await ev.call_async_event("onPlayerDisconnect", player=self)
+
             # TODO: i18n
             self.log.info(f"Disconnected, online time: {round((time.monotonic() - self._connect_time) / 60, 2)}min.")
             self.__Core.clients[self.cid] = None
