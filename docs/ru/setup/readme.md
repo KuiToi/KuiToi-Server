@@ -36,19 +36,24 @@ Game:
   map: gridmap_v2
   max_cars: 1
   players: 8
-Server:
+Options:
   debug: false
-  description: Welcome to KuiToi Server!
+  encoding: utf-8
   language: en
+  log_chat: true
+  speed_limit: 0
+  use_lua: true
+  use_queue: false
+Server:
+  description: Welcome to KuiToi Server!
   name: KuiToi-Server
   server_ip: 0.0.0.0
-  server_port: 30813
+  server_port: 30814
 WebAPI:
   enabled: false
-  secret_key: <random_key>
+  secret_key: 3838ccb03c86cdb386b67fbfdcba62d0
   server_ip: 127.0.0.1
   server_port: 8433
-
 ```
 ### Auth
 
@@ -62,11 +67,19 @@ WebAPI:
 * `max_cars` - Максимальное количество машин на игрока
 * `players` - Максимально количество игроков
 
-### Server
+### Options
 
 * `debug` - Нужно ли выводить debug сообщения (только для опытных пользователей, немного теряется в производительности)
-* `description` - Описания сервера для лаунчера BeamMP
+* `encoding` - С какой кодировкой открывать файлы
 * `language` - С каким языком запустится сервер (Доступные на данный момент: en, ru)
+* `log_chat` - Нужно-ли выводить чат в консоль
+* `speed_limit` - Ограничение скорости на скачивание модов (В Мб/с)
+* `use_lua` - Включить ли поддержку lua
+* `use_queue` - Скачивать по очереди, т.е. в один момент может скачивать только 1 клиент
+
+### Server
+
+* `description` - Описания сервера для лаунчера BeamMP
 * `name` - Названия сервер для лаунчера BeamMP
 * `server_ip` - Какой IP адрес занять серверу (только для опытных пользователей, по умолчанию 0.0.0.0)
 * `server_port` - На каком порту будет работать сервер
