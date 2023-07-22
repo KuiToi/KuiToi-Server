@@ -409,6 +409,7 @@ class Client:
                 self.log.debug(f"Unicycle spawn accepted: car_id={car_id}")
             else:
                 self.log.debug(f"Car spawn accepted: car_id={car_id}")
+            self._focus_car = car_id
             self._cars[car_id] = {
                 "packet": pkt,
                 "json": car_json,
@@ -547,7 +548,7 @@ class Client:
 
             case "m":  # Move focus car
                 self.log.debug(f"Move focus to: {raw_data}")
-                cid, car_id = self._get_cid_vid(raw_data)
+                cid, car_id = self._get_cid_vid(raw_data[5:])
                 if car_id != -1 and cid == self.cid and self._cars[car_id]:
                     self._focus_car = car_id
                 await self._send(raw_data, to_all=True, to_self=True)
