@@ -16,7 +16,7 @@ from threading import Thread
 from core import get_logger
 
 
-# TODO: call_client_event, get_player, get_players, GetPlayerCount
+# TODO: get_player, get_players, GetPlayerCount
 class KuiToi:
     _plugins_dir = ""
 
@@ -45,6 +45,7 @@ class KuiToi:
     def open(self, file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
         path = os.path.join(self.__dir, file)
         self.log.debug(f'Trying to open "{path}" with mode "{mode}"')
+        # Really need?
         # if not os.path.exists(path):
         #     with open(path, 'x'): ...
         f = None
@@ -63,15 +64,33 @@ class KuiToi:
 
     def call_event(self, event_name, *args, **kwargs):
         self.log.debug(f"Called event {event_name}")
-        ev.call_event(event_name, *args, **kwargs)
+        return ev.call_event(event_name, *args, **kwargs)
 
     async def call_async_event(self, event_name, *args, **kwargs):
         self.log.debug(f"Called async event {event_name}")
-        await ev.call_async_event(event_name, *args, **kwargs)
+        return await ev.call_async_event(event_name, *args, **kwargs)
 
     def call_lua_event(self, event_name, *args):
         self.log.debug(f"Called lua event {event_name}")
-        ev.call_lua_event(event_name, *args)
+        return ev.call_lua_event(event_name, *args)
+
+    def get_player(self, pid=None, nick=None, cid=None):
+        self.log.debug("Requests get_player")
+        return ev.call_event("_get_player", cid=cid or pid, nick=nick)[0]
+
+    def get_players(self):
+        self.log.debug("Requests get_players")
+        return self.get_player(-1)
+
+    def players_counter(self):
+        self.log.debug("Requests players_counter")
+        return len(self.get_players())
+
+    def is_player_connected(self, pid=None, nick=None):
+        self.log.debug("Requests is_player_connected")
+        if pid < 0:
+            return False
+        return bool(self.get_player(cid=pid, nick=nick))
 
 
 class PluginsLoader:
