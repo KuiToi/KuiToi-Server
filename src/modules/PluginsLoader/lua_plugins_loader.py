@@ -4,6 +4,9 @@ import os
 import platform
 import random
 import shutil
+import threading
+import time
+from threading import Thread
 
 import toml
 from lupa.lua53 import LuaRuntime
@@ -11,11 +14,37 @@ from lupa.lua53 import LuaRuntime
 from core import get_logger
 
 
+class EventTimer:
+    def __init__(self, event_name, interval_ms, strategy=None):
+        self.event_name = event_name
+        self.interval_ms = interval_ms
+        self.strategy = strategy
+        self.timer = None
+        self.stopped = False
+
+    def start(self):
+        def callback():
+            if not self.stopped:
+                self.start()
+            self.trigger_event()
+
+        self.timer = threading.Timer(self.interval_ms / 1000.0, callback)
+        self.timer.start()
+
+    def stop(self):
+        self.stopped = True
+        if self.timer is not None:
+            self.timer.cancel()
+
+    def trigger_event(self):
+        # trigger the event with the given name
+        print(f"Event '{self.event_name}' triggered")
+
+
 # noinspection PyPep8Naming
 class MP:
 
     # In ./in_lua.lua
-    # MP.Sleep
 
     def __init__(self, name: str, lua: LuaRuntime):
         self.loaded = False
@@ -30,6 +59,7 @@ class MP:
             "onPlayerJoin": [], "onPlayerDisconnect": [], "onChatMessage": [], "onVehicleSpawn": [],
             "onVehicleEdited": [], "onVehicleDeleted": [], "onVehicleReset": [], "onFileChanged": []
         }
+        self._event_timers = {}
 
     def _print(self, *args):
         args = list(args)
@@ -38,11 +68,6 @@ class MP:
                 args[i] = self._lua.globals().Util.JsonEncode(arg)
         s = " ".join(map(str, args))
         self.log.info(s)
-
-    def CreateTimer(self):
-        self.log.debug("request CreateTimer()")
-        # TODO: CreateTimer
-        self.log.warning("KuiToi does not currently support: MP.CreateTimer()")
 
     def GetOSName(self) -> str:
         self.log.debug("request MP.GetOSName()")
@@ -78,13 +103,16 @@ class MP:
 
     def CreateEventTimer(self, event_name: str, interval_ms: int, strategy: int = None):
         self.log.debug("request CreateEventTimer()")
-        # TODO: CreateEventTimer
-        self.log.warning("KuiToi does not currently support: MP.CreateEventTimer()")
+        event_timer = EventTimer(event_name, interval_ms, strategy)
+        self._event_timers[event_name] = event_timer
+        event_timer.start()
 
     def CancelEventTimer(self, event_name: str):
         self.log.debug("request CancelEventTimer()")
-        # TODO: CancelEventTimer
-        self.log.warning("KuiToi does not currently support: MP.CancelEventTimer()")
+        if event_name in self._event_timers:
+            event_timer = self._event_timers[event_name]
+            event_timer.stop()
+            del self._event_timers[event_name]
 
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
@@ -109,6 +137,10 @@ class MP:
             IsDone=lambda: True,
             GetResults=lambda: self._lua.table_from(ev.call_lua_event(event_name, *args))
         )
+
+    def Sleep(self, time_ms):
+        self.log.debug(f"request Sleep(); Thread: {threading.current_thread().name}")
+        time.sleep(time_ms * 0.001)
 
     def SendChatMessage(self, player_id, message):
         self.log.debug("request SendChatMessage()")
@@ -585,8 +617,6 @@ class LuaPluginsLoader:
         }
         with open("ServerConfig.toml", "w") as f:
             toml.dump(data, f)
-        self.log.warning("KuiToi does not currently support: MP.CreateTimer(), MP.CreateEventTimer(), "
-                         "MP.CancelEventTimer()")
         self.log.warning("KuiToi will not support at all: MP.Set()")
         py_folders = ev.call_event("_plugins_get")[0]
         for name in os.listdir(self.plugins_dir):
@@ -617,7 +647,7 @@ class LuaPluginsLoader:
             lua_globals.package.path += f';{p0};{p1}'
             with open("modules/PluginsLoader/add_in.lua", "r") as f:
                 lua.execute(f.read())
-            self.lua_plugins.update({name: {"lua": lua, "ok": False}})
+            self.lua_plugins.update({name: {"lua": lua, "ok": False, "th": None, "stop_th": None}})
             plugin_path = os.path.join(self.plugins_dir, name)
             for file in os.listdir(plugin_path):
                 path = f"plugins/{name}/{file}"
@@ -640,4 +670,9 @@ class LuaPluginsLoader:
                 self.log.exception(e)
 
     def unload(self, _):
-        ...
+        self.log.debug("Unloading lua plugins")
+        for k, data in self.lua_plugins.items():
+            if data['ok']:
+                self.log.debug(f"Unloading lua plugin: {k}")
+                # data['stop_th']()
+                # data['th'].join()
