@@ -16,11 +16,10 @@ from threading import Thread
 from core import get_logger
 
 
-# TODO: get_player, get_players, GetPlayerCount
 class KuiToi:
     _plugins_dir = ""
 
-    def __init__(self, name=None):
+    def __init__(self, name):
         if name is None:
             raise AttributeError("KuiToi: Name is required")
         self.__log = get_logger(f"Plugin | {name}")
