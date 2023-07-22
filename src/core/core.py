@@ -16,7 +16,7 @@ from core import utils
 from core.Client import Client
 from core.tcp_server import TCPServer
 from core.udp_server import UDPServer
-from modules import PluginsLoader, LuaPluginsLoader
+from modules import PluginsLoader
 from modules.WebAPISystem import app as webapp
 
 
@@ -224,8 +224,10 @@ class Core:
             os.mkdir(pl_dir)
         pl = PluginsLoader(pl_dir)
         await pl.load()
-        lpl = LuaPluginsLoader(pl_dir)
-        lpl.load()
+        if config.Options['use_lua']:
+            from modules.PluginsLoader.lua_plugins_loader import LuaPluginsLoader
+            lpl = LuaPluginsLoader(pl_dir)
+            lpl.load()
 
         try:
             # WebApi Start

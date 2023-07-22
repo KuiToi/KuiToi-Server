@@ -11,6 +11,5 @@ from .ConfigProvider import ConfigProvider, Config
 from .i18n import MultiLanguage
 from .EventsSystem import EventsSystem
 from .PluginsLoader import PluginsLoader
-from .PluginsLoader import LuaPluginsLoader
 from .WebAPISystem import web_app
 from .WebAPISystem import _stop as stop_web
