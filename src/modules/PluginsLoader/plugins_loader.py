@@ -79,8 +79,7 @@ class PluginsLoader:
 
     async def load(self):
         self.log.debug("Loading plugins...")
-        files = os.listdir(self.plugins_dir)
-        for file in files:
+        for file in os.listdir(self.plugins_dir):
             file_path = os.path.join(self.plugins_dir, file)
             if os.path.isfile(file_path) and file.endswith(".py"):
                 try:
@@ -96,14 +95,14 @@ class PluginsLoader:
 
                     ok = True
                     try:
-                        isfunc = inspect.isfunction
-                        if not isfunc(plugin.load):
+                        is_func = inspect.isfunction
+                        if not is_func(plugin.load):
                             self.log.error('Function "def load():" not found.')
                             ok = False
-                        if not isfunc(plugin.start):
+                        if not is_func(plugin.start):
                             self.log.error('Function "def start():" not found.')
                             ok = False
-                        if not isfunc(plugin.unload):
+                        if not is_func(plugin.unload):
                             self.log.error('Function "def unload():" not found.')
                             ok = False
                         if type(plugin.kt) != KuiToi:
@@ -121,22 +120,22 @@ class PluginsLoader:
                                         f'Plugin name: "{pl_name}"; Plugin file "{file_path}"')
 
                     plugin.open = plugin.kt.open
-                    iscorfunc = inspect.iscoroutinefunction
+                    is_coro_func = inspect.iscoroutinefunction
                     self.plugins.update(
                         {
                             pl_name: {
                                 "plugin": plugin,
                                 "load": {
                                     "func": plugin.load,
-                                    "async": iscorfunc(plugin.load)
+                                    "async": is_coro_func(plugin.load)
                                 },
                                 "start": {
                                     "func": plugin.start,
-                                    "async": iscorfunc(plugin.start)
+                                    "async": is_coro_func(plugin.start)
                                 },
                                 "unload": {
                                     "func": plugin.unload,
-                                    "async": iscorfunc(plugin.unload)
+                                    "async": is_coro_func(plugin.unload)
                                 }
                             }
                         }
