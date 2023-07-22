@@ -555,13 +555,15 @@ class Client:
                 if to_client:
                     # noinspection PyProtectedMember
                     writer = to_client._writer
-                self.log.info(f"{message}" if to_all else f"{self.nick}: {msg}")
+                if config.Options['log_chat']:
+                    self.log.info(f"{message}" if to_all else f"{self.nick}: {msg}")
                 await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
                 need_send = False
             except KeyError | AttributeError:
                 self.log.error(f"Returns invalid data: {ev_data}")
         if need_send:
-            self.log.info(f"{self.nick}: {msg}")
+            if config.Options['log_chat']:
+                self.log.info(f"{self.nick}: {msg}")
             await self._send(data, to_all=True)
 
     async def _handle_codes(self, data):

@@ -18,7 +18,7 @@ class Config:
         self.Server = server or {"name": "KuiToi-Server", "description": "Welcome to KuiToi Server!",
                                  "server_ip": "0.0.0.0", "server_port": 30814}
         self.Options = options or {"language": "en", "encoding": "utf-8", "speed_limit": 0, "use_queue": False,
-                                   "debug": False, "use_lua": False}
+                                   "debug": False, "use_lua": False, "log_chat": True}
         self.WebAPI = web or {"enabled": False, "server_ip": "127.0.0.1", "server_port": 8433,
                               "secret_key": secrets.token_hex(16)}
 
