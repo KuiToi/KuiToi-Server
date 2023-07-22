@@ -1,12 +1,18 @@
-# Plugin System
+Это описание системы плагинов для KuiToi сервера на Python:
 
-## Installing the Library with "Stubs"
-###### (This means that it will not work without a server, but the IDE will suggest the API)
-###### (The library is still under development)
+## Events
+### Events list: [here](./events_list.md)
+
+## Classes
+### Classes list: [here](./classes.md)
+
+## Installing the library with "stubs"
+###### (This means it won't work without the server, but your IDE will suggest the API)
+###### (The library is still in development)
 
 * Using pip:\
     `$ pip install KuiToi`
-* From source code:\
+* From source:\
     `git clone https://github.com/KuiToi/KuiToi-PyLib`
 
 ## Example
@@ -17,7 +23,7 @@ try:
 except ImportError:
     pass
 
-kt = KuiToi("Example")
+kt = KuiToi("ExamplePlugin")
 log = kt.log
 
 def my_event_handler(event_data):
@@ -25,14 +31,14 @@ def my_event_handler(event_data):
 
 def load():
     # Plugin initialization
-    ev.register_event("my_event", my_event_handler)
+    kt.register_event("my_event", my_event_handler)
     log.info("Plugin loaded successfully.")
 
     
 def start():
-    # Running plugin processes
-    ev.call_event("my_event")
-    ev.call_event("my_event", "Some data", data="some data too")
+    # Starting plugin processes
+    kt.call_event("my_event")
+    kt.call_event("my_event", "Some data", data="some data too")
     log.info("Plugin started successfully.")
 
 
@@ -41,15 +47,17 @@ def unload():
     log.info("Plugin unloaded successfully.")
 ```
 
-* It is recommended to use `open()` after `load()`. Otherwise, use `kt.load()` - creates a file in the `plugin/<plugin_name>/<filename>` folder.
-* Creating your own event: `kt.register_event("my_event", my_event_function)`
+A more comprehensive example can also be found in [example.py](examples/example.py)
+
+* It is recommended to use `open()` after `load()`, otherwise use `kt.load()` - It creates a file in the `plugin/<plugin_name>/<filename>` folder.
+* Creating your own event: `kt.register_event("my_event", my_event_function)` - 
 * Calling an event: `kt.call_event("my_event")`
 * Calling an event with data: `kt.call_event("my_event", data, data2=data2)`
-* Basic events: _Will write later_
+* Base events: _To be added later_
 
-## Async Functions
+## Async functions
 
-Async support is available.
+Async support is available
 
 ```python
 try:
@@ -64,17 +72,17 @@ log = kt.log
 async def my_event_handler(event_data):
     log.info(f"{event_data}")
 
-
+    
 async def load():
     # Plugin initialization
-    ev.register_event("my_event", my_event_handler)
+    kt.register_event("my_event", my_event_handler)
     log.info("Plugin loaded successfully.")
 
 
 async def start():
-    # Running plugin processes
-    await ev.call_async_event("my_event")
-    await ev.call_async_event("my_event", "Some data", data="some data too")
+    # Starting plugin processes
+    await kt.call_async_event("my_event")
+    await kt.call_async_event("my_event", "Some data", data="some data too")
     log.info("Plugin started successfully.")
 
 
@@ -84,9 +92,9 @@ async def unload():
 
 ```
 
-A more extensive example can also be found in [async_example.py](./async_example.py).
+A more comprehensive example can also be found in [async_example.py](examples/async_example.py)
 
-* Creating your own event: `kt.register_event("my_event", my_event_function)` (register_event checks for function)
+* Creating your own event: `kt.register_event("my_event", my_event_function)` (register_event has a function check)
 * Calling an async event: `kt.call_async_event("my_event")`
 * Calling an async event with data: `kt.call_async_event("my_event", data, data2=data2)`
-* Basic async events: _Will write later_
+* Base async events: _To be added later_

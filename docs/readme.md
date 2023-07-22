@@ -1,4 +1,4 @@
 # Choose your language
 
-### [English](./en)
 ### [Русский](./ru)
+### [English](./en) (AI translation)
