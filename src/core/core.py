@@ -50,6 +50,8 @@ class Core:
         ev.register_event("_get_player", lambda x: self.get_client(**x['kwargs']))
 
     def get_client(self, cid=None, nick=None):
+        if cid is None and nick is None:
+            return None
         if cid is not None:
             if cid == -1:
                 return [i for i in self.clients if i is not None]
