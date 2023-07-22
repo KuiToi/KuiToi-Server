@@ -55,8 +55,8 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [ ] Python part:
       - [x] Load Python plugins
       - [x] Async support
-      - [ ] KuiToi class
-      - [ ] Client (Player) class
+      - [x] KuiToi class
+      - [x] Client (Player) class
     - [ ] JavaScript part:
       - [ ] Load JavaScript plugins
       - [ ] KuiToi class
