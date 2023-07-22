@@ -6,7 +6,6 @@ import random
 import shutil
 import threading
 import time
-from threading import Thread
 
 import toml
 from lupa.lua53 import LuaRuntime
