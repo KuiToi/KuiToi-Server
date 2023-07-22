@@ -138,3 +138,5 @@ dmypy.json
 /test/
 *test.py
 logs/
+*.yml
+*.toml
