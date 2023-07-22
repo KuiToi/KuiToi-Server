@@ -4,7 +4,6 @@ import os
 import platform
 import random
 import shutil
-from threading import Thread
 
 from lupa.lua53 import LuaRuntime
 
@@ -85,26 +84,26 @@ class MP:
 
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
-        self.log.debug(f"Calling lcoal lua event: '{event_name}'")
+        self.log.debug(f"Calling local lua event: '{event_name}'")
         funcs_data = []
         if event_name in self._local_events.keys():
             for func in self._local_events[event_name]:
                 try:
                     funcs_data.append(func(*args))
                 except Exception as e:
-                    self.log.error(f'Error while calling "{event_name}"; In function: "{func.__name__}"')
+                    self.log.error(f'Error while calling "{event_name}"; In function: "{func}"')
                     self.log.exception(e)
         else:
             self.log.warning(f"Event {event_name} does not exist, maybe ev.call_lua_event() or MP.Trigger<>Event()?. "
                              f"Just skipping it...")
 
-        return self._lua.table_from({i: v for i, v in enumerate(funcs_data)})
+        return self._lua.table_from(funcs_data)
 
     def TriggerGlobalEvent(self, event_name, *args):
         self.log.debug("request TriggerGlobalEvent()")
         return self._lua.table(
             IsDone=lambda: True,
-            GetResults=lambda: self._lua.table_from({i: v for i, v in enumerate(ev.call_lua_event(event_name, *args))})
+            GetResults=lambda: self._lua.table_from(ev.call_lua_event(event_name, *args))
         )
 
     def SendChatMessage(self, player_id, message):
@@ -194,14 +193,13 @@ class MP:
             return self._lua.table()
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
-            return self._lua.table_from(
-                {i: f'{v["json"]}' for i, d in enumerate([i for i in client.cars if i is not None]) for k, v in
-                 d.items() if k == "json"})
+            return self._lua.table_from([f'{v["json"]}' for d in [i for i in client.cars if i is not None]
+                                         for k, v in d.items() if k == "json"])
 
     def GetPlayers(self):
         self.log.debug("request GetPlayers()")
         clients = ev.call_event("_get_players", cid=-1)
-        return self._lua.table_from({i: n for i, n in enumerate(clients)})
+        return self._lua.table_from(clients)
 
     def IsPlayerGuest(self, player_id) -> bool:
         self.log.debug("request IsPlayerGuest()")
@@ -241,9 +239,11 @@ class MP:
         self.log.debug("request Set")
         self.log.warning("KuiToi cannot support this: MP.Set()")
 
-    def Settings(self, *args):
-        self.log.debug("request Set")
-        self.log.warning("KuiToi cannot support this: MP.Settings()")
+    @property
+    def Settings(self):
+        self.log.debug("request Settings")
+        self.log.warning("KuiToi cannot support this: MP.Settings")
+        return self._lua.table(MaxCars=1)
 
 
 # noinspection PyPep8Naming
@@ -515,7 +515,7 @@ class FS:
             item_path = os.path.join(path, item)
             if os.path.isdir(item_path):
                 directories.append(item)
-        return self._lua.table_from({i: v for i, v in enumerate(directories)})
+        return self._lua.table_from(directories)
 
     def ListFiles(self, path):
         self.log.debug("requesting ListFiles()")
@@ -524,7 +524,7 @@ class FS:
             item_path = os.path.join(path, item)
             if os.path.isfile(item_path):
                 files.append(item)
-        return self._lua.table_from({i: v for i, v in enumerate(files)})
+        return self._lua.table_from(files)
 
     def ConcatPaths(self, *args):
         self.log.debug("requesting ConcatPaths()")
@@ -548,6 +548,8 @@ class LuaPluginsLoader:
 
     def load(self):
         self.log.debug("Loading Lua plugins...")
+        self.log.warning("Some BeamMP plugins require a correctly configured ServerConfig.toml file to function. If "
+                         "necessary, create it.")
         py_folders = ev.call_event("_plugins_get")[0]
         for name in os.listdir(self.plugins_dir):
             path = os.path.join(self.plugins_dir, name)
