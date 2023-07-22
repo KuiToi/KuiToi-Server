@@ -41,6 +41,7 @@ class MP:
     def CreateTimer(self):
         self.log.debug("request CreateTimer()")
         # TODO: CreateTimer
+        self.log.warning("KuiToi does not currently support: MP.CreateTimer()")
 
     def GetOSName(self) -> str:
         self.log.debug("request MP.GetOSName()")
@@ -65,7 +66,7 @@ class MP:
             return
         event_func = self._lua.globals()[function_name]
         if not event_func:
-            self.log.error(f"Can't register '{event_name}': not found function: '{function_name}'")
+            self.log.warning(f"Can't register '{event_name}': not found function: '{function_name}'")
             return
         ev.register_event(event_name, event_func, lua=function_name)
         if event_name not in self._local_events:
@@ -77,10 +78,12 @@ class MP:
     def CreateEventTimer(self, event_name: str, interval_ms: int, strategy: int = None):
         self.log.debug("request CreateEventTimer()")
         # TODO: CreateEventTimer
+        self.log.warning("KuiToi does not currently support: MP.CreateEventTimer()")
 
     def CancelEventTimer(self, event_name: str):
         self.log.debug("request CancelEventTimer()")
         # TODO: CancelEventTimer
+        self.log.warning("KuiToi does not currently support: MP.CancelEventTimer()")
 
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
@@ -238,12 +241,6 @@ class MP:
     def Set(self, *args):
         self.log.debug("request Set")
         self.log.warning("KuiToi cannot support this: MP.Set()")
-
-    @property
-    def Settings(self):
-        self.log.debug("request Settings")
-        self.log.warning("KuiToi cannot support this: MP.Settings")
-        return self._lua.table(MaxCars=1)
 
 
 # noinspection PyPep8Naming
@@ -548,8 +545,16 @@ class LuaPluginsLoader:
 
     def load(self):
         self.log.debug("Loading Lua plugins...")
+        # TODO: i18n
+        self.log.info("You have enabled support for Lua plugins.")
+        self.log.warning("There are some nuances to working with KuiToi. "
+                         "If you have a proposal for their solution, and it is related to KuiToi, "
+                         "please contact the developer.")
         self.log.warning("Some BeamMP plugins require a correctly configured ServerConfig.toml file to function. If "
                          "necessary, create it.")
+        self.log.warning("KuiToi does not currently support: MP.CreateTimer(), MP.CreateEventTimer(), "
+                         "MP.CancelEventTimer()")
+        self.log.warning("will not support at all: MP.Set()")
         py_folders = ev.call_event("_plugins_get")[0]
         for name in os.listdir(self.plugins_dir):
             path = os.path.join(self.plugins_dir, name)
