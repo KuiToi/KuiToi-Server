@@ -5,6 +5,7 @@ import platform
 import random
 import shutil
 
+import toml
 from lupa.lua53 import LuaRuntime
 
 from core import get_logger
@@ -550,8 +551,40 @@ class LuaPluginsLoader:
         self.log.warning("There are some nuances to working with KuiToi. "
                          "If you have a proposal for their solution, and it is related to KuiToi, "
                          "please contact the developer.")
-        self.log.warning("Some BeamMP plugins require a correctly configured ServerConfig.toml file to function. If "
-                         "necessary, create it.")
+        self.log.warning("Some BeamMP plugins require a correctly configured ServerConfig.toml file to function.")
+        self.log.info("Creating it.")
+        data = {
+            "info": "ServerConfig.toml is created solely for backward compatibility support. "
+                    "This file will be updated every time the program is launched.",
+            "General": {
+                "Name": config.Server['name'],
+                "Port": config.Server['server_port'],
+                "AuthKey": config.Auth['key'],
+                "LogChat": config.Options['log_chat'],
+                "Debug": config.Options['debug'],
+                "Private": config.Auth['private'],
+                "MaxCars": config.Game['max_cars'],
+                "MaxPlayers": config.Game['players'],
+                "Map": f"/levels/{config.Game['map']}/info.json",
+                "Description": config.Server['description'],
+                "ResourceFolder": "plugins/"
+            },
+            "Misc": {
+                "ImScaredOfUpdates": False,
+                "SendErrorsShowMessage": False,
+                "SendErrors": False
+            },
+            "HTTP": {
+                "HTTPServerIP": config.WebAPI['server_ip'],
+                "HTTPServerPort": config.WebAPI['server_port'],
+                "SSLKeyPath": None,
+                "SSLCertPath": None,
+                "UseSSL": False,
+                "HTTPServerEnabled": config.WebAPI['enabled'],
+            }
+        }
+        with open("ServerConfig.toml", "w") as f:
+            toml.dump(data, f)
         self.log.warning("KuiToi does not currently support: MP.CreateTimer(), MP.CreateEventTimer(), "
                          "MP.CancelEventTimer()")
         self.log.warning("KuiToi will not support at all: MP.Set()")
