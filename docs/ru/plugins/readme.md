@@ -17,7 +17,7 @@ try:
 except ImportError:
     pass
 
-kt = KuiToi("Example")
+kt = KuiToi("ExamplePlugin")
 log = kt.log
 
 def my_event_handler(event_data):
@@ -40,6 +40,7 @@ def unload():
     # Код завершающий все процессы
     log.info("Плагин выгружен успешно.")
 ```
+Так же более обширный пример можно найти в [example.py](examples/example.py)
 
 * Рекомендуется использовать `open()` после `load()`, иначе стоит использовать `kt.load()` - Создаёт файл в папке `plugin/<plugin_name>/<filename>`
 * Создание своего ивента : `kt.register_event("my_event", my_event_function)` - 
@@ -84,7 +85,7 @@ async def unload():
 
 ```
 
-Так же более обширный пример можно найти в [async_example.py](./async_example.py)
+Так же более обширный пример можно найти в [async_example.py](examples/async_example.py)
 
 * Создание своего ивента: `kt.register_event("my_event", my_event_function)` (в register_event стоит проверка на функцию)
 * Вызов async ивента: `kt.call_async_event("my_event")`
