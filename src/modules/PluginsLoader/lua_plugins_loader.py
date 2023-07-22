@@ -554,7 +554,7 @@ class LuaPluginsLoader:
                          "necessary, create it.")
         self.log.warning("KuiToi does not currently support: MP.CreateTimer(), MP.CreateEventTimer(), "
                          "MP.CancelEventTimer()")
-        self.log.warning("will not support at all: MP.Set()")
+        self.log.warning("KuiToi will not support at all: MP.Set()")
         py_folders = ev.call_event("_plugins_get")[0]
         for name in os.listdir(self.plugins_dir):
             path = os.path.join(self.plugins_dir, name)
