@@ -18,6 +18,8 @@ class MP:
     # MP.Sleep
 
     def __init__(self, name: str, lua: LuaRuntime):
+        self.loaded = False
+        self._event_waiters = []
         self.loop = asyncio.get_event_loop()
         self.log = get_logger(f"LuaPlugin | {name}")
         self.name = name
@@ -52,8 +54,16 @@ class MP:
         self.log.debug("request MP.GetServerVersion()")
         return ev.call_event("_get_BeamMP_version")[0]
 
+    def _reg_ev(self):
+        for event in self._event_waiters:
+            self.RegisterEvent(*event)
+
     def RegisterEvent(self, event_name: str, function_name: str) -> None:
         self.log.debug("request MP.RegisterEvent()")
+        if not self.loaded:
+            self.log.debug("MP.RegisterEvent: plugin not loaded, waiting...")
+            self._event_waiters.append([event_name, function_name])
+            return
         event_func = self._lua.globals()[function_name]
         if not event_func:
             self.log.error(f"Can't register '{event_name}': not found function: '{function_name}'")
@@ -399,7 +409,7 @@ class Util:
 
 
 # noinspection PyPep8Naming
-class FP:
+class FS:
 
     def __init__(self, name: str, lua: LuaRuntime):
         self.log = get_logger(f"LuaPlugin | FP | {name}")
@@ -410,6 +420,8 @@ class FP:
         self.log.debug("requesting CreateDirectory()")
         try:
             os.makedirs(path)
+            return True, None
+        except FileExistsError:
             return True, None
         except FileNotFoundError | NotADirectoryError as e:
             return False, f"{e}"
@@ -526,7 +538,7 @@ class LuaPluginsLoader:
         self.plugins_dir = plugins_dir
         self.lua_plugins = {}
         self.lua_plugins_tasks = []
-        self.lua_dirs = []
+        self.lua_dirs = set()
         self.log = get_logger("LuaPluginsLoader")
         self.loaded_str = "Lua plugins: "
         ev.register_event("_lua_plugins_get", lambda x: self.lua_plugins)
@@ -534,50 +546,58 @@ class LuaPluginsLoader:
         console.add_command("lua_plugins", lambda x: self.loaded_str[:-2])
         console.add_command("lua_pl", lambda x: self.loaded_str[:-2])
 
-    def _start(self, obj, lua, file):
-        try:
-            lua.globals().loadfile(f"plugins/{obj}/{file}")()
-            self.lua_plugins[obj]['ok'] = True
-            self.loaded_str += f"{obj}:ok, "
-            lua.globals().onInit()
-            lua.globals().MP.TriggerLocalEvent("onInit")
-        except Exception as e:
-            self.loaded_str += f"{obj}:no, "
-            self.log.error(f"Cannot load lua plugin from `{obj}/main.lua`\n{e}")
-            # self.log.exception(e)
-
     def load(self):
         self.log.debug("Loading Lua plugins...")
         py_folders = ev.call_event("_plugins_get")[0]
-        for obj in os.listdir(self.plugins_dir):
-            path = os.path.join(self.plugins_dir, obj)
-            if os.path.isdir(path) and obj not in py_folders and obj not in "__pycache__":
-                if os.path.isfile(os.path.join(path, "main.lua")):
-                    self.lua_dirs.append([path, obj])
+        for name in os.listdir(self.plugins_dir):
+            path = os.path.join(self.plugins_dir, name)
+            if os.path.isdir(path) and name not in py_folders and name not in "__pycache__":
+                plugin_path = os.path.join(self.plugins_dir, name)
+                for file in os.listdir(plugin_path):
+                    path = f"plugins/{name}/{file}"
+                    if os.path.isfile(path) and path.endswith(".lua"):
+                        self.lua_dirs.add(name)
 
         self.log.debug(f"py_folders {py_folders}, lua_dirs {self.lua_dirs}")
 
-        for path, obj in self.lua_dirs:
+        for name in self.lua_dirs:
             # noinspection PyArgumentList
             lua = LuaRuntime(encoding=config.enc, source_encoding=config.enc, unpack_returned_tuples=True)
             lua_globals = lua.globals()
             lua_globals.printRaw = lua.globals().print
-            lua_globals.exit = lambda x: self.log.info(f"{obj}: You can't disable server..")
-            mp = MP(obj, lua)
+            lua_globals.exit = lambda x: self.log.info(f"{name}: You can't disable server..")
+            mp = MP(name, lua)
             lua_globals.MP = mp
             lua_globals.print = mp._print
-            lua_globals.Util = Util(obj, lua)
-            lua_globals.FP = FP(obj, lua)
+            lua_globals.Util = Util(name, lua)
+            lua_globals.FS = FS(name, lua)
             pa = os.path.abspath(self.plugins_dir)
-            p0 = os.path.join(pa, obj, "?.lua")
-            p1 = os.path.join(pa, obj, "lua", "?.lua")
+            p0 = os.path.join(pa, name, "?.lua")
+            p1 = os.path.join(pa, name, "lua", "?.lua")
             lua_globals.package.path += f';{p0};{p1}'
-            # with open("modules/PluginsLoader/add_in.lua", "r") as f:
-            #     code += f.read()
-            self.lua_plugins.update({obj: {"mp": mp, "lua": lua, "thread": None, "ok": False}})
-            th = Thread(target=self._start, args=(obj, lua, "main.lua"), name=f"lua_plugin_{obj}-Thread")
-            th.start()
-            self.lua_plugins[obj]['thread'] = th
+            with open("modules/PluginsLoader/add_in.lua", "r") as f:
+                lua.execute(f.read())
+            self.lua_plugins.update({name: {"lua": lua, "ok": False}})
+            plugin_path = os.path.join(self.plugins_dir, name)
+            for file in os.listdir(plugin_path):
+                path = f"plugins/{name}/{file}"
+                if os.path.isfile(path) and path.endswith(".lua"):
+                    try:
+                        lua_globals.loadfile(path)()
+                    except Exception as e:
+                        self.loaded_str += f"{name}:no, "
+                        self.log.error(f"Cannot load lua plugin from `{path}`: {e}")
+            try:
+                lua_globals.MP.loaded = True
+                lua_globals.MP._reg_ev()
+                lua_globals.MP.TriggerLocalEvent("onInit")
+                lua_globals.onInit()
+                self.lua_plugins[name]['ok'] = True
+                self.loaded_str += f"{name}:ok, "
+            except Exception as e:
+                self.loaded_str += f"{name}:no, "
+                self.log.error(f"Exception onInit from `{name}`: {e}")
+                self.log.exception(e)
 
     def unload(self, _):
         ...
