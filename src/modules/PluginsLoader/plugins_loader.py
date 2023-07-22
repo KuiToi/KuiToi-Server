@@ -23,11 +23,15 @@ class KuiToi:
     def __init__(self, name=None):
         if name is None:
             raise AttributeError("KuiToi: Name is required")
-        self.log = get_logger(f"Plugin | {name}")
+        self.__log = get_logger(f"Plugin | {name}")
         self.__name = name
         self.__dir = os.path.join(self._plugins_dir, self.__name)
         if not os.path.exists(self.__dir):
             os.mkdir(self.__dir)
+
+    @property
+    def log(self):
+        return self.__log
 
     @property
     def name(self):
@@ -57,9 +61,17 @@ class KuiToi:
         self.log.debug(f"Registering event {event_name}")
         ev.register_event(event_name, event_func)
 
-    def call_event(self, event_name, *data, **kwargs):
+    def call_event(self, event_name, *args, **kwargs):
         self.log.debug(f"Called event {event_name}")
-        ev.call_event(event_name, *data, **kwargs)
+        ev.call_event(event_name, *args, **kwargs)
+
+    async def call_async_event(self, event_name, *args, **kwargs):
+        self.log.debug(f"Called async event {event_name}")
+        await ev.call_async_event(event_name, *args, **kwargs)
+
+    def call_lua_event(self, event_name, *args):
+        self.log.debug(f"Called lua event {event_name}")
+        ev.call_lua_event(event_name, *args)
 
 
 class PluginsLoader:
