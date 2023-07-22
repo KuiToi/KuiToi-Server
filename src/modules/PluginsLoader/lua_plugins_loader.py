@@ -185,7 +185,7 @@ class MP:
             return self._lua.table(), "Bad client"
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
-            car = client.cars[car_id]
+            car = client._cars[car_id]
             if car:
                 return self._lua.table_from(car['pos'])
             return self._lua.table(), "Vehicle not found"
@@ -230,7 +230,7 @@ class MP:
             return self._lua.table()
         client = ev.call_event("_get_player", cid=player_id)[0]
         if client:
-            return self._lua.table_from([f'{v["json"]}' for d in [i for i in client.cars if i is not None]
+            return self._lua.table_from([f'{v["json"]}' for d in [i for i in client._cars if i is not None]
                                          for k, v in d.items() if k == "json"])
 
     def GetPlayers(self):

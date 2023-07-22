@@ -54,7 +54,7 @@ class Client:
 
     @property
     def addr(self):
-        return self._addr
+        return self._addr[0]
 
     @property
     def cid(self):
@@ -82,7 +82,7 @@ class Client:
 
     @property
     def cars(self):
-        return self._cars
+        return {i: v for i, v in enumerate(self._cars) if v is not None}
 
     @property
     def last_position(self):
@@ -103,7 +103,11 @@ class Client:
             self.__alive = True
             return False
 
-    async def kick(self, reason):
+    async def kick(self, reason=None):
+        if not reason:
+            reason = "Kicked!"
+        else:
+            reason = f"{reason!r}"
         if not self.__alive:
             self.log.debug(f"{self.nick}.kick('{reason}') skipped: Not alive;")
             return
@@ -113,9 +117,19 @@ class Client:
         self.__alive = False
 
     async def send_message(self, message, to_all=True):
-        await self._send(f"C:{message}", to_all=to_all)
+        if not message:
+            message = "no message"
+            to_all = False
+        await self._send(f"C:{message!r}", to_all=to_all)
 
     async def send_event(self, event_name, event_data, to_all=True):
+        if isinstance(event_data, (list, tuple, dict)):
+            event_data = json.dumps(event_data, separators=(',', ':'))
+        else:
+            event_data = f"{event_data!r}"
+        if len(event_data) > 104857599:
+            self.log.error("Client data too big! >=104857599")
+            return
         await self._send(f"E:{event_name}:{event_data}", to_all=to_all)
 
     async def _send(self, data, to_all=False, to_self=True, to_udp=False, writer=None):
@@ -355,8 +369,8 @@ class Client:
 
     async def _spawn_car(self, data):
         car_data = data[2:]
-        car_id = next((i for i, car in enumerate(self.cars) if car is None), len(self.cars))
-        cars_count = len(self.cars) - self.cars.count(None)
+        car_id = next((i for i, car in enumerate(self._cars) if car is None), len(self._cars))
+        cars_count = len(self._cars) - self._cars.count(None)
         if self._snowman['id'] != -1:
             cars_count -= 1  # -1 for unicycle
         self.log.debug(f"car_id={car_id}, cars_count={cars_count}")
@@ -404,6 +418,9 @@ class Client:
             des = f"Od:{self.cid}-{car_id}"
             await self._send(des)
 
+    async def delete_car(self, car_id):
+        await self._delete_car(car_id=car_id)
+
     async def _delete_car(self, raw_data=None, car_id=None):
 
         if not car_id and raw_data:
@@ -412,13 +429,13 @@ class Client:
             cid = self.cid
             raw_data = f"Od:{self.cid}-{car_id}"
 
-        if car_id != -1 and self.cars[car_id]:
+        if car_id != -1 and self._cars[car_id]:
 
             ev.call_lua_event("onVehicleDeleted", self.cid, car_id)
 
             admin_allow = False  # Delete from admin, for example...
-            ev_data_list = ev.call_event("onCarDelete", car=self.cars[car_id], car_id=car_id, player=self)
-            d2 = await ev.call_async_event("onCarDelete", car=self.cars[car_id], car_id=car_id, player=self)
+            ev_data_list = ev.call_event("onCarDelete", car=self._cars[car_id], car_id=car_id, player=self)
+            d2 = await ev.call_async_event("onCarDelete", car=self._cars[car_id], car_id=car_id, player=self)
             ev_data_list.extend(d2)
             for ev_data in ev_data_list:
                 # TODO: handle event onCarDelete
@@ -426,7 +443,7 @@ class Client:
 
             if cid == self.cid or admin_allow:
                 await self._send(raw_data, to_all=True, to_self=True)
-                car = self.cars[car_id]
+                car = self._cars[car_id]
                 if car['snowman']:
                     self.log.debug(f"Snowman found")
                     unicycle_id = self._snowman['id']
@@ -441,10 +458,10 @@ class Client:
 
     async def _edit_car(self, raw_data, data):
         cid, car_id = self._get_cid_vid(raw_data)
-        if car_id != -1 and self.cars[car_id]:
+        if car_id != -1 and self._cars[car_id]:
             client = self.__Core.get_client(cid=cid)
             if client:
-                car = client.cars[car_id]
+                car = client._cars[car_id]
                 new_car_json = {}
                 try:
                     new_car_json = json.loads(data[data.find("{"):])
@@ -482,7 +499,7 @@ class Client:
 
     async def _reset_car(self, raw_data):
         cid, car_id = self._get_cid_vid(raw_data)
-        if car_id != -1 and cid == self.cid and self.cars[car_id]:
+        if car_id != -1 and cid == self.cid and self._cars[car_id]:
             await self._send(raw_data, to_all=True, to_self=False)
             ev.call_lua_event("onVehicleReset", self.cid, car_id, raw_data[raw_data.find("{"):])
             car_json = {}
@@ -535,15 +552,16 @@ class Client:
 
         await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
         await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
-        self._ready = True
 
         for client in self.__Core.clients:
             if not client:
                 continue
-            for car in client.cars:
+            for car in client._cars:
                 if not car:
                     continue
                 await self._send(car['packet'])
+
+        self._ready = True
 
     async def _chat_handler(self, data):
         sup = data.find(":", 2)
@@ -647,7 +665,7 @@ class Client:
         self.__alive = False
         if (self.cid > 0 or self.nick is not None) and \
                 self.__Core.clients_by_nick.get(self.nick):
-            for i, car in enumerate(self.cars):
+            for i, car in enumerate(self._cars):
                 if not car:
                     continue
                 self.log.debug(f"Removing car: car_id={i}")
