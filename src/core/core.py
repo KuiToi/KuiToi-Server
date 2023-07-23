@@ -116,7 +116,7 @@ class Core:
             self.log.error("Error in check_alive.")
             self.log.exception(e)
 
-    async def __gracefully_kick(self, _):
+    async def __gracefully_kick(self):
         for client in self.clients:
             if not client:
                 continue

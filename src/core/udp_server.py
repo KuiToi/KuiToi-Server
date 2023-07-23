@@ -93,8 +93,7 @@ class UDPServer(asyncio.DatagramTransport):
                 )
                 d.transport = self.transport
 
-                if not self.run:
-                    self.log.debug(f"UDP server started on {self.transport.get_extra_info('sockname')}")
+                self.log.debug(f"UDP server started on {self.transport.get_extra_info('sockname')}")
 
                 self.run = True
                 while not self.transport.is_closing():
