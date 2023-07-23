@@ -19,7 +19,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Chat
     - [x] Players online counter
     - [x] Packets handled (Recursive finding second packet)
-    - [x] Client events
+    - [ ] Client events
     - [x] Car synchronizations:
       - [x] State packets
       - [x] Spawn cars
@@ -51,16 +51,12 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Return from events
     - [x] Async support
     - [ ] Add all events
-  - [x] Plugins support
-    - [ ] Python part:
+  - [x] Plugins supports
+    - [x] Python part:
       - [x] Load Python plugins
       - [x] Async support
       - [x] KuiToi class
       - [x] Client (Player) class
-    - [ ] JavaScript part:
-      - [ ] Load JavaScript plugins
-      - [ ] KuiToi class
-      - [ ] Client (Player) class
     - [x] Lua part: (Original BeamMP compatibility)
       - [x] Load Lua plugins
       - [x] MP Class
