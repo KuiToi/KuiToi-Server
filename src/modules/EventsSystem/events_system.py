@@ -73,9 +73,9 @@ class EventsSystem:
                        f"async_event={async_event}, lua_event={lua}):")
         if lua:
             if event_name not in self.__lua_events:
-                self.__lua_events.update({str(event_name): [{"func": event_func, "name": lua}]})
+                self.__lua_events.update({str(event_name): [{"func_name": event_func, "lua": lua}]})
             else:
-                self.__lua_events[event_name].append({"func": event_func, "name": lua})
+                self.__lua_events[event_name].append({"func_name": event_func, "lua": lua})
             self.log.debug("Register ok")
             return
 
@@ -141,13 +141,18 @@ class EventsSystem:
         funcs_data = []
         if event_name in self.__lua_events.keys():
             for data in self.__lua_events[event_name]:
-                func = data['func']
+                lua = data['lua']
+                func_name = data["func_name"]
                 try:
+                    func = lua.globals()[func_name]
+                    if not func:
+                        self.log.warning(f"Cannot trigger local event: '{func_name}' not found!")
+                        continue
                     fd = func(*args)
                     funcs_data.append(fd)
                 except Exception as e:
                     # TODO: i18n
-                    self.log.error(f'Error while calling lua event "{event_name}"; In function: "{data["name"]}"')
+                    self.log.error(f'Error while calling lua event "{event_name}"; In function: "{func_name}"')
                     self.log.exception(e)
         else:
             # TODO: i18n

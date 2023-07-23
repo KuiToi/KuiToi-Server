@@ -45,8 +45,6 @@ class EventTimer:
 # noinspection PyPep8Naming
 class MP:
 
-    # In ./in_lua.lua
-
     def __init__(self, name: str, lua: LuaRuntime):
         self.loaded = False
         self._event_waiters = []
@@ -81,25 +79,13 @@ class MP:
         self.log.debug("request MP.GetServerVersion()")
         return ev.call_event("_get_BeamMP_version")[0]
 
-    def _reg_ev(self):
-        for event in self._event_waiters:
-            self.RegisterEvent(*event)
-
     def RegisterEvent(self, event_name: str, function_name: str) -> None:
         self.log.debug("request MP.RegisterEvent()")
-        if not self.loaded:
-            self.log.debug("MP.RegisterEvent: plugin not loaded, waiting...")
-            self._event_waiters.append([event_name, function_name])
-            return
-        event_func = self._lua.globals()[function_name]
-        if not event_func:
-            self.log.warning(f"Can't register '{event_name}': not found function: '{function_name}'")
-            return
-        ev.register_event(event_name, event_func, lua=function_name)
+        ev.register_event(event_name, function_name, lua=self._lua)
         if event_name not in self._local_events:
-            self._local_events.update({str(event_name): [event_func]})
+            self._local_events.update({str(event_name): [function_name]})
         else:
-            self._local_events[event_name].append(event_func)
+            self._local_events[event_name].append(function_name)
         self.log.debug("Register ok (local)")
 
     def CreateEventTimer(self, event_name: str, interval_ms: int, strategy: int = None):
@@ -120,13 +106,20 @@ class MP:
         self.log.debug(f"Calling local lua event: '{event_name}'")
         funcs_data = []
         if event_name in self._local_events.keys():
-            for func in self._local_events[event_name]:
+            for func_name in self._local_events[event_name]:
                 try:
-                    funcs_data.append(func(*args))
+                    func = self._lua.globals()[func_name]
+                    if not func:
+                        self.log.warning(f"Cannot trigger local event: '{func_name}' not found!")
+                        continue
+                    fd = func(*args)
+                    funcs_data.append(fd)
                 except Exception as e:
-                    self.log.error(f'Error while calling "{event_name}"; In function: "{func}"')
+                    # TODO: i18n
+                    self.log.error(f'Error while calling lua event "{event_name}"; In function: "{func_name}"')
                     self.log.exception(e)
         else:
+            # TODO: i18n
             self.log.warning(f"Event {event_name} does not exist, maybe ev.call_lua_event() or MP.Trigger<>Event()?. "
                              f"Just skipping it...")
 
@@ -272,7 +265,7 @@ class MP:
             return self._lua.table_from(client.identifiers)
         return self._lua.table()
 
-    def Set(self, *args):
+    def Set(self, *_):
         self.log.debug("request Set")
         self.log.warning("KuiToi cannot support this: MP.Set()")
 
@@ -636,7 +629,7 @@ class LuaPluginsLoader:
             lua = LuaRuntime(encoding=config.enc, source_encoding=config.enc, unpack_returned_tuples=True)
             lua_globals = lua.globals()
             lua_globals.printRaw = lua.globals().print
-            lua_globals.exit = lambda x: self.log.info(f"{name}: You can't disable server..")
+            lua_globals.exit = lambda x: self.log.info(f"KuiToi: You can't disable server..")
             mp = MP(name, lua)
             lua_globals.MP = mp
             lua_globals.print = mp._print
@@ -648,7 +641,7 @@ class LuaPluginsLoader:
             lua_globals.package.path += f';{p0};{p1}'
             with open("modules/PluginsLoader/add_in.lua", "r") as f:
                 lua.execute(f.read())
-            self.lua_plugins.update({name: {"lua": lua, "ok": False, "th": None, "stop_th": None}})
+            self.lua_plugins.update({name: {"lua": lua, "ok": False}})
             plugin_path = os.path.join(self.plugins_dir, name)
             for file in os.listdir(plugin_path):
                 path = f"plugins/{name}/{file}"
@@ -660,7 +653,6 @@ class LuaPluginsLoader:
                         self.log.error(f"Cannot load lua plugin from `{path}`: {e}")
             try:
                 lua_globals.MP.loaded = True
-                lua_globals.MP._reg_ev()
                 lua_globals.MP.TriggerLocalEvent("onInit")
                 lua_globals.onInit()
                 self.lua_plugins[name]['ok'] = True
@@ -672,8 +664,8 @@ class LuaPluginsLoader:
 
     def unload(self, _):
         self.log.debug("Unloading lua plugins")
-        for k, data in self.lua_plugins.items():
+        for name, data in self.lua_plugins.items():
             if data['ok']:
-                self.log.debug(f"Unloading lua plugin: {k}")
-                for k, v in data['lua'].globals().MP._event_timers.items():
-                    v.stop()
+                self.log.info(f"Unloading lua plugin: {name}")
+                for _, timer in data['lua'].globals().MP._event_timers.items():
+                    timer.stop()
