@@ -116,6 +116,12 @@ class Core:
             self.log.error("Error in check_alive.")
             self.log.exception(e)
 
+    async def __gracefully_kick(self, _):
+        for client in self.clients:
+            if not client:
+                continue
+            await client.kick("Server shutdown!")
+
     @staticmethod
     def start_web():
         uvconfig = uvicorn.Config("modules.WebAPISystem.app:web_app",
@@ -297,6 +303,7 @@ class Core:
         ev.call_lua_event("onShutdown")
         ev.call_event("onServerStopped")
         await ev.call_async_event("onServerStopped")
+        await self.__gracefully_kick()
         await ev.call_async_event("_plugins_unload")
         ev.call_event("_lua_plugins_unload")
         self.run = False

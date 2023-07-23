@@ -59,9 +59,10 @@ class UDPServer(asyncio.DatagramTransport):
                     case _:
                         self.log.debug(f"[{cid}] Unknown code: {code}")
             else:
-                self.log.debug(f"Client not found.")
+                self.log.debug(f"[{cid}] Client not found.")
 
         except Exception as e:
+
             self.log.error(f"Error handle_datagram: {e}")
 
     def datagram_received(self, *args, **kwargs):
@@ -80,8 +81,9 @@ class UDPServer(asyncio.DatagramTransport):
 
     async def _start(self):
         self.log.debug("Starting UDP server.")
-        try:
-            while self.Core.run:
+        while self.Core.run:
+            try:
+
                 await asyncio.sleep(0.2)
 
                 d = UDPServer
@@ -97,15 +99,14 @@ class UDPServer(asyncio.DatagramTransport):
                 self.run = True
                 while not self.transport.is_closing():
                     await asyncio.sleep(0.2)
-        except OSError as e:
-            self.log.error("Cannot bind port or other error")
-            self.log.exception(e)
-        except Exception as e:
-            self.log.error(f"Error: {e}")
-            self.log.exception(e)
-        finally:
-            self.run = False
-            self.Core.run = False
+
+            except OSError as e:
+                self.run = False
+                self.Core.run = False
+                self.log.error(f"Cannot bind port or other error: {e}")
+            except Exception as e:
+                self.log.error(f"Error: {e}")
+                self.log.exception(e)
 
     def _stop(self):
         self.log.debug("Stopping UDP server")

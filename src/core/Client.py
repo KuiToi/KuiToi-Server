@@ -40,11 +40,6 @@ class Client:
         self._connect_time = 0
         self._last_position = {}
 
-        ev.register_event("onServerStopped", self.__gracefully_kick)
-
-    async def __gracefully_kick(self, _):
-        await self.kick("Server shutdown!")
-
     @property
     def _writer(self):
         return self.__writer
@@ -689,8 +684,8 @@ class Client:
             # TODO: i18n
             self.log.info(f"Disconnected, online time: {round((time.monotonic() - self._connect_time) / 60, 2)}min.")
             self.__Core.clients[self.cid] = None
-            self.__Core.clients_by_id.pop(self.cid)
-            self.__Core.clients_by_nick.pop(self.nick)
+            del self.__Core.clients_by_id[self.cid]
+            del self.__Core.clients_by_nick[self.nick]
         else:
             self.log.debug(f"Removing client; Closing connection...")
         try:
