@@ -157,7 +157,6 @@ class Core:
                         "version": self.BeamMP_version, "clientversion": self.client_major_version,
                         "name": config.Server["name"], "modlist": modlist, "modstotalsize": modstotalsize,
                         "modstotal": modstotal, "playerslist": "", "desc": config.Server['description'], "pass": False}
-                self.log.debug(f"Auth: data {data}")
 
                 # Sentry?
                 ok = False
@@ -169,7 +168,6 @@ class Core:
                             async with session.post(url, data=data, headers={"api-v": "2"}) as response:
                                 code = response.status
                                 body = await response.json()
-                                self.log.debug(f"Auth: code {code}, body {body}")
                                 ok = True
                         break
                     except Exception as e:
@@ -183,19 +181,22 @@ class Core:
                         self.log.error("Missing/invalid json members in backend response")
                         raise KeyboardInterrupt
 
-                    if test:
-                        status = body.get("status")
-                        msg = body.get("msg")
-                        if status == "2000":
+                    status = body.get("status")
+                    msg = body.get("msg")
+                    if status == "2000":
+                        if test:
                             # TODO: i18n
                             self.log.info(f"Authenticated! {msg}")
-                        elif status == "200":
+                    elif status == "200":
+                        if test:
                             self.log.info(f"Resumed authenticated session. {msg}")
-                        else:
-                            self.log.error(f"Backend REFUSED the auth key. Reason: "
-                                           f"{msg or 'Backend did not provide a reason'}")
-                            self.log.info(f"Server still runnig, but only in Direct connect mode.")
-                            self.direct = True
+                    else:
+                        self.log.debug(f"Auth: data {data}")
+                        self.log.debug(f"Auth: code {code}, body {body}")
+                        self.log.error(f"Backend REFUSED the auth key. Reason: "
+                                       f"{msg or 'Backend did not provide a reason'}")
+                        self.log.info(f"Server still runnig, but only in Direct connect mode.")
+                        self.direct = True
                 else:
                     self.direct = True
                     if test:

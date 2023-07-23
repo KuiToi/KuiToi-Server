@@ -112,7 +112,7 @@ class Client:
         if not reason:
             reason = "Kicked!"
         else:
-            reason = f"{reason!r}"
+            reason = f"{reason}"
         if not self.__alive:
             self.log.debug(f"{self.nick}.kick('{reason}') skipped: Not alive;")
             return
