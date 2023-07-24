@@ -47,6 +47,10 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Return from events
     - [x] Async support
     - [ ] Add all events
+  - [x] MultiLanguage: (i18n support)
+    - [ ] Core
+    - [x] Console
+    - [x] WebAPI
   - [x] Plugins supports:
     - [x] Python part:
       - [x] Load Python plugins
@@ -58,10 +62,6 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
       - [x] MP Class
       - [x] Util class
       - [x] FS class
-  - [x] MultiLanguage: (i18n support)
-    - [ ] Core
-    - [x] Console
-    - [x] WebAPI
   - [ ] HTTP API Server: (fastapi)
     - [x] Stop and Start with core
     - [x] Configure FastAPI logger
