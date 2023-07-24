@@ -201,13 +201,21 @@ class Console:
                 if cmd == "":
                     continue
                 else:
+                    found_in_lua = False
+                    d = ev.call_lua_event("onConsoleInput", cmd_in)
+                    if len(d) > 0:
+                        for text in d:
+                            if text is not None:
+                                found_in_lua = True
+                                self.log(text)
                     command_object = self.__func.get(cmd)
                     if command_object:
                         out = command_object['f'](cmd_s[1:])
                         if out:
                             self.log(out)
                     else:
-                        self.log(self.__not_found % cmd)
+                        if not found_in_lua:
+                            self.log(self.__not_found % cmd)
             except KeyboardInterrupt:
                 raise KeyboardInterrupt
             except Exception as e:
