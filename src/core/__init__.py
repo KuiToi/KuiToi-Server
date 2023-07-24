@@ -102,7 +102,7 @@ if not config.Auth['private'] and not config.Auth['key']:
 log.debug("Initializing console...")
 console = Console()
 console.builtins_hook()
-# console.logger_hook()
+console.logger_hook()
 console.add_command("stop", console.stop, i18n.man_message_stop, i18n.help_message_stop)
 console.add_command("exit", console.stop, i18n.man_message_exit, i18n.help_message_exit)
 

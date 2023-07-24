@@ -122,19 +122,30 @@ class Console:
         self.__alias.update(custom_completer or {key: None})
         self.__alias["man"].update({key: None})
         self.__func.update({key: {"f": func}})
-        self.__man.update({key: f'html<seagreen>{i18n.man_for} <b>{key}</b>\n{man}</seagreen>' if man else None})
+        self.__man.update({key: f'html:<seagreen>{i18n.man_for} <b>{key}</b>\n{man}</seagreen>' if man else None})
         self.__desc.update({key: desc})
         self.__update_completer()
         return self.__alias.copy()
 
-    def write(self, s: AnyStr):
-        if s.startswith("html"):
-            print_formatted_text(HTML(s[4:]))
+    def _write(self, t):
+        if t.startswith("html:"):
+            print_formatted_text(HTML(t[5:]))
         else:
-            print_formatted_text(s)
+            print_formatted_text(t)
+
+    def write(self, s: AnyStr):
+        if isinstance(s, (list, tuple)):
+            for text in s:
+                self._write(text)
+        else:
+            self._write(s)
 
     def log(self, s: AnyStr) -> None:
-        self.__logger.info(f"{s}")
+        if isinstance(s, (list, tuple)):
+            for text in s:
+                self.__logger.info(f"{text}")
+        else:
+            self.__logger.info(f"{s}")
         # self.write(s)
 
     def __lshift__(self, s: AnyStr) -> None:
