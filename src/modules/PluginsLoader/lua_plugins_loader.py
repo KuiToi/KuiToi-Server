@@ -627,7 +627,7 @@ class LuaPluginsLoader:
 
         for name in self.lua_dirs:
             # noinspection PyArgumentList
-            lua = LuaRuntime(encoding=config.enc, source_encoding=config.enc, unpack_returned_tuples=True)
+            lua = LuaRuntime(encoding="CP1251", source_encoding=config.enc, unpack_returned_tuples=True)
             lua_globals = lua.globals()
             lua_globals.printRaw = lua.globals().print
             lua_globals.exit = lambda x: self.log.info(f"KuiToi: You can't disable server..")
