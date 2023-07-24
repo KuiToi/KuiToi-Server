@@ -11,7 +11,6 @@ KiuToi几乎完全支持BeamMP的lua插件，所有必要的方法都已经创�
 #### Cobalt Essentials V1.7.5（免费，[github ↗](https://github.com/prestonelam2003/CobaltEssentials/)）
 
 1. 要获取`pluginPath`，需要：`debug.getinfo(1).source:gsub("\\","/")` => `debug.getinfo(1).source:gsub("\\","/"):gsub("@", "")`，因为路径返回值中包含`@`，这破坏了插件。
-2. `cobaltSysChar` 
 
 ### 工作原理
 

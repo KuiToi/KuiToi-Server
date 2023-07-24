@@ -11,7 +11,6 @@
 #### Cobalt Essentials V1.7.5 (Бесплатный, [github](https://github.com/prestonelam2003/CobaltEssentials/))
 
 1. Для получения `pluginPath` нужно: `debug.getinfo(1).source:gsub("\\","/")` => `debug.getinfo(1).source:gsub("\\","/"):gsub("@", "")` так как пусть возвращается с `@`, что сломало плагин.
-2. `cobaltSysChar` 
 
 ### Немного о принципе работы
 

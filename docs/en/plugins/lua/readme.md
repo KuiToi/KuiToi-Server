@@ -11,7 +11,6 @@ KiuToi does not support: `MP.Set()`
 #### Cobalt Essentials V1.7.5 (Free, [github](https://github.com/prestonelam2003/CobaltEssentials/))
 
 1. To obtain `pluginPath`, use: `debug.getinfo(1).source:gsub("\\","/")` => `debug.getinfo(1).source:gsub("\\","/"):gsub("@", "")` as the path returns with `@`, which broke the plugin.
-2. `cobaltSysChar` 
 
 ### A Little About How it Works
 
