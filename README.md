@@ -4,6 +4,12 @@
 **_[Status: Beta]_** \
 BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 
+Why did I decide to write my own kernel from scratch?\
+I didn't like writing plugins in Lua after using Python; it was very inconvenient, there were always some nuances, which ultimately led me to create KuiToi!
+
+**Our site**: [kuitoi.su](https://kuitoi.su) (WIP)\
+**Our discord**: [KuiToi](https://discord.gg/BAcgaAmdkJ)
+
 ## TODOs
 
 - [x] Server core:
