@@ -6,7 +6,7 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
 
 ## TODOs
 
-- [x] Server core
+- [x] Server core:
   - [x] BeamMP System:
     - [x] Private access (Without key, Direct connect)
     - [x] Public access  (With key, listing in Launcher)
@@ -26,18 +26,22 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
       - [x] Delete cars
       - [x] Edit cars
       - [x] Reset cars
-    - [x] "ABG:" (compressed data)
+    - [x] "ABG": (compressed data)
       - [x] Decompress data
       - [x] Compress data
   - [x] UDP Server part:
     - [x] Ping
     - [x] Position synchronizations
 - [x] Additional:
+  - [ ] RCON System:
+    - [ ] Serving
+    - [ ] Client
+    - [ ] SSL encryption
   - [ ] KuiToi System
     - [ ] Servers counter
     - [ ] Players counter
     - [ ] Etc.
-  - [x] Logger
+  - [x] Logger:
     - [x] Just logging
     - [x] Log in file
     - [x] Log history (.1.log, .2.log, ...)
@@ -45,13 +49,13 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Tabulation
     - [x] History
     - [x] Autocomplete
-  - [x] Events System
+  - [x] Events System:
     - [x] Call events
     - [x] Create custom events
     - [x] Return from events
     - [x] Async support
     - [ ] Add all events
-  - [x] Plugins supports
+  - [x] Plugins supports:
     - [x] Python part:
       - [x] Load Python plugins
       - [x] Async support
@@ -62,11 +66,11 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
       - [x] MP Class
       - [x] Util class
       - [x] FS class
-  - [x] MultiLanguage (i18n support)
+  - [x] MultiLanguage: (i18n support)
     - [ ] Core
     - [x] Console
     - [x] WebAPI
-  - [ ] HTTP API Server (fastapi)
+  - [ ] HTTP API Server: (fastapi)
     - [x] Stop and Start with core
     - [x] Configure FastAPI logger
     - [ ] Sync with event system
