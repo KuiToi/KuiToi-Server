@@ -11,18 +11,7 @@
 #### Cobalt Essentials V1.7.5 (Бесплатный, [github](https://github.com/prestonelam2003/CobaltEssentials/))
 
 1. Для получения `pluginPath` нужно: `debug.getinfo(1).source:gsub("\\","/")` => `debug.getinfo(1).source:gsub("\\","/"):gsub("@", "")` так как пусть возвращается с `@`, что сломало плагин.
-2. Пришлось перенести все `require()` за `onInit`
-3. В некоторых моментах пришлось перенести `MP.RegisterEvent` уже после объявления функции, т.е.:
-```lua
---Вот так не правильно, может не пройти регистрация
-MP.RegisterEvent("onPlayerAuth","onPlayerAuth") 
-function onPlayerAuth(name, role, isGuest)
-    -- Some plugin code
-end
-
---Вот такой вариант пройдёт
-MP.RegisterEvent("onPlayerAuth","onPlayerAuth")
-```
+2. `cobaltSysChar` 
 
 ### Немного о принципе работы
 

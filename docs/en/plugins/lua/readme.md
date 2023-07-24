@@ -11,18 +11,7 @@ KiuToi does not support: `MP.Set()`
 #### Cobalt Essentials V1.7.5 (Free, [github](https://github.com/prestonelam2003/CobaltEssentials/))
 
 1. To obtain `pluginPath`, use: `debug.getinfo(1).source:gsub("\\","/")` => `debug.getinfo(1).source:gsub("\\","/"):gsub("@", "")` as the path returns with `@`, which broke the plugin.
-2. All `require()` statements had to be moved after `onInit`.
-3. In some cases, `MP.RegisterEvent` had to be moved after the function declaration, i.e.:
-```lua
---This is incorrect, registration may fail
-MP.RegisterEvent("onPlayerAuth","onPlayerAuth") 
-function onPlayerAuth(name, role, isGuest)
-    -- Some plugin code
-end
-
---This is the correct version
-MP.RegisterEvent("onPlayerAuth","onPlayerAuth")
-```
+2. `cobaltSysChar` 
 
 ### A Little About How it Works
 

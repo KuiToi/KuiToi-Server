@@ -11,18 +11,7 @@ KiuToi几乎完全支持BeamMP的lua插件，所有必要的方法都已经创�
 #### Cobalt Essentials V1.7.5（免费，[github ↗](https://github.com/prestonelam2003/CobaltEssentials/)）
 
 1. 要获取`pluginPath`，需要：`debug.getinfo(1).source:gsub("\\","/")` => `debug.getinfo(1).source:gsub("\\","/"):gsub("@", "")`，因为路径返回值中包含`@`，这破坏了插件。
-2. 必须将所有的`require()`移动到`onInit`之后。
-3. 在某些情况下，必须在函数声明之后注册`MP.RegisterEvent`，即：
-```lua
---这样不正确，可能无法注册
-MP.RegisterEvent("onPlayerAuth","onPlayerAuth") 
-function onPlayerAuth(name, role, isGuest)
-    -- Some plugin code
-end
-
---这样就可以了
-MP.RegisterEvent("onPlayerAuth","onPlayerAuth")
-```
+2. `cobaltSysChar` 
 
 ### 工作原理
 
