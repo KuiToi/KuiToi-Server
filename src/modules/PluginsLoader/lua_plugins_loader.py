@@ -116,8 +116,9 @@ class MP:
                     funcs_data.append(fd)
                 except Exception as e:
                     # TODO: i18n
-                    self.log.error(f'Error while calling lua event "{event_name}"; In function: "{func_name}"')
-                    self.log.exception(e)
+                    self.log.error(f'Error: "{e}" - while calling lua event "{event_name}" with arguments: {args} - '
+                                   f'in function: "{func_name}"')
+                    # self.log.exception(e)
         else:
             # TODO: i18n
             self.log.warning(f"Event {event_name} does not exist, maybe ev.call_lua_event() or MP.Trigger<>Event()?. "
