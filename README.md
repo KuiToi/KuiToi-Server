@@ -33,14 +33,6 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Ping
     - [x] Position synchronizations
 - [x] Additional:
-  - [ ] RCON System:
-    - [ ] Serving
-    - [ ] Client
-    - [ ] SSL encryption
-  - [ ] KuiToi System
-    - [ ] Servers counter
-    - [ ] Players counter
-    - [ ] Etc.
   - [x] Logger:
     - [x] Just logging
     - [x] Log in file
@@ -75,6 +67,14 @@ BeamingDrive Multiplayer (BeamMP) server compatible with BeamMP clients.
     - [x] Configure FastAPI logger
     - [ ] Sync with event system
     - [ ] Add methods...
+  - [ ] RCON System:
+    - [ ] Serving
+    - [ ] Client
+    - [ ] SSL encryption
+  - [ ] KuiToi System
+    - [ ] Servers counter
+    - [ ] Players counter
+    - [ ] Etc.
 - [ ] [Documentation](./docs/)
 
 ## Installation
