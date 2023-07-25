@@ -664,8 +664,8 @@ class Client:
                 event_name = data[2:sep]
                 even_data = data[sep + 1:]
                 ev.call_lua_event(event_name, even_data)
-                ev.call_event(event_name, even_data)
-                await ev.call_async_event(event_name, even_data)
+                ev.call_event(event_name, data=even_data, player=self)
+                await ev.call_async_event(event_name, data=even_data, player=self)
             case "N":
                 await self._send(data, to_all=True, to_self=False)
 
