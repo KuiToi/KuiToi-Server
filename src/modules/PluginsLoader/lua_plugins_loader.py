@@ -3,6 +3,7 @@ import json
 import os
 import platform
 import random
+import re
 import shutil
 import threading
 import time
@@ -65,7 +66,8 @@ class MP:
         for i, arg in enumerate(args):
             if isinstance(arg, str):
                 try:
-                    args[i] = arg.encode("CP1251").decode(config.enc)
+                    text = arg.encode("CP1251").decode(config.enc).replace("\u001b", "\x1b")
+                    args[i] = re.sub(r'\x1b\[.*?m', '', text)
                 except UnicodeEncodeError:
                     pass
             if "LuaTable" in str(type(arg)):
