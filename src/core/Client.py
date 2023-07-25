@@ -627,11 +627,13 @@ class Client:
             await self._send(data, to_all=True, to_self=False)
             return
 
+        _bytes = False
         try:
             data = data.decode()
         except UnicodeDecodeError:
+            _bytes = True
             self.log.error(f"UnicodeDecodeError: {data}")
-            return
+            self.log.info("Some things are skipping...")
 
         # Codes: p, Z in udp_server.py
         match data[0]:  # At data[0] code
@@ -639,15 +641,31 @@ class Client:
                 await self._connected_handler()
 
             case "C":  # Chat handler
+                if _bytes:
+                    return
                 await self._chat_handler(data)
 
             case "O":  # Cars handler
+                if _bytes:
+                    return
                 await self._handle_car_codes(data)
 
             case "E":  # Client events handler
-                # TODO: Handle events from client
-                pass
-
+                if len(data) < 2:
+                    self.log.debug("Tried to send an empty event, ignoring.")
+                    return
+                if _bytes:
+                    sep = data.find(b":", 2)
+                    self.log.warning("Bytes event!")
+                else:
+                    sep = data.find(":", 2)
+                if sep == -1:
+                    self.log.error(f"Received event in invalid format (missing ':'), got: {data}")
+                event_name = data[2:sep]
+                even_data = data[sep + 1:]
+                ev.call_lua_event(event_name, even_data)
+                ev.call_event(event_name, even_data)
+                await ev.call_async_event(event_name, even_data)
             case "N":
                 await self._send(data, to_all=True, to_self=False)
 
