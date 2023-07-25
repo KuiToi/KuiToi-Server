@@ -63,6 +63,11 @@ class MP:
     def _print(self, *args):
         args = list(args)
         for i, arg in enumerate(args):
+            if isinstance(arg, str):
+                try:
+                    args[i] = arg.encode("CP1251").decode(config.enc)
+                except UnicodeEncodeError:
+                    pass
             if "LuaTable" in str(type(arg)):
                 args[i] = self._lua.globals().Util.JsonEncode(arg)
         s = " ".join(map(str, args))

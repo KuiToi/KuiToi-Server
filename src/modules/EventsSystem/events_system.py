@@ -62,6 +62,7 @@ class EventsSystem:
             "onVehicleDeleted": [],  # onCarDelete
             "onVehicleReset": [],  # onCarReset
             "onFileChanged": [],  # TODO lua onFileChanged
+            "onConsoleInput": [],  # kt.add_command
         }
 
     def builtins_hook(self):

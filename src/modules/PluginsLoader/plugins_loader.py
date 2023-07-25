@@ -91,6 +91,10 @@ class KuiToi:
             return False
         return bool(self.get_player(cid=pid, nick=nick))
 
+    def add_command(self, key, func, man, desc, custom_completer) -> dict:
+        self.log.debug("Requests add_command")
+        return console.add_command(key, func, man, desc, custom_completer)
+
 
 class PluginsLoader:
 
