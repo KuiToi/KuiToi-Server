@@ -14,56 +14,13 @@ from core.utils import get_logger
 
 
 class i18n:
+    data = {}
 
     def __init__(self, data):
-        # Basic phases
-        self.hello: str = data["hello"]
-        self.config_path: str = data["config_path"]
-        self.init_ok: str = data["init_ok"]
-        self.start: str = data["start"]
-        self.stop: str = data["stop"]
+        i18n.data = data
 
-        # Server auth
-        self.auth_need_key: str = data["auth_need_key"]
-        self.auth_empty_key: str = data["auth_empty_key"]
-        self.auth_cannot_open_browser: str = data["auth_cannot_open_browser"]
-        self.auth_use_link: str = data["auth_use_link"]
-
-        # GUI phases
-        self.GUI_yes: str = data["GUI_yes"]
-        self.GUI_no: str = data["GUI_no"]
-        self.GUI_ok: str = data["GUI_ok"]
-        self.GUI_cancel: str = data["GUI_cancel"]
-        self.GUI_need_key_message: str = data["GUI_need_key_message"]
-        self.GUI_enter_key_message: str = data["GUI_enter_key_message"]
-        self.GUI_cannot_open_browser: str = data["GUI_cannot_open_browser"]
-
-        # Web phases
-        self.web_start: str = data["web_start"]
-
-        # Command: man
-        self.man_message_man: str = data["man_message_man"]
-        self.help_message_man: str = data["help_message_man"]
-        self.man_for: str = data["man_for"]
-        self.man_message_not_found: str = data["man_message_not_found"]
-        self.man_command_not_found: str = data["man_command_not_found"]
-
-        # Command: help
-        self.man_message_help: str = data["man_message_help"]
-        self.help_message_help: str = data["help_message_help"]
-        self.help_command: str = data["help_command"]
-        self.help_message: str = data["help_message"]
-        self.help_message_not_found: str = data["help_message_not_found"]
-
-        # Command: help
-        self.man_message_stop: str = data["man_message_stop"]
-        self.help_message_stop: str = data["help_message_stop"]
-
-        # Command: exit
-        self.man_message_exit: str = data["man_message_exit"]
-        self.help_message_exit: str = data["help_message_exit"]
-
-        self.data = data
+    def __getattribute__(self, key):
+        return i18n.data[key]
 
 
 class MultiLanguage:
@@ -92,43 +49,65 @@ class MultiLanguage:
             # noinspection PyDictDuplicateKeys
             self.__data = {
   "": "Basic phases",
-  "hello": "Greetings from KuiToi Server!",
-  "config_path": "Use {} to configure.",
-  "init_ok": "Initialization complete.",
+  "hello": "Hello from KuiToi-Server!",
+  "config_path": "Use {} for configuration.",
+  "init_ok": "Initialization completed.",
   "start": "Server started!",
   "stop": "Server stopped!",
 
   "": "Server auth",
-  "auth_need_key": "A BeamMP key is required to start the server!",
-  "auth_empty_key": "The BeamMP key is empty!",
+  "auth_need_key": "A BeamMP key is required to start!",
+  "auth_empty_key": "BeamMP key is empty!",
   "auth_cannot_open_browser": "Failed to open browser: {}",
   "auth_use_link": "Use this link: {}",
 
   "": "GUI phases",
   "GUI_yes": "Yes",
   "GUI_no": "No",
-  "GUI_ok": "Ok",
+  "GUI_ok": "OK",
   "GUI_cancel": "Cancel",
-  "GUI_need_key_message": "A BeamMP key is required to start the server!\nDo you want to open the link in a browser to obtain the key?",
+  "GUI_need_key_message": "A BeamMP key is required to start!\nDo you want to open the link in your browser to obtain the key?",
   "GUI_enter_key_message": "Please enter the key:",
   "GUI_cannot_open_browser": "Failed to open browser.\nUse this link: {}",
 
   "": "Web phases",
-  "web_start": "WebAPI started at {} (Press CTRL+C to quit)",
+  "web_start": "WebAPI started on {} (CTRL+C to stop)",
+
+  "": "Core phrases",
+  "core_direct_mode": "Server started in direct connection mode.",
+  "core_auth_server_error": "Incorrect response received from BeamMP authentication server.",
+  "core_auth_server_refused": "BeamMP authentication server rejected your key. Reason: {}",
+  "core_auth_server_refused_no_reason": "BeamMP authentication server did not provide a reason.",
+  "core_auth_server_refused_direct_node": "Server is still running, but in direct connection mode.",
+  "core_auth_server_no_response": "Failed to authenticate the server.",
+  "core_mods_loaded": "{} mods loaded. {}Mb",
+
+  "": "In-game phrases",
+  "game_player_kicked": "Kicked for reason: \"{}\"",
+  "game_welcome_message": "Welcome {}!",
+
+  "": "Client class phrases",
+  "client_mod_request": "Mod requested: {}",
+  "client_mod_sent": "Mod sent: Size: {}mb, Speed: {}Mb/s ({}sec)",
+  "client_mod_sent_limit": " (limit {}Mb/s)",
+  "client_mod_sent_error": "Error sending mod: {}",
+  "client_sync_time": "Sync time {}sec.",
+  "client_event_invalid_data": "Invalid data returned from event: {}",
+  "client_player_disconnected": "Disconnected from the server. Game time: {} min.",
 
   "": "Command: man",
-  "man_message_man": "man - Displays help page for COMMAND.\nUsage: man COMMAND",
-  "help_message_man": "Displays help page for COMMAND.",
+  "man_message_man": "man - Shows help page for COMMAND.\nUsage: man COMMAND",
+  "help_message_man": "Shows help page for COMMAND.",
   "man_for": "Help page for",
-  "man_message_not_found": "man: Help page not found.",
+  "man_message_not_found": "man: No help page found.",
   "man_command_not_found": "man: Command \"{}\" not found!",
 
   "": "Command: help",
-  "man_message_help": "help - Displays the names and short descriptions of commands.\nUsage: help [--raw]\nThe `help` command displays a list of all available commands and a brief description of each command.",
-  "help_message_help": "Displays the names and short descriptions of commands.",
+  "man_message_help": "help - Shows the names and brief descriptions of commands.\nUsage: help [--raw]\nThe `help` command displays a list of all available commands and a brief description for each command.",
+  "help_message_help": "Shows the names and brief descriptions of commands.",
   "help_command": "Command",
-  "help_message": "Description",
-  "help_message_not_found": "No description available.",
+  "help_message": "Text",
+  "help_message_not_found": "No text found.",
 
   "": "Command: stop",
   "man_message_stop": "stop - Stops the server.\nUsage: stop",

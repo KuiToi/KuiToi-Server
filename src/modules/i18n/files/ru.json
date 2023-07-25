@@ -24,6 +24,28 @@
   "": "Web phases",
   "web_start": "WebAPI запустился на {} (CTRL+C для выключения)",
 
+  "": "Core phrases",
+  "core_direct_mode": "Сервер запушен в режиме прямого подключения.",
+  "core_auth_server_error": "Поступил не корректный ответ от сервером авторизации BeamMP.",
+  "core_auth_server_refused": "Сервер авторизации BeamMP отклонил ваш ключ. Причина: {}",
+  "core_auth_server_refused_no_reason": "Сервер авторизации BeamMP не сообщил причины.",
+  "core_auth_server_refused_direct_node": "Сервер всё ещё работает, но в режиме прямого подключения.",
+  "core_auth_server_no_response": "Не получилось авторизовать сервер.",
+  "core_mods_loaded": "Загружено {} модов. {}Мб",
+
+  "": "In-game phrases",
+  "game_player_kicked": "Кикнут по причине: \"{}\"",
+  "game_welcome_message": "Добро пожаловать {}!",
+
+  "": "Client class phrases",
+  "client_mod_request": "Запрошен мод: {}",
+  "client_mod_sent": "Мод отправлен: Вес: {}мб, Скорость: {}Мб/с ({}сек)",
+  "client_mod_sent_limit": " (лимит {}Мб/с)",
+  "client_mod_sent_error": "Ошибка при отправке мода: {}",
+  "client_sync_time": "Время синхронизации {}сек.",
+  "client_event_invalid_data": "Из ивента вернулись не верные данные: {}",
+  "client_player_disconnected": "Вышел с сервера. Время игры: {} мин",
+
   "": "Command: man",
   "man_message_man": "man - Показывает страничку помощи для COMMAND.\nИспользование: man COMMAND",
   "help_message_man": "Показывает страничку помощи для COMMAND.",

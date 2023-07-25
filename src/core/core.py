@@ -142,8 +142,7 @@ class Core:
     async def heartbeat(self, test=False):
         if config.Auth["private"] or self.direct:
             if test:
-                # TODO: i18n
-                self.log.info(f"Server runnig in Direct connect mode.")
+                self.log.info(i18n.core_direct_mode)
             self.direct = True
             return
 
@@ -184,31 +183,30 @@ class Core:
                     if not (body.get("status") is not None and
                             body.get("code") is not None and
                             body.get("msg") is not None):
-                        self.log.error("Missing/invalid json members in backend response")
-                        raise KeyboardInterrupt
+                        self.log.error(i18n.core_auth_server_error)
+                        return
 
                     status = body.get("status")
                     msg = body.get("msg")
                     if status == "2000":
                         if test:
-                            # TODO: i18n
-                            self.log.info(f"Authenticated! {msg}")
+                            self.log.debug(f"Authenticated! {msg}")
                     elif status == "200":
                         if test:
-                            self.log.info(f"Resumed authenticated session. {msg}")
+                            self.log.debug(f"Resumed authenticated session. {msg}")
                     else:
                         self.log.debug(f"Auth: data {data}")
                         self.log.debug(f"Auth: code {code}, body {body}")
-                        self.log.error(f"Backend REFUSED the auth key. Reason: "
-                                       f"{msg or 'Backend did not provide a reason'}")
-                        self.log.info(f"Server still runnig, but only in Direct connect mode.")
+
+                        self.log.error(i18n.core_auth_server_refused.format(
+                            msg or i18n.core_auth_server_refused_no_reason))
+                        self.log.info(i18n.core_auth_server_refused_direct_node)
                         self.direct = True
                 else:
                     self.direct = True
                     if test:
-                        # TODO: i18n
-                        self.log.error("Cannot authenticate server.")
-                        self.log.info(f"Server still runnig, but only in Direct connect mode.")
+                        self.log.error(i18n.core_auth_server_no_response)
+                        self.log.info(i18n.core_auth_server_refused_direct_node)
                     # if not config.Auth['private']:
                     #     raise KeyboardInterrupt
 
@@ -263,8 +261,7 @@ class Core:
             self.log.debug(f"mods_list: {self.mods_list}")
             len_mods = len(self.mods_list) - 1
             if len_mods > 0:
-                # TODO: i18n
-                self.log.info(f"Loaded {len_mods} mods: {round(self.mods_list[0] / MB, 2)}mb")
+                self.log.info(i18n.core_mods_loaded.format(len_mods, round(self.mods_list[0] / MB, 2)))
             self.log.info(i18n.init_ok)
 
             await self.heartbeat(True)
@@ -278,7 +275,6 @@ class Core:
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
             await ev.call_async_event("_plugins_start")
-            # await ev.call_async_event("_lua_plugins_start")
 
             self.run = True
             self.log.info(i18n.start)

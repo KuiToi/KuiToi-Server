@@ -31,6 +31,8 @@ class EventsSystem:
             "onCarDelete": [],
             "onCarEdited": [],
             "onCarReset": [],
+            ""
+            "onCarFocusMove": [],
             "onSentPing": [],  # Only sync
             "onChangePosition": [],  # Only sync
             "onPlayerDisconnect": [],

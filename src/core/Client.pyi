@@ -35,7 +35,7 @@ class Client:
         self._ready = False
         self._focus_car = -1
         self._identifiers = []
-        self._cars: List[Optional[Dict[str, int]]] = []
+        self._cars: List[Union[Dict[str, Union[str, bool, Dict[str, Union[str, List[int], float]]]], None]] = []
         self._snowman: Dict[str, Union[int, str]]  = {"id": -1, "packet": ""}
         self._last_position = {}
     async def __gracefully_kick(self): ...

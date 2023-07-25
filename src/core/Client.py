@@ -111,8 +111,7 @@ class Client:
         if not self.__alive:
             self.log.debug(f"{self.nick}.kick('{reason}') skipped: Not alive;")
             return
-        # TODO: i18n
-        self.log.info(f"Kicked with reason: \"{reason}\"")
+        self.log.info(i18n.game_player_kicked.format(reason))
         await self._send(f"K{reason}")
         self.__alive = False
 
@@ -272,8 +271,7 @@ class Client:
             data = await self._recv(True)
             if data.startswith(b"f"):
                 file = data[1:].decode(config.enc)
-                # TODO: i18n
-                self.log.info(f"Requested mode: {file!r}")
+                self.log.info(i18n.client_mod_request.format(repr(file)))
                 size = -1
                 for mod in self.__Core.mods_list:
                     if type(mod) == int:
@@ -312,10 +310,9 @@ class Client:
                 tr = time.monotonic() - t
                 if self.__Core.lock_upload:
                     self.__Core.lock_upload = False
-                # TODO: i18n
-                msg = f"Mod sent: Size {round(size / MB, 3)}mb Speed {math.ceil(size / tr / MB)}Mb/s ({int(tr)}s)"
+                msg = i18n.client_mod_sent.format(round(size / MB, 3), math.ceil(size / tr / MB), int(tr))
                 if speed:
-                    msg += f" of limit {int(speed * 2)}Mb/s"
+                    msg += i18n.client_mod_sent_limit.format(int(speed * 2))
                 self.log.info(msg)
                 sent = sl0 + sl1
                 ok = sent == size
@@ -323,8 +320,7 @@ class Client:
                 self.log.debug(f"SplitLoad_0: {sl0}; SplitLoad_1: {sl1}; At all ({ok}): Sent: {sent}; Lost: {lost}")
                 if not ok:
                     self.__alive = False
-                    # TODO: i18n
-                    self.log.error(f"Error while sending: {file!r}")
+                    self.log.error(i18n.client_mod_sent_error.format(repr(file)))
                     return
             elif data.startswith(b"SR"):
                 path_list = ''
@@ -385,10 +381,11 @@ class Client:
         lua_data = ev.call_lua_event("onVehicleSpawn", self.cid, car_id, car_data[car_data.find("{"):])
         if 1 in lua_data:
             allow = False
-        ev_data_list = ev.call_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
-        d2 = await ev.call_async_event("onCarSpawn", car=car_json, car_id=car_id, player=self)
+        ev_data_list = ev.call_event("onCarSpawn", data=car_json, car_id=car_id, player=self)
+        d2 = await ev.call_async_event("onCarSpawn", data=car_json, car_id=car_id, player=self)
         ev_data_list.extend(d2)
         for ev_data in ev_data_list:
+            self.log.debug(ev_data)
             # TODO: handle event onCarSpawn
             pass
         pkt = f"Os:{self.roles}:{self.nick}:{self.cid}-{car_id}:{car_data}"
@@ -435,10 +432,11 @@ class Client:
             ev.call_lua_event("onVehicleDeleted", self.cid, car_id)
 
             admin_allow = False  # Delete from admin, for example...
-            ev_data_list = ev.call_event("onCarDelete", car=self._cars[car_id], car_id=car_id, player=self)
-            d2 = await ev.call_async_event("onCarDelete", car=self._cars[car_id], car_id=car_id, player=self)
+            ev_data_list = ev.call_event("onCarDelete", data=self._cars[car_id], car_id=car_id, player=self)
+            d2 = await ev.call_async_event("onCarDelete", data=self._cars[car_id], car_id=car_id, player=self)
             ev_data_list.extend(d2)
             for ev_data in ev_data_list:
+                self.log.debug(ev_data)
                 # TODO: handle event onCarDelete
                 pass
 
@@ -474,10 +472,11 @@ class Client:
                 lua_data = ev.call_lua_event("onVehicleEdited", self.cid, car_id, data[data.find("{"):])
                 if 1 in lua_data:
                     allow = False
-                ev_data_list = ev.call_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
-                d2 = await ev.call_async_event("onCarEdited", car=new_car_json, car_id=car_id, player=self)
+                ev_data_list = ev.call_event("onCarEdited", data=new_car_json, car_id=car_id, player=self)
+                d2 = await ev.call_async_event("onCarEdited", data=new_car_json, car_id=car_id, player=self)
                 ev_data_list.extend(d2)
                 for ev_data in ev_data_list:
+                    self.log.debug(ev_data)
                     # TODO: handle event onCarEdited
                     pass
 
@@ -508,8 +507,8 @@ class Client:
                 car_json = json.loads(raw_data[raw_data.find("{"):])
             except Exception as e:
                 self.log.debug(f"Invalid new_car_json: Error: {e}; Data: {raw_data}")
-            ev.call_event("onCarReset", car=car_json, car_id=car_id, player=self)
-            await ev.call_async_event("onCarReset", car=car_json, car_id=car_id, player=self)
+            ev.call_event("onCarReset", data=car_json, car_id=car_id, player=self)
+            await ev.call_async_event("onCarReset", data=car_json, car_id=car_id, player=self)
             self.log.debug(f"Car reset: car_id={car_id}")
         else:
             self.log.debug(f"Invalid car: car_id={car_id}")
@@ -539,6 +538,11 @@ class Client:
 
             case "t":  # Broken details
                 self.log.debug(f"Something changed/broken: {raw_data}")
+                cid, car_id = self._get_cid_vid(raw_data[5:])
+                if car_id != -1 and cid == self.cid and self._cars[car_id]:
+                    data = raw_data[raw_data.find("{"):]
+                    ev.call_event("onCar", car_id=car_id, data=data)
+                    await ev.call_async_event("onCarFocusMove", car_id=car_id, data=data)
                 await self._send(raw_data, to_all=True, to_self=False)
 
             case "m":  # Move focus car
@@ -546,16 +550,18 @@ class Client:
                 cid, car_id = self._get_cid_vid(raw_data[5:])
                 if car_id != -1 and cid == self.cid and self._cars[car_id]:
                     self._focus_car = car_id
+                    data = raw_data[raw_data.find("{"):]
+                    ev.call_event("onCarFocusMove", car_id=car_id, data=data)
+                    await ev.call_async_event("onCarFocusMove", car_id=car_id, data=data)
                 await self._send(raw_data, to_all=True, to_self=True)
 
     async def _connected_handler(self):
-        self.log.info(f"Syncing time: {round(time.monotonic() - self._connect_time, 2)}s")
         # Client connected
         ev.call_event("onPlayerJoin", player=self)
         await ev.call_async_event("onPlayerJoin", player=self)
 
         await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
-        await self._send(f"JWelcome {self.nick}!", to_all=True)  # Hello message
+        await self._send(i18n.game_welcome_message.format(self.nick), to_all=True)  # Hello message
 
         for client in self.__Core.clients:
             if not client:
@@ -565,6 +571,7 @@ class Client:
                     continue
                 await self._send(car['packet'])
 
+        self.log.info(i18n.client_sync_time.format(round(time.monotonic() - self._connect_time, 2)))
         self._ready = True
 
     async def _chat_handler(self, data):
@@ -604,7 +611,7 @@ class Client:
                 await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
                 need_send = False
             except KeyError | AttributeError:
-                self.log.error(f"Returns invalid data: {ev_data}")
+                self.log.error(i18n.client_event_invalid_data.format(ev_data))
         if need_send:
             if config.Options['log_chat']:
                 self.log.info(f"{self.nick}: {msg}")
@@ -681,8 +688,11 @@ class Client:
             ev.call_event("onPlayerDisconnect", player=self)
             await ev.call_async_event("onPlayerDisconnect", player=self)
 
-            # TODO: i18n
-            self.log.info(f"Disconnected, online time: {round((time.monotonic() - self._connect_time) / 60, 2)}min.")
+            self.log.info(
+                i18n.client_player_disconnected.format(
+                    round((time.monotonic() - self._connect_time) / 60, 2)
+                )
+            )
             self.__Core.clients[self.cid] = None
             del self.__Core.clients_by_id[self.cid]
             del self.__Core.clients_by_nick[self.nick]
