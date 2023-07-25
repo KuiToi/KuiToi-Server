@@ -25,6 +25,7 @@
   "web_start": "WebAPI запустился на {} (CTRL+C для выключения)",
 
   "": "Core phrases",
+  "core_bind_failed": "Не получилось занять порт. Ошибка: {}",
   "core_direct_mode": "Сервер запушен в режиме прямого подключения.",
   "core_auth_server_error": "Поступил не корректный ответ от сервером авторизации BeamMP.",
   "core_auth_server_refused": "Сервер авторизации BeamMP отклонил ваш ключ. Причина: {}",
@@ -32,9 +33,18 @@
   "core_auth_server_refused_direct_node": "Сервер всё ещё работает, но в режиме прямого подключения.",
   "core_auth_server_no_response": "Не получилось авторизовать сервер.",
   "core_mods_loaded": "Загружено {} модов. {}Мб",
+  "core_identifying_connection": "Обработка нового подключения...",
+  "core_player_kick_outdated": "Не подходящая версия BeamMP.",
+  "core_player_kick_bad_key": "Передан не правильный ключ!",
+  "core_player_kick_invalid_key": "Неверный ключ! Пожалуйста, перезапустите свою игру.",
+  "core_player_kick_auth_server_fail": "Сбой сервера аутентификации! Попробуйте снова подключиться через 5 минут.",
+  "core_player_kick_stale": "Устаревший клиент. (Заменено новым подключением)",
+  "core_player_kick_no_allowed_default_reason": "Вам не рады на этом сервере. Вход запрещён.",
+  "core_player_kick_server_full": "Сервер полон.",
+  "core_player_set_id": "Игрок получил ID {}",
+  "core_identifying_okay": "Успешный вход.",
 
   "": "In-game phrases",
-  "game_player_kicked": "Кикнут по причине: \"{}\"",
   "game_welcome_message": "Добро пожаловать {}!",
 
   "": "Client class phrases",
@@ -43,6 +53,7 @@
   "client_mod_sent_limit": " (лимит {}Мб/с)",
   "client_mod_sent_error": "Ошибка при отправке мода: {}",
   "client_sync_time": "Время синхронизации {}сек.",
+  "client_kicked": "Кикнут по причине: \"{}\"",
   "client_event_invalid_data": "Из ивента вернулись не верные данные: {}",
   "client_player_disconnected": "Вышел с сервера. Время игры: {} мин",
 

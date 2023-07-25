@@ -111,7 +111,7 @@ class Client:
         if not self.__alive:
             self.log.debug(f"{self.nick}.kick('{reason}') skipped: Not alive;")
             return
-        self.log.info(i18n.game_player_kicked.format(reason))
+        self.log.info(i18n.client_kicked.format(reason))
         await self._send(f"K{reason}")
         self.__alive = False
 

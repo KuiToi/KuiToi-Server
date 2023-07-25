@@ -26,6 +26,7 @@ class i18n:
 
     # Core phrases
 
+    core_bind_failed: str
     core_direct_mode: str
     core_auth_server_error: str
     core_auth_server_refused: str
@@ -33,10 +34,19 @@ class i18n:
     core_auth_server_refused_direct_node: str
     core_auth_server_no_response: str
     core_mods_loaded: str
+    core_identifying_connection: str
+    core_player_kick_outdated: str
+    core_player_kick_bad_key: str
+    core_player_kick_invalid_key: str
+    core_player_kick_auth_server_fail: str
+    core_player_kick_stale: str
+    core_player_kick_no_allowed_default_reason: str
+    core_player_kick_server_full: str
+    core_player_set_id: str
+    core_identifying_okay: str
 
     # In-game phrases
 
-    game_player_kicked: str
     game_welcome_message: str
 
     # Client class phrases
@@ -46,6 +56,7 @@ class i18n:
     client_mod_sent_limit: str
     client_mod_sent_error: str
     client_sync_time: str
+    client_kicked: str
     client_event_invalid_data: str
     client_player_disconnected: str
 

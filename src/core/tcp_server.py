@@ -24,13 +24,11 @@ class TCPServer:
 
     async def auth_client(self, reader, writer):
         client = self.Core.create_client(reader, writer)
-        # TODO: i18n
-        self.log.info(f"Identifying new ClientConnection...")
+        self.log.info(i18n.core_identifying_connection)
         data = await client._recv(True)
         self.log.debug(f"Version: {data}")
         if data.decode("utf-8") != f"VC{self.Core.client_major_version}":
-            # TODO: i18n
-            await client.kick("Outdated Version.")
+            await client.kick(i18n.core_player_kick_outdated)
             return False, client
         else:
             await client._send(b"S")  # Accepted client version
@@ -38,8 +36,7 @@ class TCPServer:
         data = await client._recv(True)
         self.log.debug(f"Key: {data}")
         if len(data) > 50:
-            # TODO: i18n
-            await client.kick("Invalid Key (too long)!")
+            await client.kick(i18n.core_player_kick_bad_key)
             return False, client
         client._key = data.decode("utf-8")
         ev.call_event("onPlayerSentKey", player=client)
@@ -50,8 +47,7 @@ class TCPServer:
                     res = await response.json()
             self.log.debug(f"res: {res}")
             if res.get("error"):
-                # TODO: i18n
-                await client.kick('Invalid key! Please restart your game.')
+                await client.kick(i18n.core_player_kick_invalid_key)
                 return False, client
             client.nick = res["username"]
             client.roles = res["roles"]
@@ -60,21 +56,20 @@ class TCPServer:
             # noinspection PyProtectedMember
             client._update_logger()
         except Exception as e:
-            # TODO: i18n
             self.log.error(f"Auth error: {e}")
-            await client.kick('Invalid authentication data! Try to reconnect in 5 minutes.')
+            await client.kick(i18n.core_player_kick_auth_server_fail)
             return False, client
 
         for _client in self.Core.clients:
             if not _client:
                 continue
             if _client.nick == client.nick and _client.guest == client.guest:
-                # TODO: i18n
-                await client.kick('Stale Client (replaced by new client)')
-                return False, client
+                await _client.kick(i18n.core_player_kick_stale)
+
+        client.log.info(i18n.core_player_set_id.format(client.pid))
 
         allow = True
-        reason = "You are not allowed on the server!"
+        reason = i18n.core_player_kick_no_allowed_default_reason
 
         lua_data = ev.call_lua_event("onPlayerAuth", client.nick, client.roles, client.guest, client.identifiers)
         for data in lua_data:
@@ -90,12 +85,10 @@ class TCPServer:
         ev.call_event("onPlayerAuthenticated", player=client)
 
         if len(self.Core.clients_by_id) > config.Game["players"]:
-            # TODO: i18n
-            await client.kick("Server full!")
+            await client.kick(i18n.core_player_kick_server_full)
             return False, client
         else:
-            # TODO: i18n
-            self.log.info("Identification success")
+            self.log.info(i18n.core_identifying_okay)
             await self.Core.insert_client(client)
 
         return True, client
@@ -127,8 +120,8 @@ class TCPServer:
                 await writer.drain()
                 writer.close()
             case _:
-                # TODO: i18n
                 self.log.error(f"Unknown code: {code}")
+                self.log.info("Report about that!")
                 writer.close()
         return False, None
 
@@ -148,7 +141,6 @@ class TCPServer:
                     del cl
                 break
             except Exception as e:
-                # TODO: i18n
                 self.log.error("Error while handling connection...")
                 self.log.exception(e)
                 traceback.print_exc()
@@ -165,8 +157,7 @@ class TCPServer:
                 async with server:
                     await server.serve_forever()
         except OSError as e:
-            # TODO: i18n
-            self.log.error("Cannot bind port")
+            self.log.error(i18n.core_bind_failed.format(e))
             raise e
         except KeyboardInterrupt:
             pass
