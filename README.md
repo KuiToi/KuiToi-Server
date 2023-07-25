@@ -26,7 +26,7 @@ I didn't like writing plugins in Lua after using Python; it was very inconvenien
     - [x] Chat
     - [x] Players online counter
     - [x] Packets handled (Recursive finding second packet)
-    - [ ] Client events
+    - [x] Client events
     - [x] Car synchronizations:
       - [x] State packets
       - [x] Spawn cars
@@ -53,7 +53,7 @@ I didn't like writing plugins in Lua after using Python; it was very inconvenien
     - [x] Create custom events
     - [x] Return from events
     - [x] Async support
-    - [ ] Add all events
+    - [x] Add all events
   - [x] MultiLanguage: (i18n support)
     - [ ] Core
     - [x] Console
