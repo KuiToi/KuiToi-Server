@@ -22,21 +22,21 @@ class EventsSystem:
         self.loop = asyncio.get_event_loop()
         self.as_tasks = []
         self.__events = {
-            "onServerStarted": [],
-            "onPlayerSentKey": [],  # Only sync
-            "onPlayerAuthenticated": [],  # Only sync
-            "onPlayerJoin": [],
-            "onChatReceive": [],
-            "onCarSpawn": [],
-            "onCarDelete": [],
-            "onCarEdited": [],
-            "onCarReset": [],
-            ""
-            "onCarFocusMove": [],
-            "onSentPing": [],  # Only sync
-            "onChangePosition": [],  # Only sync
-            "onPlayerDisconnect": [],
-            "onServerStopped": [],
+            "onServerStarted": [],  # No handler
+            "onPlayerSentKey": [],  # Only sync, no handler
+            "onPlayerAuthenticated": [],  # (!) Only sync, With handler
+            "onPlayerJoin": [],  # (!) With handler
+            "onChatReceive": [],  # (!) With handler
+            "onCarSpawn": [],  # (!) With handler
+            "onCarDelete": [],  # (!) With handler (admin allow)
+            "onCarEdited": [],  # (!) With handler
+            "onCarReset": [],  # No handler
+            "onCarChanged": [],  # No handler
+            "onCarFocusMove": [],  # No handler
+            "onSentPing": [],  # Only sync, no handler
+            "onChangePosition": [],  # Only sync, no handler
+            "onPlayerDisconnect": [],  # No handler
+            "onServerStopped": [],  # No handler
         }
         self.__async_events = {
             "onServerStarted": [],
@@ -46,6 +46,8 @@ class EventsSystem:
             "onCarDelete": [],
             "onCarEdited": [],
             "onCarReset": [],
+            "onCarChanged": [],
+            "onCarFocusMove": [],
             "onPlayerDisconnect": [],
             "onServerStopped": []
         }

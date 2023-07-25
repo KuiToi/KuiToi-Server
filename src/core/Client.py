@@ -541,8 +541,8 @@ class Client:
                 cid, car_id = self._get_cid_vid(raw_data[5:])
                 if car_id != -1 and cid == self.cid and self._cars[car_id]:
                     data = raw_data[raw_data.find("{"):]
-                    ev.call_event("onCar", car_id=car_id, data=data)
-                    await ev.call_async_event("onCarFocusMove", car_id=car_id, data=data)
+                    ev.call_event("onCarChanged", car_id=car_id, data=data)
+                    await ev.call_async_event("onCarChanged", car_id=car_id, data=data)
                 await self._send(raw_data, to_all=True, to_self=False)
 
             case "m":  # Move focus car
