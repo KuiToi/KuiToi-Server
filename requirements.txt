@@ -8,3 +8,4 @@ pydantic~=2.0.2
 click~=8.1.4
 lupa~=2.0
 toml~=0.10.2
+colorama~=0.4.6

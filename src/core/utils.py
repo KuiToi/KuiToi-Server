@@ -10,7 +10,11 @@ import logging
 import os
 import tarfile
 
-log_format = "[%(asctime)s | %(name)-14s | %(levelname)-5s] %(message)s"
+import colorama
+from colorama import Fore, Style
+
+colorama.init()
+log_format = f"{Fore.CYAN}[%(asctime)s | %(name)-14s | %(levelname)-5s] {Style.RESET_ALL} %(message)s"
 log_dir = "./logs/"
 log_file = log_dir + "server.log"
 log_level = logging.INFO
