@@ -14,6 +14,7 @@ from prompt_toolkit import PromptSession, print_formatted_text, HTML
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
 from prompt_toolkit.patch_stdout import patch_stdout
 
 from core import get_logger
@@ -28,6 +29,7 @@ class Console:
                  debug=False) -> None:
         self.__logger = get_logger("console")
         self.__is_run = False
+        self.no_cmd = False
         self.__prompt_in = prompt_in
         self.__prompt_out = prompt_out
         self.__not_found = not_found
@@ -128,10 +130,18 @@ class Console:
         return self.__alias.copy()
 
     def _write(self, t):
-        if t.startswith("html:"):
-            print_formatted_text(HTML(t[5:]))
-        else:
-            print_formatted_text(t)
+        if self.no_cmd:
+            print(t)
+            return
+        try:
+            if t.startswith("html:"):
+                print_formatted_text(HTML(t[5:]))
+            else:
+                print_formatted_text(t)
+        except NoConsoleScreenBufferError:
+            print("Works in non cmd mode.")
+            self.no_cmd = True
+            print(t)
 
     def write(self, s: AnyStr):
         if isinstance(s, (list, tuple)):
@@ -202,11 +212,18 @@ class Console:
         while True:
             try:
                 with patch_stdout():
-                    cmd_in = await session.prompt_async(
-                        self.__prompt_in,
-                        completer=self.completer,
-                        auto_suggest=AutoSuggestFromHistory()
-                    )
+                    if self.no_cmd:
+                        cmd_in = input(self.__prompt_in)
+                    else:
+                        try:
+                            cmd_in = await session.prompt_async(
+                                self.__prompt_in,
+                                completer=self.completer,
+                                auto_suggest=AutoSuggestFromHistory()
+                            )
+                        except NoConsoleScreenBufferError:
+                            print("Works in non cmd mode.")
+                            self.no_cmd = True
                 cmd_s = cmd_in.split(" ")
                 cmd = cmd_s[0]
                 if cmd == "":
