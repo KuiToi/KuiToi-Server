@@ -7,6 +7,7 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import builtins
+import inspect
 import logging
 from typing import AnyStr
 
@@ -242,7 +243,11 @@ class Console:
                                 self.log(text)
                     command_object = self.__func.get(cmd)
                     if command_object:
-                        out = command_object['f'](cmd_s[1:])
+                        func = command_object['f']
+                        if inspect.iscoroutinefunction(func):
+                            out = await func(cmd_s[1:])
+                        else:
+                            out = func(cmd_s[1:])
                         if out:
                             self.log(out)
                     else:
