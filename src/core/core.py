@@ -270,6 +270,9 @@ class Core:
             tasks = []
             # self.udp.start,
             f_tasks = [self.tcp.start, self.udp._start, console.start, self.stop_me, self.heartbeat, self.check_alive]
+            if config.RCON['enabled']:
+                rcon = console.rcon(config.RCON['password'], config.RCON['server_ip'], config.RCON['server_port'])
+                f_tasks.append(rcon.start)
             for task in f_tasks:
                 tasks.append(asyncio.create_task(task()))
             t = asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)

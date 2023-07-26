@@ -18,6 +18,7 @@ from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
 from prompt_toolkit.patch_stdout import patch_stdout
 
 from core import get_logger
+from modules.ConsoleSystem import RCON
 
 
 class Console:
@@ -45,6 +46,9 @@ class Console:
         self.add_command("help", self.__create_help_message, i18n.man_message_help, i18n.help_message_help,
                          custom_completer={"help": {"--raw": None}})
         self.completer = NestedCompleter.from_nested_dict(self.__alias)
+        rcon = RCON
+        rcon.console = self
+        self.rcon = rcon
 
     def __debug(self, *x):
         self.__logger.debug(f"{x}")
