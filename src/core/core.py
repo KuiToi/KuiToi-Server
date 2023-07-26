@@ -217,6 +217,22 @@ class Core:
             except Exception as e:
                 self.log.error(f"Error in heartbeat: {e}")
 
+    async def kick_cmd(self, args):
+        if not len(args) > 0:
+            return "\nUsage: kick <nick>|:<id> [reason]\nExamples:\n\tkick admin bad boy\n\tkick :0 bad boy"
+        reason = "kicked by console."
+        if len(args) > 1:
+            reason = " ".join(args[1:])
+        cl = args[0]
+        if cl.startswith(":") and cl[1:].isdigit():
+            client = self.get_client(cid=int(cl[1:]))
+        else:
+            client = self.get_client(nick=cl)
+        if client:
+            await client.kick(reason)
+        else:
+            return "Client not found."
+
     async def main(self):
         self.tcp = self.tcp(self, self.server_ip, self.server_port)
         self.udp = self.udp(self, self.server_ip, self.server_port)
@@ -224,6 +240,7 @@ class Core:
             "list",
             lambda x: f"Players list: {self.get_clients_list(True)}"
         )
+        console.add_command("kick", self.kick_cmd)
 
         pl_dir = "plugins"
         self.log.debug("Initializing PluginsLoaders...")
