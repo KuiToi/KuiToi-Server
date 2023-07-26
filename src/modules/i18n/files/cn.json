@@ -57,7 +57,14 @@
   "client_event_invalid_data": "从事件返回的数据无效：{}",
   "client_player_disconnected": "离开服务器。游戏时间：{}分钟。",
 
-  "": "Events system",
+  "": "事件系统",
+
+  "events_not_callable": "无法添加事件\"{}\"。请改用\"{}\"。跳过...",
+  "events_not_found": "事件\"{}\"未注册。也许{}？跳过...",
+  "events_calling_error": "调用函数\"{}\"时出错。",
+  "events_lua_function_not_found": "无法调用{}lua事件 - 未找到\"{}\"。",
+  "events_lua_local": "本地 ",
+  "events_lua_calling_error": "错误：\"{}\" - 调用lua事件\"{}\"时出错，函数：\"{}\"，参数：{}",
 
   "": "插件加载器",
 

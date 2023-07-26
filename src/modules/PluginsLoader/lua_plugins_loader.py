@@ -43,7 +43,7 @@ class EventTimer:
         self.mp.TriggerLocalEvent(self.event_name)
 
 
-# noinspection PyPep8Naming
+# noinspection PyPep8Naming,PyProtectedMember
 class MP:
 
     def __init__(self, name: str, lua: LuaRuntime):
@@ -117,19 +117,15 @@ class MP:
                 try:
                     func = self._lua.globals()[func_name]
                     if not func:
-                        self.log.warning(f"Cannot trigger local event: '{func_name}' not found!")
+                        self.log.warning(i18n.events_lua_function_not_found.format(i18n.events_lua_local, func_name))
                         continue
                     fd = func(*args)
                     funcs_data.append(fd)
                 except Exception as e:
-                    # TODO: i18n
-                    self.log.error(f'Error: "{e}" - while calling lua event "{event_name}" with arguments: {args} - '
-                                   f'in function: "{func_name}"')
-                    # self.log.exception(e)
+                    self.log.error(i18n.events_lua_calling_error.format(f"{e}", event_name, func_name, f"{args}"))
+
         else:
-            # TODO: i18n
-            self.log.warning(f"Event {event_name} does not exist, maybe ev.call_lua_event() or MP.Trigger<>Event()?. "
-                             f"Just skipping it...")
+            self.log.warning(i18n.events_not_found.format(event_name, "ev.call_lua_event(), MP.Trigger<>Event()"))
 
         return self._lua.table_from(funcs_data)
 
@@ -563,6 +559,7 @@ class FS:
         return os.path.join(*args)
 
 
+# noinspection PyProtectedMember
 class LuaPluginsLoader:
 
     def __init__(self, plugins_dir):

@@ -59,6 +59,13 @@
 
   "": "Events system",
 
+  "events_not_callable": "Невозможно добавить ивент \"{}\". Использую лучше \"{}\". Скип...",
+  "events_not_found": "Ивент \"{}\" не зарегистрирован. Может {}? Скип...",
+  "events_calling_error": "Ошибка во время вызова \"{}\" в функции \"{}\".",
+  "events_lua_function_not_found": "Невозможно вызвать {}lua ивент - \"{}\" не найдена.",
+  "events_lua_local": "локальный ",
+  "events_lua_calling_error": "Ошибка: \"{}\" - во время вызова lua ивента \"{}\", функция: \"{}\" , аргументы: {}",
+
   "": "Plugins loader",
 
   "plugins_not_found_load": "Функция \"def load():\" не найдена.",

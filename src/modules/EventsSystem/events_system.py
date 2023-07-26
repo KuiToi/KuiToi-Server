@@ -56,12 +56,12 @@ class EventsSystem:
             "onInit": [],  # onServerStarted
             "onShutdown": [],  # onServerStopped
             "onPlayerAuth": [],  # onPlayerAuthenticated
-            "onPlayerConnecting": [],  # TODO lua onPlayerConnecting
-            "onPlayerJoining": [],  # TODO lua onPlayerJoining
+            "onPlayerConnecting": [],  # No
+            "onPlayerJoining": [],  # No
             "onPlayerJoin": [],  # onPlayerJoin
-            "onPlayerDisconnect": [],  # TODO lua onPlayerDisconnect
+            "onPlayerDisconnect": [],  # onPlayerDisconnect
             "onChatMessage": [],  # onChatReceive
-            "onVehicleSpawn": [],  # "onCarSpawn
+            "onVehicleSpawn": [],  # onCarSpawn
             "onVehicleEdited": [],  # onCarEdited
             "onVehicleDeleted": [],  # onCarDelete
             "onVehicleReset": [],  # onCarReset
@@ -85,9 +85,7 @@ class EventsSystem:
             return
 
         if not callable(event_func):
-            # TODO: i18n
-            self.log.error(f"Cannot add event '{event_name}'. "
-                           f"Use `KuiToi.add_event({event_name}', function)` instead. Skipping it...")
+            self.log.error(i18n.events_not_callable.format(event_name, f"kt.add_event(\"{event_name}\", function)"))
             return
         if async_event or inspect.iscoroutinefunction(event_func):
             if event_name not in self.__async_events:
@@ -112,12 +110,10 @@ class EventsSystem:
                     data = await func(event_data)
                     funcs_data.append(data)
                 except Exception as e:
-                    # TODO: i18n
-                    self.log.error(f'Error while calling "{event_name}"; In function: "{func.__name__}"')
+                    self.log.error(i18n.events_calling_error.format(event_name, func.__name__))
                     self.log.exception(e)
         else:
-            # TODO: i18n
-            self.log.warning(f"Event {event_name} does not exist, maybe ev.call_event()?. Just skipping it...")
+            self.log.warning(i18n.events_not_found.format(event_name, "kt.call_event()"))
 
         return funcs_data
 
@@ -132,12 +128,10 @@ class EventsSystem:
                     event_data = {"event_name": event_name, "args": args, "kwargs": kwargs}
                     funcs_data.append(func(event_data))
                 except Exception as e:
-                    # TODO: i18n
-                    self.log.error(f'Error while calling "{event_name}"; In function: "{func.__name__}"')
+                    self.log.error(i18n.events_calling_error.format(event_name, func.__name__))
                     self.log.exception(e)
         else:
-            # TODO: i18n
-            self.log.warning(f"Event {event_name} does not exist, maybe ev.call_async_event()?. Just skipping it...")
+            self.log.warning(i18n.events_not_found.format(event_name, "kt.call_async_event()"))
 
         return funcs_data
 
@@ -151,21 +145,13 @@ class EventsSystem:
                 try:
                     func = lua.globals()[func_name]
                     if not func:
-                        self.log.warning(f"Cannot trigger local event: '{func_name}' not found!")
+                        self.log.warning(i18n.events_lua_function_not_found.format("", func_name))
                         continue
                     fd = func(*args)
                     funcs_data.append(fd)
                 except Exception as e:
-                    # TODO: i18n
-                    self.log.error(f'Error: "{e}" - while calling lua event "{event_name}" with arguments: {args} - '
-                                   f'in function: "{func_name}"')
-                    # self.log.exception(e)
+                    self.log.error(i18n.events_lua_calling_error.format(f"{e}", event_name, func_name, f"{args}"))
         else:
-            # TODO: i18n
-            self.log.warning(f"Event {event_name} does not exist, maybe ev.call_lua_event() or MP.Trigger<>Event()?. "
-                             f"Just skipping it...")
+            self.log.warning(i18n.events_not_found.format(event_name, "ev.call_lua_event(), MP.Trigger<>Event()"))
 
         return funcs_data
-
-
-

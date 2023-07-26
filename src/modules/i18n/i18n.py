@@ -106,6 +106,32 @@ class MultiLanguage:
                 "client_event_invalid_data": "Invalid data returned from event: {}",
                 "client_player_disconnected": "Left the server. Playtime: {} min",
 
+                "": "Events system",
+
+                "events_not_callable": "Unable to add event \"{}\". Use \"{}\" instead. Skipping...",
+                "events_not_found": "Event \"{}\" is not registered. Maybe {}? Skipping...",
+                "events_calling_error": "Error calling \"{}\" in function \"{}\".",
+                "events_lua_function_not_found": "Unable to call {}lua event - \"{}\" not found.",
+                "events_lua_local": "local ",
+                "events_lua_calling_error": "Error: \"{}\" - calling lua event \"{}\", function: \"{}\", arguments: {}",
+
+                "": "Plugins loader",
+
+                "plugins_not_found_load": "Function \"def load():\" not found.",
+                "plugins_not_found_start": "Function \"def start():\" not found.",
+                "plugins_not_found_unload": "Function \"def unload():\" not found.",
+                "plugins_kt_invalid": "\"kt\" variable does not belong to the KuiToi class.",
+                "plugins_invalid": "Plugin \"{}\" cannot be run in KuiToi.",
+                "plugins_error_loading": "An error occurred while loading the plugin {}: {}",
+
+                "": "Lua plugins loader",
+
+                "plugins_lua_enabled": "You have enabled Lua plugin support.",
+                "plugins_lua_nuances_warning": "There are some nuances when working with Kuiti. If you have a suggestion for their solution, and it is related to KuiToi, please contact the developer.",
+                "plugins_lua_legacy_config_create_warning": "Some BeamMP plugins require a properly configured ServerConfig.toml file to function.",
+                "plugins_lua_legacy_config_create": "Creating it.",
+                "plugins_lua_unload": "Stopping Lua plugin: {}",
+
                 "": "Command: man",
                 "man_message_man": "man - Shows the help page for COMMAND.\nUsage: man COMMAND",
                 "help_message_man": "Shows the help page for COMMAND.",

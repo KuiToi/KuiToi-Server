@@ -62,7 +62,12 @@ class i18n:
 
     # Events system
 
-
+    events_not_callable: str
+    events_not_found: str
+    events_calling_error: str
+    events_lua_function_not_found: str
+    events_lua_local: str
+    events_lua_calling_error: str
 
     # Plugins loader
 

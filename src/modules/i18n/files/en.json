@@ -59,6 +59,13 @@
 
   "": "Events system",
 
+  "events_not_callable": "Unable to add event \"{}\". Use \"{}\" instead. Skipping...",
+  "events_not_found": "Event \"{}\" is not registered. Maybe {}? Skipping...",
+  "events_calling_error": "Error calling \"{}\" in function \"{}\".",
+  "events_lua_function_not_found": "Unable to call {}lua event - \"{}\" not found.",
+  "events_lua_local": "local ",
+  "events_lua_calling_error": "Error: \"{}\" - calling lua event \"{}\", function: \"{}\", arguments: {}",
+
   "": "Plugins loader",
 
   "plugins_not_found_load": "Function \"def load():\" not found.",
