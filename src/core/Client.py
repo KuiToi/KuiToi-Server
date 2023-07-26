@@ -561,7 +561,7 @@ class Client:
         await ev.call_async_event("onPlayerJoin", player=self)
 
         await self._send(f"Sn{self.nick}", to_all=True)  # I don't know for what it
-        await self._send(i18n.game_welcome_message.format(self.nick), to_all=True)  # Hello message
+        await self._send(f"J{i18n.game_welcome_message.format(self.nick)}", to_all=True)  # Hello message
 
         for client in self.__Core.clients:
             if not client:
