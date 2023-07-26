@@ -100,8 +100,8 @@ class UDPServer(asyncio.DatagramTransport):
                     await asyncio.sleep(0.2)
 
             except OSError as e:
-                self.run = False
-                self.Core.run = False
+                # self.run = False
+                # self.Core.run = False
                 self.log.error(f"Cannot bind port or other error: {e}")
             except Exception as e:
                 self.log.error(f"Error: {e}")

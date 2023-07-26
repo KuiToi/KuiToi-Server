@@ -194,7 +194,13 @@ class Client:
     async def _recv(self, one=False):
         while self.__alive:
             try:
-                header = await self.__reader.read(4)
+                header = b""
+                while len(header) < 4 and self.__alive:
+                    h = await self.__reader.read(4)
+                    if not h:
+                        break
+                    else:
+                        header += h
 
                 int_header = int.from_bytes(header, byteorder='little', signed=True)
 
@@ -219,9 +225,14 @@ class Client:
                     self.__packets_queue.append(None)
                     continue
 
-                data = await self.__reader.read(int_header)
+                data = b""
+                while len(data) < int_header and self.__alive:
+                    buffer = await self.__reader.read(int_header - len(data))
+                    if not buffer:
+                        break
+                    else:
+                        data += buffer
 
-                # self.log.debug(f"int_header: {int_header}; data: `{data}`;")
                 abg = b"ABG:"
                 if len(data) > len(abg) and data.startswith(abg):
                     data = zlib.decompress(data[len(abg):])
