@@ -60,6 +60,27 @@ class i18n:
     client_event_invalid_data: str
     client_player_disconnected: str
 
+    # Events system
+
+
+
+    # Plugins loader
+
+    plugins_not_found_load: str
+    plugins_not_found_start: str
+    plugins_not_found_unload: str
+    plugins_kt_invalid: str
+    plugins_invalid: str
+    plugins_error_loading: str
+
+    # Lua plugins loader
+
+    plugins_lua_enabled: str
+    plugins_lua_nuances_warning: str
+    plugins_lua_legacy_config_create_warning: str
+    plugins_lua_legacy_config_create: str
+    plugins_lua_unload: str
+
     # Command: man
     man_message_man: str
     help_message_man: str

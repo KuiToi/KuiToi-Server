@@ -131,21 +131,21 @@ class PluginsLoader:
                     try:
                         is_func = inspect.isfunction
                         if not is_func(plugin.load):
-                            self.log.error('Function "def load():" not found.')
+                            self.log.error(i18n.plugins_not_found_load)
                             ok = False
                         if not is_func(plugin.start):
-                            self.log.error('Function "def start():" not found.')
+                            self.log.error(i18n.plugins_not_found_start)
                             ok = False
                         if not is_func(plugin.unload):
-                            self.log.error('Function "def unload():" not found.')
+                            self.log.error(i18n.plugins_not_found_unload)
                             ok = False
                         if type(plugin.kt) != KuiToi:
-                            self.log.error(f'Attribute "kt" isn\'t KuiToi class. Plugin file: "{file_path}"')
+                            self.log.error(i18n.plugins_kt_invalid)
                             ok = False
                     except AttributeError:
                         ok = False
                     if not ok:
-                        self.log.error(f'Plugin file: "{file_path}" is not a valid KuiToi plugin.')
+                        self.log.error(i18n.plugins_invalid.format(file_path))
                         return
 
                     pl_name = plugin.kt.name
@@ -185,9 +185,8 @@ class PluginsLoader:
                     self.loaded_str += f"{pl_name}:ok, "
                     self.log.debug(f"Plugin loaded: {file}. Settings: {self.plugins[pl_name]}")
                 except Exception as e:
-                    # TODO: i18n
                     self.loaded_str += f"{file}:no, "
-                    self.log.error(f"Error while loading plugin: {file}; Error: {e}")
+                    self.log.error(i18n.plugins_error_loading.format(file, f"{e}"))
                     self.log.exception(e)
 
     async def start(self, _):

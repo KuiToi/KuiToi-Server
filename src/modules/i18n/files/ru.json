@@ -57,6 +57,25 @@
   "client_event_invalid_data": "Из ивента вернулись не верные данные: {}",
   "client_player_disconnected": "Вышел с сервера. Время игры: {} мин",
 
+  "": "Events system",
+
+  "": "Plugins loader",
+
+  "plugins_not_found_load": "Функция \"def load():\" не найдена.",
+  "plugins_not_found_start": "Функция \"def start():\" не найдена.",
+  "plugins_not_found_unload": "Функция \"def unload():\" не найдена.",
+  "plugins_kt_invalid": "Переменная \"kt\" не принадлежит классу KuiToi.",
+  "plugins_invalid": "Плагин: \"{}\" - не может быть запущен в KuiToi.",
+  "plugins_error_loading": "Произошла ошибка при загрузке плагина {}: {}",
+
+  "": "Lua plugins loader",
+
+  "plugins_lua_enabled": "Вы включили поддержку плагинов Lua.",
+  "plugins_lua_nuances_warning": "В работе с Kuiti есть некоторые нюансы. Если у вас есть предложение по их решению, и оно связано с KuiToi, пожалуйста, свяжитесь с разработчиком.",
+  "plugins_lua_legacy_config_create_warning": "Для работы некоторых плагинов BeamMP требуется правильно настроенный файл ServerConfig.toml.",
+  "plugins_lua_legacy_config_create": "Создаю его.",
+  "plugins_lua_unload": "Останавливаю Lua плагин: {}",
+
   "": "Command: man",
   "man_message_man": "man - Показывает страничку помощи для COMMAND.\nИспользование: man COMMAND",
   "help_message_man": "Показывает страничку помощи для COMMAND.",

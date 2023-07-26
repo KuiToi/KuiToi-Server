@@ -57,6 +57,25 @@
   "client_event_invalid_data": "从事件返回的数据无效：{}",
   "client_player_disconnected": "离开服务器。游戏时间：{}分钟。",
 
+  "": "Events system",
+
+  "": "插件加载器",
+
+  "plugins_not_found_load": "未找到\"def load():\"函数。",
+  "plugins_not_found_start": "未找到\"def start():\"函数。",
+  "plugins_not_found_unload": "未找到\"def unload():\"函数。",
+  "plugins_kt_invalid": "“kt”变量不属于KuiToi类。",
+  "plugins_invalid": "无法在KuiToi中运行插件\"{}\"。",
+  "plugins_error_loading": "加载插件{}时出错：{}",
+
+  "": "Lua插件加载器",
+
+  "plugins_lua_enabled": "您已启用Lua插件支持。",
+  "plugins_lua_nuances_warning": "在使用KuiToi时有一些细微差别。如果您有关于解决方案的建议，并且它与KuiToi相关，请联系开发人员。",
+  "plugins_lua_legacy_config_create_warning": "一些BeamMP插件需要一个正确配置的ServerConfig.toml文件才能正常运行。",
+  "plugins_lua_legacy_config_create": "正在创建。",
+  "plugins_lua_unload": "停止Lua插件：{}",
+
   "": "命令：man",
   "man_message_man": "man - 显示COMMAND的帮助页面。\n用法：man COMMAND",
   "help_message_man": "显示COMMAND的帮助页面。",

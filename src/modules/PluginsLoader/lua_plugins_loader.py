@@ -580,13 +580,10 @@ class LuaPluginsLoader:
 
     def load(self):
         self.log.debug("Loading Lua plugins...")
-        # TODO: i18n
-        self.log.info("You have enabled support for Lua plugins.")
-        self.log.warning("There are some nuances to working with KuiToi. "
-                         "If you have a proposal for their solution, and it is related to KuiToi, "
-                         "please contact the developer.")
-        self.log.warning("Some BeamMP plugins require a correctly configured ServerConfig.toml file to function.")
-        self.log.info("Creating it.")
+        self.log.info(i18n.plugins_lua_enabled)
+        self.log.warning(i18n.plugins_lua_nuances_warning)
+        self.log.warning(i18n.plugins_lua_legacy_config_create_warning)
+        self.log.info(i18n.plugins_lua_legacy_config_create)
         data = {
             "info": "ServerConfig.toml is created solely for backward compatibility support. "
                     "This file will be updated every time the program is launched.",
@@ -674,6 +671,6 @@ class LuaPluginsLoader:
         self.log.debug("Unloading lua plugins")
         for name, data in self.lua_plugins.items():
             if data['ok']:
-                self.log.info(f"Unloading lua plugin: {name}")
+                self.log.info(i18n.plugins_lua_unload.format(name))
                 for _, timer in data['lua'].globals().MP._event_timers.items():
                     timer.stop()
