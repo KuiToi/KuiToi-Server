@@ -66,8 +66,6 @@ class TCPServer:
             if _client.nick == client.nick and _client.guest == client.guest:
                 await _client.kick(i18n.core_player_kick_stale)
 
-        client.log.info(i18n.core_player_set_id.format(client.pid))
-
         allow = True
         reason = i18n.core_player_kick_no_allowed_default_reason
 
@@ -90,6 +88,7 @@ class TCPServer:
         else:
             self.log.info(i18n.core_identifying_okay)
             await self.Core.insert_client(client)
+            client.log.info(i18n.core_player_set_id.format(client.pid))
 
         return True, client
 

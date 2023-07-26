@@ -303,10 +303,10 @@ class Core:
         ev.call_event("onServerStopped")
         await ev.call_async_event("onServerStopped")
         await self.__gracefully_kick()
+        if config.Options['use_lua']:
+            ev.call_event("_lua_plugins_unload")
         await ev.call_async_event("_plugins_unload")
-        ev.call_event("_lua_plugins_unload")
         self.run = False
         self.log.info(i18n.stop)
         if config.WebAPI["enabled"]:
             asyncio.run(self.web_stop())
-        # exit(0)
