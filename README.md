@@ -55,7 +55,7 @@ I didn't like writing plugins in Lua after using Python; it was very inconvenien
     - [x] Async support
     - [x] Add all events
   - [x] MultiLanguage: (i18n support)
-    - [ ] Core
+    - [x] Core
     - [x] Console
     - [x] WebAPI
   - [x] Plugins supports:
@@ -77,7 +77,7 @@ I didn't like writing plugins in Lua after using Python; it was very inconvenien
   - [ ] RCON System:
     - [ ] Serving
     - [ ] Client
-    - [ ] SSL encryption
+    - [x] AES encryption
   - [ ] KuiToi System
     - [ ] Servers counter
     - [ ] Players counter
