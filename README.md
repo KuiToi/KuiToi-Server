@@ -75,14 +75,15 @@ I didn't like writing plugins in Lua after using Python; it was very inconvenien
     - [ ] Sync with event system
     - [ ] Add methods...
   - [ ] RCON System:
-    - [ ] Serving
-    - [ ] Client
+    - [x] Serving
+    - [ ] Handle commands
+    - [x] Client
     - [x] AES encryption
   - [ ] KuiToi System
     - [ ] Servers counter
     - [ ] Players counter
     - [ ] Etc.
-- [ ] [Documentation](./docs/)
+- [ ] [Documentation](./docs)
 
 ## Installation
 
