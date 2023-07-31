@@ -45,6 +45,10 @@ class Client:
         return self.__writer
 
     @property
+    def alive(self):
+        return self.__alive
+
+    @property
     def log(self):
         return self._log
 
@@ -185,8 +189,8 @@ class Client:
             await writer.drain()
             return True
 
-        except ConnectionError:
-            self.log.debug('[TCP] Disconnected')
+        except Exception as e:
+            self.log.debug(f'[TCP] Disconnected: {e}')
             self.__alive = False
             await self._remove_me()
             return False
@@ -280,6 +284,9 @@ class Client:
     async def _sync_resources(self):
         while self.__alive:
             data = await self._recv(True)
+            if data is None:
+                await self._remove_me()
+                break
             if data.startswith(b"f"):
                 file = data[1:].decode(config.enc)
                 self.log.info(i18n.client_mod_request.format(repr(file)))
@@ -358,7 +365,7 @@ class Client:
         id_sep = s.find('-')
         if id_sep == -1:
             self.log.debug(
-                f"Invalid packet: Could not parse pid/vid from packet, as there is no '-' separator: '{data}'")
+                f"Invalid packet: Could not parse pid/vid from packet, as there is no '-' separator: '{data}', {s}")
             return -1, -1
         cid = s[:id_sep]
         vid = s[id_sep + 1:]
@@ -549,7 +556,7 @@ class Client:
 
             case "t":  # Broken details
                 self.log.debug(f"Something changed/broken: {raw_data}")
-                cid, car_id = self._get_cid_vid(raw_data[5:])
+                cid, car_id = self._get_cid_vid(raw_data[2:])
                 if car_id != -1 and cid == self.cid and self._cars[car_id]:
                     data = raw_data[raw_data.find("{"):]
                     ev.call_event("onCarChanged", car_id=car_id, data=data)
@@ -558,7 +565,7 @@ class Client:
 
             case "m":  # Move focus car
                 self.log.debug(f"Move focus to: {raw_data}")
-                cid, car_id = self._get_cid_vid(raw_data[5:])
+                cid, car_id = self._get_cid_vid(raw_data[3:])
                 if car_id != -1 and cid == self.cid and self._cars[car_id]:
                     self._focus_car = car_id
                     data = raw_data[raw_data.find("{"):]
