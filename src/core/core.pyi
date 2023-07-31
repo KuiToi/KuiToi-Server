@@ -5,6 +5,7 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import time
 from threading import Thread
 from typing import Callable, List, Dict
 
@@ -16,6 +17,7 @@ from .udp_server import UDPServer
 
 class Core:
     def __init__(self):
+        self.start_time = time.monotonic()
         self.log = utils.get_logger("core")
         self.loop = asyncio.get_event_loop()
         self.run = False
@@ -45,6 +47,7 @@ class Core:
     def start_web() -> None: ...
     def stop_me(self) -> None: ...
     async def heartbeat(self, test=False) -> None: ...
+    async def kick_cmd(self, args: list) -> None | str: ...
     async def main(self) -> None: ...
     def start(self) -> None: ...
     async def stop(self) -> None: ...

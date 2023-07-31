@@ -5,14 +5,16 @@
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
+import math
 import os
 import random
+import time
 from threading import Thread
 
 import aiohttp
 import uvicorn
 
-from core import utils
+from core import utils, __version__
 from core.Client import Client
 from core.tcp_server import TCPServer
 from core.udp_server import UDPServer
@@ -26,6 +28,7 @@ class Core:
     def __init__(self):
         self.log = utils.get_logger("core")
         self.loop = asyncio.get_event_loop()
+        self.start_time = time.monotonic()
         self.run = False
         self.direct = False
         self.clients = []
@@ -111,6 +114,8 @@ class Core:
                     if not client.ready:
                         client.is_disconnected()
                         continue
+                    if not client.alive:
+                        await client.kick("You are not alive!")
                     await client._send(ca)
         except Exception as e:
             self.log.error("Error in check_alive.")
@@ -288,6 +293,7 @@ class Core:
             # self.udp.start,
             f_tasks = [self.tcp.start, self.udp._start, console.start, self.stop_me, self.heartbeat, self.check_alive]
             if config.RCON['enabled']:
+                console.rcon.version = f"KuiToi {__version__}"
                 rcon = console.rcon(config.RCON['password'], config.RCON['server_ip'], config.RCON['server_port'])
                 f_tasks.append(rcon.start)
             for task in f_tasks:
@@ -324,6 +330,12 @@ class Core:
             ev.call_event("_lua_plugins_unload")
         await ev.call_async_event("_plugins_unload")
         self.run = False
-        self.log.info(i18n.stop)
         if config.WebAPI["enabled"]:
             asyncio.run(self.web_stop())
+        total_time = time.monotonic() - self.start_time
+        hours = int(total_time // 3600)
+        minutes = int((total_time % 3600) // 60)
+        seconds = math.ceil(total_time % 60)
+        t = f"{'' if not hours else f'{hours} hours, '}{'' if not hours else f'{minutes} min., '}{seconds} sec."
+        self.log.info(f"Working time: {t}")
+        self.log.info(i18n.stop)
