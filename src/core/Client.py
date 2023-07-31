@@ -265,7 +265,7 @@ class Client:
                 try:
                     writer.write(data)
                     await writer.drain()
-                    self.log.debug(f"[{who}] Sent {len(data)} bytes.")
+                    # self.log.debug(f"[{who}] Sent {len(data)} bytes.")
                 except ConnectionError:
                     self.__alive = False
                     self.log.debug(f"[{who}] Disconnected.")
@@ -556,7 +556,7 @@ class Client:
 
             case "t":  # Broken details
                 self.log.debug(f"Something changed/broken: {raw_data}")
-                cid, car_id = self._get_cid_vid(raw_data[2:])
+                cid, car_id = self._get_cid_vid(raw_data)
                 if car_id != -1 and cid == self.cid and self._cars[car_id]:
                     data = raw_data[raw_data.find("{"):]
                     ev.call_event("onCarChanged", car_id=car_id, data=data)
