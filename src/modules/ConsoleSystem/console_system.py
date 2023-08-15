@@ -15,7 +15,10 @@ from prompt_toolkit import PromptSession, print_formatted_text, HTML
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.history import FileHistory
-from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
+try:
+    from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
+except AssertionError:
+    class NoConsoleScreenBufferError(Exception): ...
 from prompt_toolkit.patch_stdout import patch_stdout
 
 from core import get_logger
