@@ -140,3 +140,6 @@ dmypy.json
 logs/
 *.yml
 *.toml
+
+/win-ver_info.txt
+/output/

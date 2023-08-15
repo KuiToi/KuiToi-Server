@@ -1,0 +1,17 @@
+Version: 0.4.3
+CompanyName: KuiToi
+FileDescription: KuiToi Server
+InternalName: KuiToi Server
+LegalCopyright: © Maxim Khomutov
+OriginalFilename: KuiToi-Server.exe
+ProductName: KuiToi Server
+Translation:
+  # ru-RU
+  - langID: 1049
+    charsetID: 1251
+  # en-US
+  - langID: 1033
+    charsetID: 1251
+  # zh-CN
+  - langID: 2052
+    charsetID: 950

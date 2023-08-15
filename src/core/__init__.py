@@ -30,7 +30,7 @@ from modules import ConfigProvider, EventsSystem
 from modules import Console
 from modules import MultiLanguage
 
-args = parser.parse_args()
+args, _ = parser.parse_known_args()
 if args.version:
     print(f"{__title__}:\n\tVersion: {__version__}\n\tBuild: {__build__}")
     exit(0)
