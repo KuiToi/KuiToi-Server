@@ -11,7 +11,7 @@
   },
   {
    "optionDest": "onefile",
-   "value": false
+   "value": true
   },
   {
    "optionDest": "console",
@@ -19,11 +19,11 @@
   },
   {
    "optionDest": "icon_file",
-   "value": "C:/Users/Santa/PycharmProjects/logo.ico"
+   "value": "C:/Users/Santa/PycharmProjects/kuitoi-Server/win-logo.ico"
   },
   {
    "optionDest": "name",
-   "value": "KuiToi_Server"
+   "value": "KuiToi-Server"
   },
   {
    "optionDest": "ascii",
