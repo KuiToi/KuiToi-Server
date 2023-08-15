@@ -73,6 +73,11 @@ class EventsSystem:
         self.log.debug("used builtins_hook")
         builtins.ev = self
 
+    def is_event(self, event_name):
+        return (event_name in self.__async_events.keys() or
+                event_name in self.__events.keys() or
+                event_name in self.__lua_events.keys())
+
     def register_event(self, event_name, event_func, async_event=False, lua=None):
         self.log.debug(f"register_event(event_name='{event_name}', event_func='{event_func}', "
                        f"async_event={async_event}, lua_event={lua}):")
@@ -112,7 +117,7 @@ class EventsSystem:
                 except Exception as e:
                     self.log.error(i18n.events_calling_error.format(event_name, func.__name__))
                     self.log.exception(e)
-        else:
+        elif not self.is_event(event_name):
             self.log.warning(i18n.events_not_found.format(event_name, "kt.call_event()"))
 
         return funcs_data
@@ -130,7 +135,7 @@ class EventsSystem:
                 except Exception as e:
                     self.log.error(i18n.events_calling_error.format(event_name, func.__name__))
                     self.log.exception(e)
-        else:
+        elif not self.is_event(event_name):
             self.log.warning(i18n.events_not_found.format(event_name, "kt.call_async_event()"))
 
         return funcs_data
@@ -151,7 +156,7 @@ class EventsSystem:
                     funcs_data.append(fd)
                 except Exception as e:
                     self.log.error(i18n.events_lua_calling_error.format(f"{e}", event_name, func_name, f"{args}"))
-        else:
+        elif not self.is_event(event_name):
             self.log.warning(i18n.events_not_found.format(event_name, "ev.call_lua_event(), MP.Trigger<>Event()"))
 
         return funcs_data
