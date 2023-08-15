@@ -2,7 +2,7 @@
 # File core.utils.py
 # Written by: SantaSpeen
 # Version 1.1
-# Core version: 0.4.4
+# Core version: 0.4.5
 # Licence: FPA
 # (c) kuitoi.su 2023
 import datetime

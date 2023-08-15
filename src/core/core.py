@@ -1,7 +1,7 @@
 # Developed by KuiToi Dev
 # File core.core.py
 # Written by: SantaSpeen
-# Version: 0.4.4
+# Version: 0.4.5
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
