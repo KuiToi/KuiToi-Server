@@ -325,7 +325,7 @@ class Client:
                     self._split_load(half_size, size, True, file, speed)
                 ]
                 sl0, sl1 = await asyncio.gather(*uploads)
-                tr = time.monotonic() - t
+                tr = (time.monotonic() - t) or 0.0001
                 if self.__Core.lock_upload:
                     self.__Core.lock_upload = False
                 msg = i18n.client_mod_sent.format(round(size / MB, 3), math.ceil(size / tr / MB), int(tr))
@@ -514,6 +514,12 @@ class Client:
                         self.log.debug(f"Updated car: car_id={car_id}")
         else:
             self.log.debug(f"Invalid car: car_id={car_id}")
+
+    async def reset_car(self, car_id, x, y, z, rot=None):
+        # TODO: reset_car
+        self.log.debug(f"Resetting car from plugin")
+        if rot is None:
+            rot = {"y": 0, "w": 0, "x": 0, "z": 0}
 
     async def _reset_car(self, raw_data):
         cid, car_id = self._get_cid_vid(raw_data)
