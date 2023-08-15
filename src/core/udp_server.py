@@ -1,7 +1,7 @@
 # Developed by KuiToi Dev
 # File core.udp_server.py
 # Written by: SantaSpeen
-# Core version: 0.4.3
+# Core version: 0.4.4
 # Licence: FPA
 # (c) kuitoi.su 2023
 import asyncio
