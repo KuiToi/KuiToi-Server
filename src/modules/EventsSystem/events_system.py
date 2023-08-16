@@ -141,7 +141,7 @@ class EventsSystem:
         return funcs_data
 
     def call_lua_event(self, event_name, *args):
-        self.log.debug(f"Calling lua event: '{event_name}'")
+        self.log.debug(f"Calling lua event: '{event_name} ({args})'")
         funcs_data = []
         if event_name in self.__lua_events.keys():
             for data in self.__lua_events[event_name]:
