@@ -110,7 +110,7 @@ class MP:
 
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
-        self.log.debug(f"Calling local lua event: '{event_name}'")
+        self.log.debug(f"Calling local lua event: '{event_name} ({args})'")
         funcs_data = []
         if event_name in self._local_events.keys():
             for func_name in self._local_events[event_name]:
@@ -157,7 +157,7 @@ class MP:
         to_all = False
         if player_id < 0:
             to_all = True
-            client = client[0]
+            client = client[0] if len(client) > 0 else None
         if client and event_name and data:
             t = self.loop.create_task(client.send_event(event_name, data, to_all=to_all))
             self.tasks.append(t)
@@ -168,7 +168,7 @@ class MP:
             return False, "Can't found event_name or data"
 
     def TriggerClientEventJson(self, player_id, event_name, data):
-        self.log.debug("request TriggerClientEventJson()")
+        self.log.debug(f"request TriggerClientEventJson({player_id, event_name, data})")
         data = self._lua.globals().Util.JsonEncode(data)
         self.TriggerClientEvent(player_id, event_name, data)
 
@@ -232,8 +232,9 @@ class MP:
 
     def GetPlayers(self):
         self.log.debug("request GetPlayers()")
-        clients = ev.call_event("_get_players", cid=-1)
-        return self._lua.table_from(clients)
+        clients = ev.call_event("_get_player", cid=-1)
+        self.log.debug(f"clients {clients}")
+        return self._lua.table_from(clients) if len(clients) > 0 else None
 
     def IsPlayerGuest(self, player_id) -> bool:
         self.log.debug("request IsPlayerGuest()")
@@ -312,12 +313,18 @@ class Util:
         return {k: v for k, v in new_dict.items() if v is not None}
 
     def JsonEncode(self, table):
-        self.log.debug("requesting JsonEncode()")
-        if all(isinstance(k, int) for k in table.keys()):
-            data = self._recursive_list_encode(table)
-        else:
-            data = self._recursive_dict_encode(table)
-        return json.dumps(data)
+        data = {}
+        try:
+            self.log.debug("requesting JsonEncode()")
+            if all(isinstance(k, int) for k in table.keys()):
+                data = self._recursive_list_encode(table)
+            else:
+                data = self._recursive_dict_encode(table)
+        except Exception as e:
+            self.log.exception(e)
+        data = json.dumps(data)
+        self.log.debug(f"Encoded: {data}")
+        return data
 
     def JsonDecode(self, string):
         self.log.debug("requesting JsonDecode()")
