@@ -233,7 +233,7 @@ class MP:
     def GetPlayers(self):
         self.log.debug("request GetPlayers()")
         clients = ev.call_event("_get_player", cid=-1)[0]
-        return self._lua.table_from(clients)
+        return self._lua.table_from([i.nick for i in clients])
 
     def IsPlayerGuest(self, player_id) -> bool:
         self.log.debug("request IsPlayerGuest()")
