@@ -696,7 +696,7 @@ class Client:
                     self.log.error(f"Received event in invalid format (missing ':'), got: {data}")
                 event_name = data[2:sep]
                 even_data = data[sep + 1:]
-                ev.call_lua_event(event_name, even_data)
+                ev.call_lua_event(event_name, self.cid, even_data)
                 ev.call_event(event_name, data=even_data, player=self)
                 await ev.call_async_event(event_name, data=even_data, player=self)
             case "N":
