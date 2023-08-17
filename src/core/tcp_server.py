@@ -53,6 +53,8 @@ class TCPServer:
             client.roles = res["roles"]
             client._guest = res["guest"]
             client._identifiers = {k: v for s in res["identifiers"] for k, v in [s.split(':')]}
+            if not client._identifiers.get("ip"):
+                client._identifiers["ip"] = client._addr[0]
             # noinspection PyProtectedMember
             client._update_logger()
         except Exception as e:

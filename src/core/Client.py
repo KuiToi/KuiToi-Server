@@ -634,7 +634,9 @@ class Client:
                     self.log.info(f"{message}" if to_all else f"{self.nick}: {msg}")
                 await self._send(f"C:{message}", to_all=to_all, to_self=to_self, writer=writer)
                 need_send = False
-            except KeyError | AttributeError:
+            except KeyError:
+                self.log.error(i18n.client_event_invalid_data.format(ev_data))
+            except AttributeError:
                 self.log.error(i18n.client_event_invalid_data.format(ev_data))
         if need_send:
             if config.Options['log_chat']:
