@@ -110,7 +110,7 @@ class MP:
 
     def TriggerLocalEvent(self, event_name, *args):
         self.log.debug("request TriggerLocalEvent()")
-        self.log.debug(f"Calling local lua event: '{event_name} ({args})'")
+        self.log.debug(f"Calling local lua event: '{event_name}{args}'")
         funcs_data = []
         if event_name in self._local_events.keys():
             for func_name in self._local_events[event_name]:
