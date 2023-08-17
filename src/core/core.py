@@ -57,7 +57,7 @@ class Core:
             return None
         if cid is not None:
             if cid == -1:
-                return [i for i in self.clients if i is not None]
+                return [i for i in self.clients if i is not None and i.synced]
             return self.clients_by_id.get(cid)
         if nick:
             return self.clients_by_nick.get(nick)

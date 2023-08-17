@@ -32,6 +32,7 @@ class Client:
         self.nick = None
         self.roles = None
         self._guest = True
+        self._synced = False
         self._ready = False
         self._identifiers = []
         self._cars = [None] * 21  # Max 20 cars per player + 1 snowman
@@ -71,6 +72,10 @@ class Client:
     @property
     def guest(self):
         return self._guest
+
+    @property
+    def synced(self):
+        return self._synced
 
     @property
     def ready(self):
@@ -706,6 +711,7 @@ class Client:
         tasks = self.__tasks
         recv = asyncio.create_task(self._recv())
         tasks.append(recv)
+        self._synced = True
         while self.__alive:
             if len(self.__packets_queue) > 0:
                 for index, packet in enumerate(self.__packets_queue):

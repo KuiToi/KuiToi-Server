@@ -32,6 +32,7 @@ class Client:
         self.roles: str = None
         self._guest = True
         self.__alive = True
+        self._synced = False
         self._ready = False
         self._focus_car = -1
         self._identifiers = []
@@ -54,6 +55,8 @@ class Client:
     def key(self) -> str: ...
     @property
     def guest(self) -> bool: ...
+    @property
+    def synced(self) -> bool: ...
     @property
     def ready(self) -> bool: ...
     @property
