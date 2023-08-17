@@ -617,6 +617,8 @@ class Client:
         ev_data_list.extend(d2)
         need_send = True
         for ev_data in ev_data_list:
+            if ev_data is None:
+                continue
             try:
                 message = ev_data["message"]
                 to_all = ev_data.get("to_all")
